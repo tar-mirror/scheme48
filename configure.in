@@ -1,0 +1,141 @@
+dnl Part of Scheme 48 1.9.  See file COPYING for notices and license.
+dnl
+dnl Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus
+dnl Crestani, Eric Knauel, David Frese, Ivan Shmakov, Taylor Campbell,
+dnl Will Noble
+dnl
+dnl Process this file with autoconf >= 2.60 to produce a configure script.
+dnl To do this, run:
+dnl   env ACLOCAL="aclocal -I m4" autoreconf -v -i
+dnl
+AC_PREREQ([2.60])dnl
+dnl
+dnl We might want AC_WORDS_BIGENDIAN in the future.
+dnl We might want AC_CHAR_UNSIGNED in the future.
+dnl
+dnl
+dnl
+dnl
+AC_INIT(c/prescheme.h)
+     AC_CONFIG_HEADER(c/sysdep.h)
+     AC_CONFIG_HEADER(c/scheme48arch.h)
+     AC_CANONICAL_HOST
+     dnl set the cross-compile flag before we try anything.
+     AC_TRY_RUN([int main() { return 0;}], [], [], [true])
+     S48_CC
+     S48_PICK_GC
+     S48_ENABLE_FORCE_32BIT
+     S48_DETERMINE_BITS_PER_BYTE
+     S48_DETERMINE_POINTER_SIZE
+     S48_DETERMINE_BIT_SUFFIX
+     S48_ENABLE_UNIVERSAL_BINARY
+     S48_OSX_ARCH_FLAGS($S48_BUILD_UNIVERSAL_P,$S48_FORCE_32_P)
+     S48_PIC_OPTION_NAME
+     S48_CREATE_BUILD_DIRS
+     S48_LDFLAGS
+     AC_ISC_POSIX
+     AC_SYS_LARGEFILE
+     S48_INLINE
+     AC_PROG_INSTALL
+     AC_CHECK_LIB(m, main)
+     AC_CHECK_LIB(dl, main)
+     AC_CHECK_LIB(mld, main)
+     AC_CHECK_LIB(nsl, main)
+     AC_CHECK_LIB(gen, main)
+     AC_CHECK_LIB(socket, main)
+     AC_CHECK_LIB(sun, getpwnam)
+     S48_POSIX_LIBC
+     S48_TM_GMTOFF
+     AC_CONST
+     AC_MSG_CHECKING(for socklen_t)
+     AC_TRY_COMPILE([#include <sys/types.h>
+                     #include <sys/socket.h>
+                     socklen_t x;
+                    ],[],
+		    [AC_MSG_RESULT(yes)],
+		    [AC_TRY_COMPILE([#include <sys/types.h>
+                                     #include <sys/socket.h>
+                                     int accept (int,
+				                 struct sockaddr *,
+						 size_t *);
+                                    ],[],
+		                    [AC_MSG_RESULT(size_t)
+                                     AC_DEFINE(socklen_t,size_t)],
+				    [AC_MSG_RESULT(int)
+                                     AC_DEFINE(socklen_t,int)])])
+     AC_RETSIGTYPE
+     AC_TYPE_UINTPTR_T
+     AC_TYPE_UINT16_T
+     AC_CHECK_HEADERS(libgen.h sys/timeb.h posix/time.h)
+     AC_CHECK_HEADERS(sys/select.h)
+     AC_CHECK_HEADERS(sysexits.h)
+     AC_CHECK_HEADERS(langinfo.h)
+     AC_CHECK_FUNC(nl_langinfo, [], [AC_LIBOBJ([c/fake/langinfo])])
+     AC_CHECK_FUNCS(gettimeofday ftime select setitimer sigaction execvpe)
+     AC_CHECK_HEADERS(poll.h)
+     AC_CHECK_FUNCS(poll)
+     S48_GLIB
+     AC_CHECK_FUNCS(dlopen)
+     AC_CHECK_FUNCS(socket chroot)
+     AC_CHECK_FUNC(strerror,
+                   [AC_DEFINE(HAVE_STRERROR, 1,
+                              [Define to 1 if you have the `strerror'
+                               function.])],
+                   [AC_LIBOBJ([c/fake/strerror.o])])
+dnl Some idiot renamed `environ' as `__environ' in some versions of Linux.
+dnl POSIX says it's `environ'.
+     AC_MSG_CHECKING([environ])
+     AC_TRY_LINK([],
+		 [extern char **environ;
+		  if (environ)
+		     return 0;
+		  else
+		     return 1;],
+               dnl Have `environ'
+		 [AC_DEFINE(ENVIRON_NAME,environ)
+		  AC_MSG_RESULT([using environ])],
+               dnl Do not have `environ'
+	         [AC_TRY_LINK([],
+		              [extern char **__environ;
+			       if (__environ)
+			         return 0;   
+			       else
+				 return 1;],
+                            dnl Have `__environ'
+		               [AC_DEFINE(ENVIRON_NAME,__environ)
+	     		        AC_MSG_RESULT([using __environ])],
+                           dnl Do not have `__environ'
+                               [AC_MSG_WARN([no environ variable found])
+                                AC_LIBOBJ([c/fake/environ.o])])])
+     S48_IEEE_ENDIANNESS($S48_BUILD_UNIVERSAL_P)
+     S48_NATIVE_CODE
+     S48_DYNAMIC_EXTERNALS
+     S48_PTHREADS
+     S48_MISALIGNED_DOUBLES
+     AC_SUBST(CFLAGS)
+     AC_SUBST(CPPFLAGS)
+     AC_SUBST(LDFLAGS)
+     AC_SUBST(LD)
+     AC_SUBST(DYNAMIC_EXTERNALS_CFLAGS)
+     AC_SUBST(DYNAMIC_EXTERNALS_LDFLAGS)
+     AC_SUBST(DYNAMIC_EXTERNALS_LDFLAGS_IN_PLACE)
+     AC_SUBST(GC_OBJS)
+     AC_SUBST(ADDITIONAL_EXTERNALS)
+     AC_SUBST(ADDITIONAL_EXTERNAL_OBJS)
+     AC_SUBST(BIT_SUFFIX)
+     dnl More payload for Autoheader
+     AH_TEMPLATE([ENVIRON_NAME],
+                 [Define to the name of the `environ' variable.])
+     AH_TEMPLATE([HAVE_GLIB],
+                 [Define to 1 if you have the `glib' library.])
+     AH_TEMPLATE([socklen_t],
+                 [Define to the type to be used instead of `socklen_t'
+                  if the system does not define the latter.])
+     AH_BOTTOM([
+#include "fake/sigact.h"
+#include "fake/strerror.h"
+#include "fake/sys-select.h"
+#include "fake/environ.h"
+#include "fake/sysexits.h"
+#include "fake/langinfo.h"])
+AC_OUTPUT(Makefile)

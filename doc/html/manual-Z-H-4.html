@@ -1,0 +1,1122 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-3.html">previous</a></span><span>, <a href="manual-Z-H-5.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_3"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_3">Chapter 3</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_3">Command processor</a></h1>
+<p></p>
+<p>
+This chapter details Scheme&nbsp;48&rsquo;s command processor, which incorporates
+both a read-eval-print loop and an interactive debugger.
+At the <tt>&gt;</tt> prompt, you can type either a Scheme form
+(expression or definition) or a command beginning with a comma.
+In
+inspection mode (see section&nbsp;<a href="#node_sec_3.8">3.8</a>)
+the prompt changes to <tt>:</tt> and commands
+no longer need to be preceded by a comma; input beginning with
+a letter or digit is assumed to be a command, not an expression.
+In inspection mode the command processor prints out a
+menu of selectable components for the current object of interest.</p>
+<p>
+</p>
+<a name="node_sec_3.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.1">3.1&nbsp;&nbsp;Current focus value and <tt>##</tt></a></h2>
+<p>The command processor keeps track of a current <em>focus value</em>.
+This value is normally the last value returned by a command.
+If a command returns multiple values the focus object is a list of the
+values.
+The focus value is not changed if a command returns no values or 
+a distinguished &lsquo;unspecific&rsquo; value.
+Examples of forms that return this unspecific value are definitions,
+uses of <tt>set!</tt>, and <tt>(if #f 0)</tt>.
+It prints as <tt>#{Unspecific}</tt>.</p>
+<p>
+The reader used by the command processor reads <tt>##</tt> as a special
+expression that evaluates to the current focus object.
+</p>
+<pre class=verbatim>&gt; (list 'a 'b)
+'(a b)
+&gt; (car ##)
+'a
+&gt; (symbol-&gt;string ##)
+&quot;a&quot;
+&gt; (if #f 0)
+#{Unspecific}
+&gt; ##
+&quot;a&quot;
+&gt; 
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_3.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.2">3.2&nbsp;&nbsp;Command levels</a></h2>
+<p>If an error, keyboard interrupt, or other breakpoint occurs, or the
+<tt>,push</tt> command is used, the command
+processor invokes a recursive copy of itself, preserving the dynamic state of
+the program when the breakpoint occurred.
+The recursive invocation creates a new <em>command level</em>.
+The command levels form a stack with the current level at the top.
+The command prompt indicates the number of stopped levels below the
+current one: <tt>&gt;</tt> or <tt>:</tt> for the
+base level and <tt><i>n</i>&gt;</tt> or <tt><i>n</i>:</tt> for all other levels,
+where <i>n</i> is the command-level nesting depth.
+The <tt>levels</tt> setting
+described below can be used to disable the automatic pushing of new levels.</p>
+<p>
+The command processor&rsquo;s evaluation package and the value of the
+current focus value are local to each command level.
+They are preserved when a new level is pushed and restored when
+it is discarded.
+The settings of all other settings are shared by all command levels.</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd>&lang;eof&rang;<br>
+Discards the current command level and resumes running the level down.
+&lang;eof&rang; is usually
+control-<tt>D</tt> at a Unix shell or control-<tt>C</tt> control-<tt>D</tt> using
+the Emacs <tt>cmuscheme48</tt> library.<p>
+</p>
+</dd><dt></dt><dd><tt>,pop</tt><br>
+The same as &lang;eof&rang;.<p>
+</p>
+</dd><dt></dt><dd><tt>,proceed [<i>exp</i> <tt>...</tt></tt>]<br>
+Proceed after an interrupt or error, resuming the next command
+level down, delivering the values of <i>exp&nbsp;<tt>...</tt></i> to the continuation.
+Interrupt continuations discard any returned values.
+<tt>,Pop</tt> and <tt>,proceed</tt> have the same effect after an interrupt
+but behave differently after errors.
+<tt>,Proceed</tt> restarts the erroneous computation from the point where the
+error occurred (although not all errors are proceedable) while
+<tt>,pop</tt> (and &lang;eof&rang;) discards it and prompts for
+a new command.<p>
+</p>
+</dd><dt></dt><dd><tt>,push</tt><br>
+Pushes a new command level on above the current one.
+This is useful if the <tt>levels</tt> setting has been used
+to disable the automatic pushing of new levels for errors and interrupts.<p>
+</p>
+</dd><dt></dt><dd><tt>,reset [<i>number</i>]</tt><br>
+Pops down to a given level and restarts that level.
+<i>Number</i> defaults to zero, <tt>,reset</tt> restarts the command
+processor, discarding all existing levels.<p>
+</p>
+</dd></dl><p></p>
+<p>
+Whenever moving to an existing level, either by sending
+an &lang;eof&rang;
+or by using <tt>,reset</tt> or the other commands listed above,
+the command processor runs all of the <tt>dynamic-wind</tt> &lsquo;&lsquo;after&rsquo;&rsquo; thunks
+belonging to stopped computations on the discarded level(s).</p>
+<p>
+</p>
+<a name="node_sec_3.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.3">3.3&nbsp;&nbsp;Logistical commands</a></h2>
+<p></p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,load <i>filename <tt>...</tt></i></tt><br>
+Loads the named Scheme source file(s).
+Easier to type than <tt>(load &quot;<i>filename</i>&quot;)</tt> because you don&rsquo;t have to
+shift to type the parentheses or quote marks.  
+(However, it is still possible to specify a filename as a Scheme
+string literal, with quote marks---you&rsquo;ll need this for filenames
+containing whitespace.)
+Also, it works in
+any package, unlike <tt>(load &quot;<i>filename</i>&quot;)</tt>, which will work only
+in packages in which the variable <tt>load</tt> is defined appropriately.<p>
+</p>
+</dd><dt></dt><dd><tt>,exit [<i>exp</i>]</tt><br>
+Exits back out to shell (or executive or whatever invoked Scheme&nbsp;48
+in the first place).
+<i>Exp</i> should evaluate to an integer.  The
+integer is returned to the calling program.
+The default value of <i>exp</i> is zero, which, on Unix,
+is generally interpreted as success.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.4">3.4&nbsp;&nbsp;Module commands</a></h2>
+<p></p>
+<p>
+There are many commands related to modules.
+Only the most commonly used module commands are described here;
+documentation for the
+rest can be found in section&nbsp;<a href="manual-Z-H-5.html#node_sec_4.8">4.8</a>.
+There is also
+a brief description of modules, structures, and packages in section&nbsp;<a href="manual-Z-H-3.html#node_sec_2.6">2.6</a> below.</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,open <i>structure <tt>...</tt></i></tt><br>
+Makes the bindings in the <i>structure</i>s visible in the current package.
+The packages associated with the <i>structure</i>s will be loaded if
+this has not already been done (the <tt>ask-before-loading</tt> setting
+can be used to disable the automatic loading of packages).<p>
+</p>
+</dd><dt></dt><dd><tt>,config [<i>command</i>]</tt><br>
+Executes <i>command</i> in the <tt>config</tt> package, which includes
+the module configuration language.
+For example, use
+<pre class=verbatim>,config ,load <i>filename</i>
+</pre><p>
+to load a file containing module definitions.
+If no <i>command</i> is given, the <tt>config</tt> package becomes the
+execution package for future commands.</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,user [<i>command</i>]</tt> <br>
+This is similar to the <tt>,config</tt>.  It
+moves to or executes a command in the user package (which is the
+default package when the Scheme&nbsp;48 command processor starts).<p>
+</p>
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.5">3.5&nbsp;&nbsp;Debugging commands</a></h2>
+<p></p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,preview</tt><br>
+Somewhat like a backtrace, but because of tail recursion you see
+less than you might in debuggers for some other languages.
+The stack to display is chosen as follows:
+<ol>
+<li><p>If the current focus object is a continuation or a thread,
+then that continuation or thread&rsquo;s stack is displayed.
+</p>
+<li><p>Otherwise, if the current command level was initiated because of
+a breakpoint in the next level down, then the stack at that
+breakpoint is displayed.
+</p>
+<li><p>Otherwise, there is no stack to display and a message is printed
+to that effect.
+</p>
+</ol><p>
+One line is printed out for each continuation on the chosen stack,
+going from top to bottom.</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,run <i>exp</i></tt><br>
+Evaluate <i>exp</i>, printing the result(s) and making them
+(or a list of them, if <i>exp</i> returns multiple results)
+the new focus object.
+The <tt>,run</tt> command is useful in inspection mode (see
+section&nbsp;<a href="#node_sec_3.8">3.8</a> below) and when writing
+command programs (see section&nbsp;<a href="#node_sec_3.9">3.9</a> below).<p>
+</p>
+</dd><dt></dt><dd><tt>,trace <i>name</i> <tt>...</tt></tt><br>
+Start tracing calls to the named procedure or procedures.
+With no arguments, displays all procedures currently traced.
+This affects the binding of <i>name</i>, not the behavior of the
+procedure that is its current value.  <i>Name</i> is redefined
+to be a procedure that prints a message,
+calls the original value of <i>name</i>, prints another
+message, and finally passes along the value(s) returned by the
+original procedure.<p>
+</p>
+</dd><dt></dt><dd><tt>,untrace <i>name</i> <tt>...</tt></tt><br>
+Stop tracing calls to the named procedure or procedures.
+With no argument, stop tracing all calls to all procedures.<p>
+</p>
+</dd><dt></dt><dd><tt>,condition</tt><br>
+The <tt>,condition</tt> command displays the condition object
+describing the error or interrupt that initiated the current
+command level.  The condition object becomes the current focus
+value.  This is particularly useful in conjunction with
+the inspector.  For example, if a procedure is passed the wrong number of
+arguments, do <tt>,condition</tt> followed by
+<tt>,inspect</tt> to inspect the
+procedure and its arguments.<p>
+</p>
+</dd><dt></dt><dd><tt>,bound? <i>name</i></tt><br>
+Display the binding of <i>name</i>, if there is one, and otherwise
+prints &lsquo;<tt>Not bound</tt>&rsquo;.<p>
+</p>
+</dd><dt></dt><dd><tt>,expand <i>form</i></tt>
+Show macro expansion of <i>form</i>, if any, fully expanding all 
+macros in <i>form</i>.<p>
+</p>
+</dd><dt></dt><dd><tt>,where <i>procedure</i></tt><br>
+Display name of file containing <i>procedure</i>&rsquo;s source code.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.6">3.6&nbsp;&nbsp;Profiling commands</a></h2>
+<p></p>
+<p>
+After loading the <tt>profile-commands</tt> structure via
+</p>
+<pre class=verbatim>,load-package profile-commands  
+</pre><p>
+Scheme&nbsp;48 provides a basic profiler, with support for flat and call-graph profiles.
+In addition to call- and runtimes the heap memory usage is estimated as well.
+By adding the byte-code optimizer <tt>profiler-instrumentation</tt> to the definition
+of a structure via a clause
+</p>
+<pre class=verbatim>  (optimize profiler-instrumentation)
+</pre><p>
+in the structure definition, code will by instrumented with calls to the profiler. The call-times to
+instrumented code can then be measured exactly.
+Without instrumentation, the profiler is solely based on sampling and therefore has only
+limited accuracy.
+Any evaluation can be profiled with the following command:</p>
+<p>
+</p>
+<dl><dt></dt><dd><p>
+</p>
+</dd><dt></dt><dd><tt>,profile <i>command</i></tt><br>
+Evaluate <i>command</i> under the profiler, printing the profiling result and making the
+return value(s) of <i>command</i> the new focus object.<p>
+</p>
+</dd></dl><p></p>
+<p>
+The output of the profiler is explained on the basis of the following piece of senseless code:</p>
+<p>
+</p>
+<pre class=verbatim>(define (c x)
+  (if (= x 0)
+      0
+      (+ 1 (c (- x 1)))))
+
+(define (b x)
+  (let ((y (- x 1)))
+    (if (&gt; y 0)
+        (begin
+          (c y)
+          (a y)
+          (+ 1 (a y)))
+        0)))
+
+(define (a x)
+  (let ((y (- x 1)))
+    (if (&gt; y 0)
+        (begin
+          (c y)
+          (b y)
+          (+ 1 (b y)))
+        0)))
+
+(define (main x)
+  (+ 1 (a x)))
+</pre><p></p>
+<p>
+The profiler produces the following output:</p>
+<p>
+</p>
+<pre class=verbatim>&gt; ,profile (main 21)
+
+** Samples:        60 (approx. one per 40ms)
+** Interrupt time: 50ms
+** Real run time:  2430ms
+** Total memory:   22k
+** GC runs:        0
+
+** Flat result (times in ms): 
+
+   time  cumu  self   mem  calls  ms/call  name
+ 61.66%  1498  1498    2k  37+51       17  c in &quot;x.scm&quot;
+  25.0%  2430   608   10k    436        6  b in &quot;x.scm&quot;
+ 13.33%  2430   324   10k    442        5  a in &quot;x.scm&quot;
+   0.0%  2430     0    0k      1     2430  main in &quot;x.scm&quot;
+
+** Tree result (times in ms): 
+
+i    time self child  mem    calls  name
+0  100.0%    0  2430   0k        0  &lt;profiler&gt; [0]
+             0  2430   0k      1/1     main in &quot;x.scm&quot; [1]
+=========================================================
+                           441/442     b in &quot;x.scm&quot; &lt;cycle 0&gt; [3]
+           324   891  10k    1/442     main in &quot;x.scm&quot; [1]
+1  100.0%  324   891  10k      442  a in &quot;x.scm&quot; &lt;cycle 0&gt; [2]
+           891     0   1k    22/37     c in &quot;x.scm&quot; [4]
+                           436/436     b in &quot;x.scm&quot; &lt;cycle 0&gt; [3]
+=========================================================
+                           436/436     a in &quot;x.scm&quot; &lt;cycle 0&gt; [2]
+2  100.0%  608   608  10k      436  b in &quot;x.scm&quot; &lt;cycle 0&gt; [3]
+           608     0   1k    15/37     c in &quot;x.scm&quot; [4]
+                           441/442     a in &quot;x.scm&quot; &lt;cycle 0&gt; [2]
+=========================================================
+             0  2430   0k      1/1     &lt;profiler&gt; [0]
+3  100.0%    0  2430   0k        1  main in &quot;x.scm&quot; [1]
+           324   891  10k    1/442     a in &quot;x.scm&quot; &lt;cycle 0&gt; [2]
+=========================================================
+           608     0   1k    15/37     b in &quot;x.scm&quot; &lt;cycle 0&gt; [3]
+           891     0   1k    22/37     a in &quot;x.scm&quot; &lt;cycle 0&gt; [2]
+4  61.66% 1498     0   2k    37+51  c in &quot;x.scm&quot; [4]
+=========================================================
+           932  1498  20k      1/1     main in &quot;x.scm&quot; [1]
+0  100.0%  932  1498  20k    1+877  &lt;cycle 0 as a whole&gt;
+           324   891  10k      441     a in &quot;x.scm&quot; &lt;cycle 0&gt; [2]
+           608   608  10k      436     b in &quot;x.scm&quot; &lt;cycle 0&gt; [3]
+             0     0   2k    37/37     c in &quot;x.scm&quot; [4]
+
+</pre><p></p>
+<p>
+The formatting of the output is based on the output of
+GNU gprof <a name="node_call_footnote_Temp_3"></a><sup><small><a href="#node_footnote_Temp_3">1</a></small></sup>.</p>
+<p>
+First, general information about the profiling is shown:
+</p>
+<ul>
+<li><p><tt>samples</tt>: total number of samples taken and the
+average time between two samples
+</p>
+<li><p><tt>interrupt time</tt>: theoretical interrupt time, the time between
+two samples
+</p>
+<li><p><tt>real run time</tt>: the total run time of the evaluation, simple measurement
+from the beginning to the end of the evaluation
+</p>
+<li><p><tt>total memory</tt>: the total amount of memory used by the program, here in kilobytes
+</p>
+<li><p><tt>GC runs</tt>: the number of times the garbage collector was running while evaluating
+</p>
+</ul><p></p>
+<p>
+The flat profile gives overall statistics for each procedure in the program:
+</p>
+<ul>
+<li><p><tt>time</tt>:
+percentage of time the procedure has in the program (based on &lsquo;&lsquo;<tt>self</tt>&rsquo;&rsquo;)
+</p>
+<li><p><tt>cumu</tt>:
+total cumulative time the procedure was running
+</p>
+<li><p><tt>self</tt>:
+total time the procedure was running itself (without children)
+</p>
+<li><p><tt>mem</tt>:
+approximated memory usage of the procedure
+</p>
+<li><p><tt>calls</tt>:
+the number of non-recursive calls to the procedure. Recursive calls are displayed after an
+optionally appended &quot;+&quot; to former number (see procedure <tt>c</tt> in example output above).
+</p>
+<li><p><tt>ms/call</tt>:
+estimate of the time per call (with children), based on non-recursive calls and &lsquo;&lsquo;<tt>cumu</tt>&rsquo;&rsquo;.
+</p>
+<li><p><tt>name</tt>:
+the name of the procedure and the file it is defined in
+</p>
+</ul><p></p>
+<p>
+The tree result displays profiling information depending on the caller of a particular procedure.
+As in gprof output, for each procedure there is an <i>entry</i>. Entries are separated by lines of <tt>=</tt>s.
+Each entry displays the callers (indented), the procedure itself and the procedure called (indented).
+The meaning of the fields depends on the type of the entry, for example:</p>
+<p>
+</p>
+<pre class=verbatim> i    time self  child  mem    calls   name
+            324    891  10k    1/442      main [1]
+ 1  100.0%  324    891  10k      442   a &lt;cycle 0&gt; [2]
+            891      0   1k    22/37      c [4]
+</pre><p></p>
+<p>
+Every procedure has a unique index number <tt>i</tt> (here &lsquo;&lsquo;1&rsquo;&rsquo;), based on the position in the
+call-graph. It is used to quickly find the corresponding entry. The number is appended to
+the procedure name (in brackets).
+The meaning of the &lsquo;&lsquo;cycle&rsquo;&rsquo; suffix is explained below.</p>
+<p>
+Callers (here <tt>main</tt>):
+</p>
+<ul>
+<li><p><tt>self</tt>:
+time spent directly in <tt>a</tt> when called by <tt>main</tt>
+</p>
+<li><p><tt>child</tt>:
+time spent in children of <tt>a</tt> when called by <tt>main</tt>
+</p>
+<li><p><tt>mem</tt>:
+memory usage of <tt>a</tt> when called by <tt>main</tt>
+</p>
+<li><p><tt>calls</tt>:
+two numbers:
+number of calls to <tt>a</tt> from <tt>main</tt>
+and
+total number of non-recursive calls to <tt>a</tt>
+</p>
+</ul><p></p>
+<p>
+Primary line (here <tt>a</tt>):
+</p>
+<ul>
+<li><p><tt>time</tt>:
+total percentage of time <tt>a</tt> was running
+</p>
+<li><p><tt>self</tt>:
+total time spent directly in <tt>a</tt>
+</p>
+<li><p><tt>child</tt>:
+total time spent in children of <tt>a</tt>
+</p>
+<li><p><tt>mem</tt>:
+total memory usage of <tt>a</tt>
+</p>
+<li><p><tt>calls</tt>:
+the total number of non-recursive calls to <tt>a</tt>. Recursive calls are
+displayed after an optional <tt>+</tt>.
+</p>
+</ul><p></p>
+<p>
+Called (here <tt>c</tt>):
+</p>
+<ul>
+<li><p><tt>self</tt>:
+time spent directly in <tt>c</tt> when called by <tt>a</tt>
+</p>
+<li><p><tt>child</tt>:
+time spent in children of <tt>c</tt> when called by <tt>a</tt>
+</p>
+<li><p><tt>mem</tt>:
+memory usage of <tt>c</tt> when called by <tt>a</tt>
+</p>
+<li><p><tt>calls</tt>:
+two numbers:
+number of calls to <tt>c</tt> from <tt>a</tt>
+and
+total number of non-recursive calls to <tt>c</tt>
+</p>
+</ul><p></p>
+<p>
+A special treatment is needed for mutual-recursive procedures. In the example,
+<tt>a</tt> calls <tt>b</tt> and <tt>b</tt> calls <tt>a</tt>. This is called a <i>cycle</i>.
+If <tt>a</tt> would call another procedure <tt>d</tt> and <tt>d</tt> would call <tt>a</tt>, all three
+procedures form a cycle.</p>
+<p>
+Cycles have a separate entry in the call graph.
+This entry consists of the callers into the cycle, the primary line of the cycle,
+the member procedures of the cycle and the external procedures called by the cycle:</p>
+<p>
+</p>
+<pre class=verbatim>            932   1498  20k      1/1      main [1]
+ 0  100.0%  932   1498  20k    1+877   &lt;cycle 0 as a whole&gt;
+            324    891  10k      441      a &lt;cycle 0&gt; [2]
+            608    608  10k      436      b &lt;cycle 0&gt; [3]
+              0      0   2k    37/37      c [4]
+</pre><p></p>
+<p>
+Callers (here <tt>main</tt>):
+</p>
+<ul>
+<li><p>the meaning of the fields are the same
+as above. The member procedures of the cycle are seen as a whole.
+</p>
+</ul><p></p>
+<p>
+Primary line:
+</p>
+<ul>
+<li><p><tt>time</tt>:
+total percentage of time any procedure of the cycle was running
+</p>
+<li><p><tt>self</tt>:
+total time spent directly in a procedure of the cycle
+</p>
+<li><p><tt>child</tt>:
+total time spent in external children of <tt>a</tt>
+</p>
+<li><p><tt>mem</tt>:
+sum of memory usage of all cycle member procedures
+</p>
+<li><p><tt>calls</tt>:
+the total number of external calls to the <tt>cycle</tt> and the total number
+of calls in the cycle internally
+</p>
+</ul><p></p>
+<p>
+Member procedures:
+</p>
+<ul>
+<li><p>the meaning of the fields are the same as above, except<tt>...</tt></p>
+<li><p><tt>calls</tt>: the number of calls to the member procedure from within the cycle
+</p>
+</ul><p></p>
+<p>
+External procedures (here <tt>c</tt>):
+</p>
+<ul>
+<li><p>the meaning of the fields are the same as with the member procedures, except<tt>...</tt></p>
+<li><p><tt>calls</tt>: the number of calls to the external procedure from the cycle
+and
+the total number of non-recursive calls to the external procedure
+</p>
+</ul><p></p>
+<p>
+In the current implementation, there are some issues that need to be considered:
+in the default configuration, samples are taken every 50 milliseconds. Procedures with a by-call
+run time shorter than the interrupt time are likely to be profiled inaccurately or may not be seen
+at all, if they have not been instrumented.</p>
+<p>
+The default interrupt time can be set with the <tt>profiler-interrupt-time</tt> command processor setting,
+see <a href="#node_sec_3.7">3.7</a>. For example,
+</p>
+<pre class=verbatim>,set profiler-interrupt-time 200
+</pre><p>
+sets the
+default profiler sampling interrupt time to 200ms.</p>
+<p>
+Because the interrupt is shared with the thread system, profiling may cause performance issues
+with multi-threaded programs. Also, programs with deep recursion (resulting in large
+continuations) can cause the profiler to use a significant percentage of the total run time.</p>
+<p>
+By default, call times are measured by the sampling process. When code had been instrumented,
+call times of those procedures will be measured exactly. When only instrumented code should be
+considered in the output of the profiler, the command processor setting
+<tt>profiler-measure-noninstr</tt> can be set to <tt>off</tt>.</p>
+<p>
+Scheme&nbsp;48 optimizes tail calls. Thus, the profiler cannot &lsquo;&lsquo;see&rsquo;&rsquo;
+tail calls and in some situations,
+the output of the profiler may show that procedures directly call their &lsquo;&lsquo;grandchildren&rsquo;&rsquo;.</p>
+<p>
+</p>
+<a name="node_sec_3.6.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.6.1">3.6.1&nbsp;&nbsp;How the profiler works</a></h3>
+<p>The profiler is based on taking samples of the current stack of continuations, the <i>call-stack</i>.
+Therefore it schedules the alarm interrupt at a regular interval specified by the
+<tt>profiler-interrupt-time</tt> command processor setting. Because the thread system uses the
+alarm interrupt as well, the profiler interrupt handler
+calls the handler of the thread system after processing the sample.</p>
+<p>
+The profiler interrupt handler first captures the current continuation and follows the continuation-stack
+down to the continuation of the <tt>profile-thunk</tt> procedure, which called the thunk to be profiled.
+Each continuation with the corresponding code template is stored in a stack of <tt>stackentry</tt> records.</p>
+<p>
+This <tt>*cur-stack*</tt> is compared from bottom to top with the <tt>*last-stack*</tt>,
+the stack captured while the prior sampling interrupt.
+The statistics gathered are stored in <tt>profinfo</tt> records.</p>
+<p>
+For each stack-entry in the <tt>*cur-stack*</tt>, several possibilities exist in
+conjunction to the entry at the same depth in the <tt>*last-stack*</tt>:
+</p>
+<ul>
+<li><p>there is no such entry: the continuation must be the result of a new call
+</p>
+<li><p>both entries are the same continuation: nothing changed, the procedure is still running
+</p>
+<li><p>entries are not the same continuation:
+the following entries up in the stack must have changed. If the templates of the current
+entries are the same, the continuation counts as the still same call to the procedure (but at another
+expression in the procedure). A such situation only counts as a new call if the continuation
+object has changed, but the continuation program-counter, arguments and the template stayed the same.
+</p>
+</ul><p>
+As we ascend in the call-stack, changes in the lower levels indicate that all entries above have to be new calls.
+This way, the profiler gathers information about how often a template is called by another template.</p>
+<p>
+Additionally, every time a procedure is seen, we record this &lsquo;&lsquo;occurrence&rsquo;&rsquo;. If the procedure is a the top of
+the stack, it is currently running. Based on these numbers, the average interrupt time and the number of calls,
+we can estimate the self and child times.</p>
+<p>
+While running, the profiler collects information about heap memory usage as well.
+After comparing the current with the last stack, the profiler knows which procedures finished, which procedures are new
+and which procedure called the new procedures. This information is used to distribute the difference in
+heap memory usage between the prior and the current sample.
+The profiler uses the <tt>memory-status</tt> primitive for retrieving available heap space and the number of
+garbage collector runs (<tt>gc-count</tt>).
+Difference in used memory between two samples is distributed by the following principles:
+</p>
+<ul>
+<li><p>if <tt>gc-count</tt> increased, distribution cannot be done
+</p>
+<li><p>if the same continuation is still at top, credit its template with all used memory between the two samplings
+</p>
+<li><p>if there are stackentry-templates gone or new, distribute the used memory <i>equally</i> between them:
+</p>
+<ul>
+<li><p>gone templates could have used some memory before &lsquo;&lsquo;returning&rsquo;&rsquo;
+</p>
+<li><p>new  templates could have used some memory while running
+</p>
+<li><p>the caller of new templates could have used some memory between the calling of gone and new procedures
+</p>
+</ul><p>
+</p>
+</ul><p></p>
+<p>
+The byte-code optimizer <tt>profiler-instrumentation</tt> adds a call to the &lsquo;&lsquo;profile-count&rsquo;&rsquo; procedure of the
+profiler structure. This procedure is responsible for the exact call-times measurement.</p>
+<p>
+After collection of the data, procedures are numbered and cycles are detected by ascending in the
+call tree. Time is being propagated from top to bottom, remembering self and child times. Most
+of the time, cycles are being considered as one procedure.</p>
+<p>
+</p>
+<a name="node_sec_3.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.7">3.7&nbsp;&nbsp;Settings</a></h2>
+<p></p>
+<p>
+There are a number of settings that control the behavior of the
+command processor; most of them are booleans.
+They can be set using the <tt>,set</tt> and <tt>,unset</tt> commands.</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,set <i>setting</i> [on | off | literal | ?]</tt><br>
+This sets the value of setting <i>setting</i>.
+For a boolean setting, the second argument must be <tt>on</tt> or
+<tt>off</tt>; it then defaults to <tt>on</tt>.
+Otherwise, the value must be a literal, typically a positive number.
+If the second argument is <tt>?</tt> the value of <i>setting</i> is
+is displayed and not changed.
+Doing <tt>,set ?</tt> will display a list of the setting and
+their current values.<p>
+</p>
+</dd><dt></dt><dd><tt>,unset <i>setting</i></tt><br>
+<tt>,unset <i>setting</i></tt> is the same as
+<tt>,set <i>setting</i> off</tt>.
+</dd></dl><p></p>
+<p>
+The settings are as follows:
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>batch</tt> (boolean)<br>
+In &lsquo;batch mode&rsquo; any error or interrupt that comes up will cause
+Scheme&nbsp;48 to exit immediately with a non-zero exit status.  Also,
+the command processor doesn&rsquo;t print prompts.  Batch mode is
+off by default.<p>
+</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>levels</tt> (boolean)<br>
+Enables or disables the automatic pushing of a new command level when
+an error, interrupt, or other breakpoint occurs.
+When enabled (the default), breakpoints push a new command level,
+and &lang;eof&rang; (see above)
+or <tt>,reset</tt> is required to return to top level.  The effects of
+pushed command levels include:
+<ul>
+<li><p>a longer prompt
+</p>
+<li><p>retention of the continuation in effect at the point of error
+</p>
+<li><p>confusion among some newcomers
+</p>
+</ul><p>
+With <tt>levels</tt> disabled one must issue a
+<tt>,push</tt> command immediately
+following an error in order to retain the error continuation for
+debugging purposes; otherwise the continuation is lost as soon as
+the focus object changes.  If you don&rsquo;t know anything about the
+available debugging tools, then <tt>levels</tt> might as well be disabled.</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>break-on-warnings</tt> (boolean)<br>
+Enter a new command level when a warning is produced, just as
+when an error occurs.  Normally warnings only result in a displayed
+message and the program does not stop executing.<p>
+</p>
+</dd><dt></dt><dd><tt>ask-before-loading</tt> (boolean)<br>
+If on, the system will ask before loading modules that are arguments
+to the <tt>,open</tt> command.  <tt>Ask-before-loading</tt> is off by
+default.
+<pre class=verbatim>&gt; ,set ask-before-loading
+will ask before loading modules
+&gt; ,open random
+Load structure random (y/n)? y
+&gt;
+</pre><p></p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>load-noisily</tt> (boolean)<br>
+When on, the system will print out the names of modules and files
+as they are loaded.  <tt>Load-noisily</tt> is off by default.
+<pre class=verbatim>&gt; ,set load-noisily
+will notify when loading modules and files
+&gt; ,open random
+[random /usr/local/lib/scheme48/big/random.scm]
+&gt; 
+</pre><p></p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>inline-values</tt> (boolean)<br>
+This controls whether or not the compiler is allowed to substitute
+variables&rsquo; values in-line.
+When <tt>inline-values</tt> mode is on,
+some Scheme procedures will be substituted in-line; when it is off,
+none will.
+Section&nbsp;<a href="manual-Z-H-3.html#node_sec_2.4">2.4</a>
+has more information.<p>
+</p>
+</dd><dt></dt><dd><tt>inspector-menu-limit</tt> (positive integer)<br>
+This controls how many items the displayed portion of the inspector
+menu contains at most.  (See Section&nbsp;<a href="#node_sec_3.8">3.8</a>.)<p>
+</p>
+</dd><dt></dt><dd><tt>inspector-writing-depth</tt> (positive integer)<br>
+This controls the maximum depth to which the inspector
+prints values.  (See Section&nbsp;<a href="#node_sec_3.8">3.8</a>.)<p>
+</p>
+</dd><dt></dt><dd><tt>inspector-writing-length</tt> (positive integer)<br>
+This controls the maximum length to which the inspector
+prints values.  (See Section&nbsp;<a href="#node_sec_3.8">3.8</a>.)<p>
+</p>
+</dd><dt></dt><dd><tt>condition-writing-depth</tt> (positive integer)<br>
+This controls the maximum depth to which conditions
+are printed.<p>
+</p>
+</dd><dt></dt><dd><tt>condition-writing-length</tt> (positive integer)<br>
+This controls the maximum length to which conditions
+are printed.<p>
+</p>
+</dd><dt></dt><dd><tt>profiler-interrupt-time</tt> (positive integer)<br>
+This controls the time between two profiler sampling interrupts
+(in milliseconds, see section <a href="#node_sec_3.6">3.6</a>).<p>
+</p>
+</dd><dt></dt><dd><tt>profiler-measure-noninstr</tt> (boolean)<br>
+When this flag is enabled, call-times will be measured by the sampling process.
+When it is disabled, call-times will only be measured when the procedure has been
+instrumented (see section <a href="#node_sec_3.6">3.6</a>).<p>
+</p>
+</dd><dt></dt><dd><tt>trace-writing-length</tt> (positive integer)<br>
+This controls the maximum length to which tracing
+prints procedure calls.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.8"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.8">3.8&nbsp;&nbsp;Inspection mode</a></h2>
+<p></p>
+<p>
+There is a data inspector available via the <tt>,inspect</tt> and
+<tt>,debug</tt> commands.
+The inspector is particularly useful with procedures, continuations,
+and records.
+The command processor can be taken out of inspection mode by
+using the <tt>q</tt> command.
+When in inspection mode, input that begins with
+a letter or digit is read as a command, not as an expression.
+To see the value of a variable or number, do <tt>(begin <i>exp</i>)</tt>
+or use the <tt>,run <i>exp</i></tt> command.</p>
+<p>
+In inspection mode the command processor prints out a
+menu of selectable components for the current focus object.
+To inspect a particular component, just type the corresponding number in
+the menu.
+That component becomes the new focus object.
+For example:
+</p>
+<pre class=verbatim>&gt; ,inspect '(a (b c) d)
+(a (b c) d)
+
+[0] a
+[1] (b c)
+[2] d
+: 1
+(b c)
+
+[0] b
+[1] c
+: 
+</pre><p></p>
+<p>
+When a new focus object is selected the previous one is pushed onto a
+stack.
+You can pop the stack, reverting to the previous object, with
+the <tt>u</tt> command, or use the <tt>stack</tt> command to move to
+an earlier object.</p>
+<p>
+</p>
+<p>
+Commands useful when in inspection mode:
+</p>
+<ul>
+<li><p><tt>u</tt> (up) pop object stack
+</p>
+<li><p><tt>m</tt> (more) print more of a long menu
+</p>
+<li><p><tt>(<tt>...</tt>)</tt> evaluate a form and select result
+</p>
+<li><p><tt>q</tt> quit
+</p>
+<li><p><tt>template</tt> select a closure or continuation&rsquo;s template
+(Templates are the static components of procedures; these are found
+inside of procedures and continuations, and contain the quoted
+constants and top-level variables referred to by byte-compiled code.)
+</p>
+<li><p><tt>d</tt> (down) move to the next continuation
+(current object must be a continuation)
+</p>
+<li><p><tt>menu</tt> print the selection menu for the focus object
+</p>
+</ul><p></p>
+<p>
+Multiple selection commands (<tt>u</tt>, <tt>d</tt>, and menu indexes)
+may be put on a single line.</p>
+<p>
+</p>
+<p>
+All ordinary commands are available when in inspection mode.
+Similarly, the inspection commands can be used when not in inspection
+mode.
+For example:
+</p>
+<pre class=verbatim>&gt; (list 'a '(b c) 'd)
+'(a (b c) d)
+&gt; ,1
+'(b c)
+&gt; ,menu
+[0] b
+[1] c
+&gt; 
+</pre><p></p>
+<p>
+If the current command level was initiated because of
+a breakpoint in the next level down, then 
+<tt>,debug</tt> will invoke the inspector on the
+continuation at the point of the error.
+The <tt>u</tt> and <tt>d</tt> (up and down)
+commands then make the inspected-value stack look like a conventional stack
+debugger, with continuations playing the role of stack frames.  <tt>D</tt> goes
+to older or deeper continuations (frames), and <tt>u</tt> goes back up to more
+recent ones.</p>
+<p>
+</p>
+<a name="node_sec_3.9"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.9">3.9&nbsp;&nbsp;Command programs</a></h2>
+<p></p>
+<p>
+The <tt>exec</tt> package contains procedures that are used
+to execute the command processor&rsquo;s commands.
+A command <tt>,<i>foo</i></tt> is executed by applying the value of
+the identifier <i>foo</i> in the <tt>exec</tt> package to
+the (suitably parsed) command arguments.</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,exec [<i>command</i>]</tt><br>
+Evaluate <i>command</i> in the <tt>exec</tt> package.
+For example, use
+<pre class=verbatim>,exec ,load <i>filename</i>
+</pre><p>
+to load a file containing commands.
+If no <i>command</i> is given, the <tt>exec</tt> package becomes the
+execution package for future commands.
+</p>
+</dd></dl><p></p>
+<p>
+The required argument types are as follows:
+</p>
+<ul>
+<li><p>filenames should be strings
+</p>
+<li><p>other names and identifiers should be symbols
+</p>
+<li><p>expressions should be s-expressions
+</p>
+<li><p>commands (as for <tt>,config</tt> and <tt>,exec</tt> itself)
+should be lists of the form
+<tt>(<i>command-name</i> <i>argument</i> <tt>...</tt>)</tt>
+where <i>command-name</i> is a symbol.
+</p>
+</ul><p></p>
+<p>
+For example, the following two commands are equivalent:
+</p>
+<pre class=verbatim>,config ,load my-file.scm
+
+,exec (config '(load &quot;my-file.scm&quot;))
+</pre><p></p>
+<p>
+The file <tt>scheme/vm/load-vm.scm</tt> in the source directory contains an
+example of an <tt>exec</tt> program.</p>
+<p>
+</p>
+<a name="node_sec_3.10"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.10">3.10&nbsp;&nbsp;Building images</a></h2>
+<p></p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,dump <i>filename</i> [<i>identification</i>]</tt><br>
+Writes the current heap out to a file, which can then be run using the
+virtual machine.  The new image file includes the command processor.
+If present, <i>identification</i>
+should be a string (written with double quotes); this string will
+be part of the greeting message as the image starts up.<p>
+</p>
+</dd><dt></dt><dd><tt>,build <i>exp</i> <i>filename</i> [<i>option <tt>...</tt></i>]</tt><br>
+Like <tt>,dump</tt>, except that the image file contains the value of
+<i>exp</i>, which should be a procedure of one argument, instead of
+the command processor.  When
+<i>filename</i> is resumed, that procedure will be invoked on the VM&rsquo;s
+<tt>-a</tt> arguments, which are passed as a list of OS strings (see
+section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.15">5.15</a>.  The
+procedure should return an integer, which is
+returned to the program that invoked the VM.  The command
+processor and debugging system are not included in the image
+(unless you go to some effort to preserve them, such as retaining
+a continuation).<p>
+If <tt>no-warnings</tt> appears as an <i>option</i> after the file
+name, no warnings about undefined external bindings
+(see Section&nbsp;<a href="manual-Z-H-9.html#node_sec_8.2">8.2</a>) will be printed upon
+resuming the image.  This is useful when the definitions of
+external bindings appear in shared objects that are only loaded
+after the resumption of the image.</p>
+<p>
+Doing <tt>,flush</tt> before building an image will reduce the amount
+of debugging information in the image, making for a smaller
+image file, but if an error occurs, the error message may be less
+helpful.  Doing <tt>,flush source maps</tt> before loading any programs
+used in the image will make it still smaller.
+See section&nbsp;<a href="#node_sec_3.11">3.11</a>
+for more information.</p>
+<p>
+</p>
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.11"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.11">3.11&nbsp;&nbsp;Resource query and control</a></h2>
+<p></p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,time <i>exp</i></tt><br>
+Measure execution time.<p>
+</p>
+</dd><dt></dt><dd><tt>,collect</tt><br>
+Invoke the garbage collector.  Ordinarily this happens
+automatically, but the command tells how much space is available
+before and after the collection.<p>
+</p>
+</dd><dt></dt><dd><tt>,keep <i>kind</i></tt>
+</dd><dt></dt><dd><tt>,flush <i>kind</i></tt><br>
+These control the amount of debugging information retained after
+compiling procedures.  This information can consume a fair amount
+of space.  <i>kind</i> is one of the following:
+<ul>
+<li><p><tt>maps</tt> - environment maps (local variable names, for inspector)
+</p>
+<li><p><tt>source</tt> - source code for continuations (displayed by inspector)
+</p>
+<li><p><tt>names</tt> - procedure names (as displayed by <tt>write</tt> and in error
+messages)
+</p>
+<li><p><tt>files</tt>  - source file names
+</p>
+</ul><p>
+These commands refer to future compilations only, not to procedures
+that already exist.  To have any effect, they must be done before
+programs are loaded.  The default is to keep all four types.
+</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,flush</tt><br>
+The flush command with no argument deletes the database of names
+of initial procedures.  Doing <tt>,flush</tt> before a <tt>,build</tt> or
+<tt>,dump</tt>
+will make the resulting image significantly smaller, but will
+compromise the information content of many error
+messages.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.12"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.12">3.12&nbsp;&nbsp;Threads</a></h2>
+<p></p>
+<p>
+Each command level has its own set of threads.  These threads are suspended
+when a new level is entered and resumed when the owning level again becomes
+the current level.
+A thread that raises an error is not resumed unless
+explicitly restarted using the <tt>,proceed</tt> command.
+In addition to any threads spawned by the user, each level has a thread
+that runs the command processor on that level.
+A new command-processor thread is started if the current one
+dies or is terminated.
+When a command level is abandoned for a lower level, or when
+a level is restarted using <tt>,reset</tt>, all of the threads on that
+level are terminated and any <tt>dynamic-wind</tt> &lsquo;&lsquo;after&rsquo;&rsquo; thunks are run.</p>
+<p>
+The following commands are useful when debugging multithreaded programs:
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,resume [<i>number</i>]</tt><br>
+Pops out to a given level and resumes running all threads at that level.
+<i>Number</i> defaults to zero.<p>
+</p>
+</dd><dt></dt><dd><tt>,threads</tt><br>
+Invokes the inspector on a list of the threads running at the
+next lower command level.<p>
+</p>
+</dd><dt></dt><dd><tt>,exit-when-done [<i>exp</i>]</tt><br>
+Waits until all user threads have completed and then
+exits back out to shell (or executive or whatever invoked Scheme&nbsp;48
+in the first place).
+<i>Exp</i> should evaluate to an integer which is then
+returned to the calling program.
+<p>
+</p>
+<p>
+</p>
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_3.13"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_3.13">3.13&nbsp;&nbsp;Quite obscure</a></h2>
+<p></p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,go <i>exp</i></tt><br>
+This is like <tt>,exit <i>exp</i></tt> except that the evaluation of <i>exp</i>
+is tail-recursive with respect to the command processor.  This
+means that the command processor itself can probably be GC&rsquo;ed,
+should a garbage collection occur in the execution of <i>exp</i>.
+If an error occurs Scheme&nbsp;48 will exit with a non-zero value.<p>
+</p>
+</dd><dt></dt><dd><tt>,translate <i>from</i> <i>to</i></tt><br>
+For <tt>load</tt> and the <tt>,load</tt> command
+(but not for <tt>open-{in|out}put-file</tt>), file
+names beginning with the string <i>from</i> will be changed so that the
+initial <i>from</i> is replaced by the string <i>to</i>.  E.g.
+<pre class=verbatim><tt>,translate /usr/gjc/ /zu/gjc/</tt>
+</pre><p>
+will cause <tt>(load &quot;/usr/gjc/foo.scm&quot;)</tt> to have the same effect as
+<tt>(load &quot;/zu/gjc/foo.scm&quot;)</tt>.
+</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,from-file <i>filename</i> <i>form</i> <tt>...</tt> ,end</tt><br>
+This is used by the <tt>cmuscheme48</tt> Emacs library to indicate the file
+from which the <i>form</i>s came.  <i>Filename</i> is then used by the
+command processor to determine the package in which the <i>form</i>s
+are to be evaluated.
+</dd></dl><p></p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=footnoterule><hr></div><p></p>
+<div class=footnote><p><a name="node_footnote_Temp_3"></a><sup><small><a href="#node_call_footnote_Temp_3">1</a></small></sup> part of the GNU Binary Utilities: http://www.gnu.org/software/binutils/</p>
+</div>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-3.html">previous</a></span><span>, <a href="manual-Z-H-5.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

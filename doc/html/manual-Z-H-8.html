@@ -1,0 +1,1006 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-7.html">previous</a></span><span>, <a href="manual-Z-H-9.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_7"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_7">Chapter 7</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_7">Threads</a></h1>
+<p></p>
+<p>
+This chapter describes Scheme&nbsp;48&rsquo;s thread system: Scheme&nbsp;48 threads
+are fully preemptive; all threads (currently) run within a single
+operating system process.  Scheme&nbsp;48 allows writing customized, nested
+schedulers, and provides numerous facilities for the synchronization
+of shared-memory programs, most importantly <i>proposals</i> for
+optimistic concurrency.</p>
+<p>
+</p>
+<a name="node_sec_7.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.1">7.1&nbsp;&nbsp;Creating and controlling threads</a></h2>
+<p>The bindings described in this section are part of the <tt>threads</tt>
+structure.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(spawn<i> thunk</i>)&nbsp;--&gt;&nbsp;<i>thread</i></tt><a name="node_idx_572"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(spawn<i> thunk name</i>)&nbsp;--&gt;&nbsp;<i>thread</i></tt><a name="node_idx_574"></a></p>
+</ul><p>
+<tt>Spawn</tt> creates a new thread, passes that thread to the current
+scheduler, and instructs the scheduler to run <i>thunk</i> in that
+thread.  The <i>name</i> argument (a symbol) associates a symbolic
+name with the thread; it is purely for debugging purposes.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(relinquish-timeslice<i></i>)</tt><a name="node_idx_576"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(sleep<i> time-in-milliseconds</i>)</tt><a name="node_idx_578"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(terminate-current-thread<i></i>)</tt><a name="node_idx_580"></a></p>
+</ul><p>
+<tt>Relinquish-timeslice</tt> instructs the scheduler to run another
+thread, thus relinquishing the timeslice of the current thread.
+<tt>Sleep</tt> does the same and asks the scheduler to suspend the
+current thread for at least <i>time-in-milliseconds</i> milliseconds
+before resuming it.  Finally, <tt>terminate-current-thread</tt>
+terminates the current thread.</p>
+<p>
+Each thread is represented by a thread object.  The following
+procedures operate on that object:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(current-thread<i></i>)&nbsp;--&gt;&nbsp;<i>thread</i></tt><a name="node_idx_582"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(thread?<i> thing</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_584"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(thread-name<i> thread</i>)&nbsp;--&gt;&nbsp;<i>name</i></tt><a name="node_idx_586"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(thread-uid<i> thread</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_588"></a></p>
+</ul><p>
+<tt>Current-thread</tt> returns the thread object associated with the
+currently running thread.  
+<tt>Thread?</tt> is the predicate for thread objects.
+<tt>Thread-name</tt> extracts the name of the thread, if one was
+specified in the call to <tt>spawn</tt>, <tt>#f</tt> otherwise.
+<tt>Thread-uid</tt> returns the <i>uid</i> of the thread, a unique
+integer assigned by the thread system.</p>
+<p>
+</p>
+<a name="node_sec_7.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.2">7.2&nbsp;&nbsp;Advanced thread handling</a></h2>
+<p>The following bindings are part of the <tt>threads-internal</tt> structure:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(terminate-thread!<i> thread</i>)</tt><a name="node_idx_590"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(kill-thread!<i> thread</i>)</tt><a name="node_idx_592"></a></p>
+</ul><p>
+<tt>Terminate-thread!</tt> unwinds the thread
+associated with <i>thread</i>, running any pending <tt>dynamic-wind</tt>
+<i>after</i> thunks (in that thread), after which the thread
+terminates.  <tt>Kill-thread!</tt> causes the thread associated with
+<i>thread</i> to terminate immediately without unwinding its continuation.
+</p>
+<p>
+</p>
+<a name="node_sec_7.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.3">7.3&nbsp;&nbsp;Debugging multithreaded programs</a></h2>
+<p>Debugging multithreaded programs can be difficult.</p>
+<p>
+As described in section&nbsp;<a href="manual-Z-H-4.html#node_sec_3.12">3.12</a>, when any thread signals an
+error, Scheme&nbsp;48 stops running all of the threads at that command level.</p>
+<p>
+The following procedure (exported by the structure
+<tt>debug-messages</tt>) is useful in debugging multi-threaded
+programs.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(debug-message<i> element<sub>0</sub> <tt>...</tt></i>)</tt><a name="node_idx_594"></a></p>
+</ul><p>
+<tt>Debug-message</tt> prints the elements to &lsquo;<tt>stderr</tt>&rsquo;, followed by a
+newline.
+The only types of values that <tt>debug-message</tt> prints in full are small
+integers (fixnums), strings, characters, symbols, booleans, and the empty list.
+Values of other types are abbreviated as follows:
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top >pair       </td><td valign=top ><tt>(...)</tt></td></tr>
+<tr><td valign=top >vector     </td><td valign=top ><tt>#(...)</tt></td></tr>
+<tr><td valign=top >procedure  </td><td valign=top ><tt>#{procedure}</tt></td></tr>
+<tr><td valign=top >record     </td><td valign=top ><tt>#{&lt;name of record type&gt;}</tt></td></tr>
+<tr><td valign=top >all others </td><td valign=top ><tt>???</tt></td></tr>
+<tr><td valign=top ></td></tr></table>
+</td></tr></table></div>
+
+The great thing about <tt>debug-message</tt> is that it bypasses Scheme&nbsp;48&rsquo;s
+I/O and thread handling.
+The message appears immediately, with no delays or errors.<p>
+</p>
+<a name="node_sec_7.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.4">7.4&nbsp;&nbsp;Optimistic concurrency</a></h2>
+<p></p>
+<p>
+Most of the bindings described in this section are part of the <tt>proposals</tt>
+structure---the low-level bindings described at the very end of the
+section are part of the <tt>low-proposals</tt> structure.</p>
+<p>
+A <i>proposal</i> is a record of reads from and and writes to locations in
+memory.  Each thread has an associated <i>current proposal</i>
+(which may be <tt>#f</tt>).
+The <i>logging</i> operations listed below record any values read or
+written in the current proposal.
+A reading operation, such as <tt>provisional-vector-ref</tt>, first checks to
+see if the current proposal contains a value for the relevant location.
+If so, that value is returned as the result of the read.
+If not, the current contents of the location are stored in the proposal and
+then returned as the result of the read.
+A logging write to a location stores the new value as the current contents of
+the location in the current proposal; the contents of the location itself
+remain unchanged.</p>
+<p>
+<i>Committing</i> to a proposal verifies that any reads logged in
+the proposal are still valid and, if so, performs any writes that
+the proposal contains.
+A logged read is valid if, at the time of the commit, the location contains
+the same value it had at the time of the original read (note that this does
+not mean that no change occurred, simply that the value now is the same as
+the value then).
+If a proposal has an invalid read then the effort to commit fails; no change
+is made to the value of any location.
+The verifications and subsequent writes to memory are performed atomically
+with respect to other proposal commit attempts.
+</p>
+<p>
+The <tt>queues</tt> structure (with source in <tt>scheme/big/queue.scm</tt>)
+is a thoroughly commented example of a moderately complex data structure
+made thread-safe using optimistic concurrency.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(call-ensuring-atomicity<i> thunk</i>)&nbsp;--&gt;&nbsp;<i>value <tt>...</tt></i></tt><a name="node_idx_596"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(call-ensuring-atomicity!<i> thunk</i>)</tt><a name="node_idx_598"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(ensure-atomicity <i>exp</i> <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>value <tt>...</tt></i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(ensure-atomicity! <i>exp</i> <tt>...</tt>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)<a name="node_idx_600"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>If there is a proposal in place 
+<tt>call-ensuring-atomicity</tt> and <tt>call-ensuring-atomicity!</tt>
+simply make a (tail-recursive) call to <i>thunk</i>.
+If the current proposal is <tt>#f</tt> they create a new proposal,
+install it, call <i>thunk</i>, and then try to commit to the proposal.
+This process repeats, with a new proposal on each iteration, until
+the commit succeeds.
+<tt>Call-ensuring-atomicity</tt> returns whatever values are returned by <i>thunk</i>
+on its final invocation, while <tt>ensure-atomicity!</tt> discards any such
+values and returns nothing.</p>
+<p>
+<tt>Ensure-atomicity</tt> and <tt>ensure-atomicity!</tt> are macro versions of
+<tt>call-ensuring-atomicity</tt> and <tt>call-ensuring-atomicity!</tt>:
+<tt>(ensure-atomicity <i>exp</i> <tt>...</tt>)</tt> expands into
+<tt>(call-ensuring-atomicity (lambda () <i>exp</i> <tt>...</tt>))</tt>; likewise for
+<tt>ensure-atomicity!</tt> and <tt>call-ensuring-atomicity!</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-car<i> pair</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_602"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-cdr<i> pair</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_604"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-set-car!<i> pair value</i>)</tt><a name="node_idx_606"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-set-cdr!<i> pair value</i>)</tt><a name="node_idx_608"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-cell-ref<i> cell</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_610"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-cell-set!<i> cell value</i>)</tt><a name="node_idx_612"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-vector-ref<i> vector i</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_614"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-vector-set!<i> vector i value</i>)</tt><a name="node_idx_616"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-string-ref<i> vector i</i>)&nbsp;--&gt;&nbsp;<i>char</i></tt><a name="node_idx_618"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-string-set!<i> vector i char</i>)</tt><a name="node_idx_620"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-byte-vector-ref<i> vector i</i>)&nbsp;--&gt;&nbsp;<i>k</i></tt><a name="node_idx_622"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(provisional-byte-vector-set!<i> vector i k</i>)</tt><a name="node_idx_624"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These are all logging versions of their Scheme counterparts.
+Reads are checked when the current proposal is committed and writes are
+delayed until the commit succeeds.
+If the current proposal is <tt>#f</tt> these perform exactly as their Scheme
+counterparts.</p>
+<p>
+The following implementation of a simple counter may not function properly
+when used by multiple threads.
+</p>
+<pre class=verbatim>(define (make-counter)
+  (let ((value 0))
+    (lambda ()
+      (set! value (+ value 1))
+      value)))
+</pre><p></p>
+<p>
+Here is the same procedure using a proposal to ensure that each
+increment operation happens atomically.
+The value of the counter is kept in a
+cell (see section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.6">5.6</a>)
+to allow the use of
+logging operations.
+</p>
+<pre class=verbatim>(define (make-counter)
+  (let ((value (make-cell 0)))
+    (lambda ()
+      (ensure-atomicity
+        (lambda ()
+          (let ((v (+ (provisional-cell-ref value)
+                      1)))
+            (provisional-cell-set! value v)
+            v))))))
+</pre><p></p>
+<p>
+Because <tt>ensure-atomicity</tt> creates a new proposal only if there is
+no existing proposal in place, multiple atomic actions can be merged
+into a single atomic action.
+For example, the following procedure increments an arbitrary number of
+counters at the same time.
+This works even if the same counter appears multiple times;
+<tt>(step-counters! c0 c0)</tt> would add two to the value of counter <tt>c0</tt>.
+</p>
+<pre class=verbatim>(define (step-counters! . counters)
+  (ensure-atomicity
+    (lambda ()
+      (for-each (lambda (counter)
+                  (counter))
+                counters))))
+</pre><p></p>
+<p>
+</p>
+<pre class=verbatim>(define-synchronized-record-type <i>tag</i> <i>type-name</i>
+  (<i>constructor-name</i> <i>field-tag</i> <tt>...</tt>)
+  [(<i><i></i></i>field-tag <tt>...</tt>)]
+  <i>predicate-name</i>
+  (<i>field-tag</i> <i>accessor-name</i> [<i>modifier-name</i>])
+  <tt>...</tt>)
+</pre><p>
+This is the same as <tt>define-record-type</tt>
+except all field reads and
+writes are logged in the current proposal.
+If the optional list of field tags is present then only those fields will
+be logged.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(call-atomically<i> thunk</i>)&nbsp;--&gt;&nbsp;<i>value(s)</i></tt><a name="node_idx_626"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(call-atomically!<i> thunk</i>)</tt><a name="node_idx_628"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(atomically <i>exp</i> <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>value(s)</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(atomically! <i>exp</i> <tt>...</tt>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)<a name="node_idx_630"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Call-atomically</tt> and <tt>call-atomically!</tt> are identical
+to <tt>call-ensuring-atomicity</tt> and <tt>call-ensuring-atomicity!</tt> except that they
+always install a new proposal before calling <tt>thunk</tt>.
+The current proposal is saved and then restored after <tt>thunk</tt> returns.
+<tt>Call-atomically</tt> and <tt>call-atomically!</tt> are useful if <tt>thunk</tt> contains
+code that is not to be combined with any other operation.</p>
+<p>
+<tt>Atomically</tt> and <tt>atomically!</tt> are macro versions of
+<tt>call-atomically</tt> and <tt>call-atomically!</tt>:
+<tt>(atomically <i>exp</i> <tt>...</tt>)</tt> expands into
+<tt>(call-atomically (lambda () <i>exp</i> <tt>...</tt>))</tt>; likewise for
+<tt>atomically!</tt> and <tt>call-atomically!</tt>.</p>
+<p>
+</p>
+<p>
+The following procedures and macro are intended primarily for use in
+implementing new synchronization primitives or complex thread-safe data
+structures.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(with-new-proposal (<i>lose</i>) <i>exp</i> <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>value <tt>...</tt></i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-commit<i></i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_632"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(proposal-active?<i></i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_634"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(remove-current-proposal!<i></i>)</tt><a name="node_idx_636"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(invalidate-current-proposal!<i></i>)</tt><a name="node_idx_638"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>With-new-proposal</tt> saves the current proposal, installs a new one,
+executes the forms in the body, reinstalls the formerly current proposal,
+and returns whatever the last body form returned.
+It also binds <i>lose</i> to a thunk repeating the procedure of installing
+a new procedure and running the body.
+Typically, the body will call <tt>maybe-commit</tt> and, if that fails,
+tail-call <i>lose</i> to try again.
+If <i>lose</i> is called from a non-tail position of the body, the results
+are unspecified (and probably harmful).</p>
+<p>
+<tt>Maybe-commit</tt> verifies that any reads logged in the current proposal are
+still valid and, if so, performs any writes that it contains.
+A logged read is valid if, at the time of the commit, the location read contains
+the same value it had at the time of the original read (note that this does
+not mean that no change occurred, simply that the value now is the same as
+the value then).
+<tt>Maybe-commit</tt> returns <tt>#t</tt> if the commit succeeds and <tt>#f</tt>
+if it fails.</p>
+<p>
+<tt>Proposal-active?</tt> returns <tt>#t</tt> if a proposal is active, and
+<tt>#f</tt> otherwise.
+<tt>Remove-current-proposal!</tt> removes and discards the current proposal;
+this can be used to clean up before raising an error.
+<tt>Invalidate-current-proposal!</tt> ensures that any attempt to commit the
+current proposal will fail; this can be used if an operation on a
+thread-safe data structure detects that it has seen the data structure in an
+inconsistent state.</p>
+<p>
+The following procedures give access to the low-level proposal
+mechanism.  They are defined in the <tt>low-proposals</tt> structure.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-proposal<i></i>)&nbsp;--&gt;&nbsp;<i>proposal</i></tt><a name="node_idx_640"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(current-proposal<i></i>)&nbsp;--&gt;&nbsp;<i>proposal</i></tt><a name="node_idx_642"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-current-proposal!<i> proposal</i>)</tt><a name="node_idx_644"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent></p>
+<p>
+<tt>Make-proposal</tt> creates a new proposal.
+<tt>Current-proposal</tt> and <tt>set-current-proposal</tt> access and set
+the current thread&rsquo;s proposal.
+It is an error to pass to <tt>set-current-proposal!</tt> a proposal that
+is already in use.</p>
+<p>
+</p>
+<a name="node_sec_7.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.5">7.5&nbsp;&nbsp;Condition variables</a></h2>
+<p>
+</p>
+<p>
+<i>Condition variables</i> (defined in the <tt>condvars</tt>
+structure) allow threads perform condition synchronization: It allows
+threads to block, waiting for a specified condition---associated with a
+condition variable---to occur, and other threads to wake up the waiting
+threads when the condition is fulfilled.</p>
+<p>
+Note that, in Scheme&nbsp;48, condition variables work in conjunction with
+proposals, not with mutex locks or semaphores, as in most other
+implementations of this concept.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-condvar<i></i>)&nbsp;--&gt;&nbsp;<i>condvar</i></tt><a name="node_idx_646"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-condvar<i> id</i>)&nbsp;--&gt;&nbsp;<i>condvar</i></tt><a name="node_idx_648"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(condvar?<i> thing</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_650"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-condvar-has-value?!<i> condvar boolean</i>)</tt><a name="node_idx_652"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(condvar-has-value?<i> condvar</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_654"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-condvar-value!<i> condvar value</i>)</tt><a name="node_idx_656"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(condvar-value<i> condvar</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_658"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-commit-and-wait-for-condvar<i> condvar</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_660"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-commit-and-set-condvar!<i> condvar value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_662"></a></p>
+</ul><p>
+<tt>Make-condvar</tt> creates a condition variable.  (The optional
+<i>id</i> argument is only for debugging purposes; the discloser for
+condition variables prints it out if present.)  <tt>Condvar?</tt> is the
+predicate for condition variables.</p>
+<p>
+Each condition variable has an associated value and a flag
+<tt>has-value?</tt> signalling if the condition has already occured.
+The accessor for flag is <tt>condvar-has-value?</tt>;
+<tt>set-condvar-has-value?!</tt> sets it.  Both are provisional
+operations and go through the current proposal.
+<tt>Set-condvar-value!</tt> sets the value of the condition variable
+(provisionally), and <tt>condvar-value</tt> extracts it.</p>
+<p>
+<tt>Maybe-commit-and-wait-for-condvar</tt> attempts to commit the
+current proposal.  If the commit succeeds, it suspends the current
+thread and registers it with the <i>condvar</i> condition variable.
+Upon waking up again <tt>maybe-commit-and-wait-for-condvar</tt> returns
+<tt>#t</tt>, If the commit fails, <tt>maybe-commit-and-set-condvar</tt>
+returns <tt>#f</tt>.</p>
+<p>
+<tt>Maybe-commit-and-set-condvar!</tt> sets the value of the
+<i>condvar</i> condition variable to <i>value</i>, (provisionally)
+sets the <tt>has-value?</tt> flag to <tt>#t</tt>, and then attempt to
+commit the current proposal.  Upon success, it wakes up all suspended
+threads registered with <i>condvar</i> and returns <tt>#t</tt>,
+otherwise, it returns <tt>#f</tt>.</p>
+<p>
+</p>
+<a name="node_sec_7.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.6">7.6&nbsp;&nbsp;Mutual exclusion</a></h2>
+<p>Scheme&nbsp;48 also has more traditional mutual-exclusion synchronization
+abstractions, specifically mutex locks and placeholders.  Note that
+typically synchronization via optimistic concurrency is usually
+preferable: Mutual exclusion often puts the running program into an
+inconsistent state for the time of the inclusion, which has adverse
+effects on modularity and interruptibility.</p>
+<p>
+</p>
+<a name="node_sec_7.6.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.6.1">7.6.1&nbsp;&nbsp;Locks</a></h3>
+<p>The <tt>locks</tt> structure contains bindings that implement standard
+mutex locks:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-lock<i></i>)&nbsp;--&gt;&nbsp;<i>lock</i></tt><a name="node_idx_664"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(lock?<i> thing</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_666"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(obtain-lock<i> lock</i>)</tt><a name="node_idx_668"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-obtain-lock<i> lock</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_670"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(release-lock<i> lock</i>)</tt><a name="node_idx_672"></a></p>
+</ul><p>
+<tt>Make-lock</tt> creates a lock in the &lsquo;&lsquo;released&rsquo;&rsquo; state.
+<tt>Lock?</tt> is the predicate for locks.</p>
+<p>
+<tt>Obtain-lock</tt> atomically checks if <i>lock</i> is in the
+&lsquo;&lsquo;released&rsquo;&rsquo; state.  If it is, the lock is put into the &lsquo;&lsquo;obtained&rsquo;&rsquo;
+state, and <tt>obtain-lock</tt> returns immediately.  If the lock is in
+the &lsquo;&lsquo;obtained&rsquo;&rsquo; state, the current thread is suspended and registered
+with the lock.
+<tt>Maybe-obtain-lock</tt>, like <tt>obtain-lock</tt>, checks the state of
+<i>lock</i>: if it is &lsquo;&lsquo;released,&rsquo;&rsquo; the lock is put into the
+&lsquo;&lsquo;obtained&rsquo;&rsquo; state, if it is &lsquo;&lsquo;obtained,&rsquo;&rsquo; <tt>maybe-obtain-lock</tt>
+returns immediately.  <tt>Maybe-obtain-lock</tt> returns <tt>#t</tt> if
+it was able to obtain the lock, and <tt>#f</tt> otherwise.</p>
+<p>
+<tt>Release-lock</tt> does nothing if <i>lock</i> is in the &lsquo;&lsquo;released&rsquo;&rsquo;
+state.  If it is in the &lsquo;&lsquo;obtained&rsquo;&rsquo; state, <tt>release-lock</tt>
+causes one of the threads suspended on an <tt>obtain-lock</tt> lock
+operation to continue execution.  If that thread is the last thread
+registered with the lock, the lock is transferred to the &lsquo;&lsquo;released&rsquo;&rsquo;
+state.  In any case, <tt>release-lock</tt> returns immediately.</p>
+<p>
+</p>
+<a name="node_sec_7.6.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.6.2">7.6.2&nbsp;&nbsp;Placeholders</a></h3>
+<p></p>
+<p>
+The <tt>placeholders</tt> structure contains bindings for
+<i>placeholders</i>---thread-safe, write-once variables, akin to
+ID-90 I-structures or CML I-variables.</p>
+<p>
+The typical scenario for placeholders is that, say, a thread&nbsp;A
+computes a value needed by another thread&nbsp;B at some unspecified time.
+Both threads share access to a placeholder; when A has computed the
+value, it places it into the placeholder.  When B needs the value, it
+extracts it from placeholder, blocking if necessary.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-placeholder<i></i>)&nbsp;--&gt;&nbsp;<i>placeholder</i></tt><a name="node_idx_674"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-placeholder<i> id</i>)&nbsp;--&gt;&nbsp;<i>placeholder</i></tt><a name="node_idx_676"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder?<i> thing</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_678"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder-set!<i> placeholder value</i>)</tt><a name="node_idx_680"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder-value<i> placeholder</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_682"></a></p>
+</ul><p>
+<tt>Make-placeholder</tt> creates an empty placeholder.  (The optional
+<i>id</i> argument is only for debugging purposes; the discloser for
+placeholders prints it out if present.)  <tt>Placeholder?</tt> is the
+predicate for placeholders.</p>
+<p>
+<tt>Placeholder-set!</tt> places a value into a placeholder.  Doing this
+more than once signals an error.  <tt>Placeholder-value</tt> extracts
+the value from the placeholder and returns it.  If the placeholder is
+empty, it blocks the current thread until it becomes full.</p>
+<p>
+</p>
+<a name="node_sec_7.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.7">7.7&nbsp;&nbsp;Writing custom synchronization abstractions</a></h2>
+<p>The bindings explained in this section are part of the
+<tt>threads-internal</tt> structure.  They are concerned with suspending
+threads and making them runnable again upon some later event.</p>
+<p>
+Typically, a suspended thread needs to be recorded in a queue
+somewhere for later waking-up.  To allow a thread to be recorded in
+multiple queues (say, when it waits for one of a number of events),
+such <i>thread queues</i> are ordinary queues containing cells that,
+in turn, contain the thread objects themselves.  Each thread has at
+most one such cell associated with it which is shared among all queues
+(or other data structures) holding on to the suspended thread.  The
+cell is cleared when the thread is woken up.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(thread-queue-empty?<i> thread-queue</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_684"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-dequeue-thread!<i> thread-queue</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_686"></a></p>
+</ul><p>
+<tt>Thread-queue-empty?</tt> atomically checks whether the
+<i>thread-queue</i> thread queue is empty, i.e., if it does not
+contain non-empty cells.  <tt>Maybe-dequeue-thread!</tt> provisionally
+dequeues a thread from <i>thread-queue</i> if it contains one.  It
+returns the dequeued thread or <tt>#f</tt> if the queue is empty.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-commit-and-block<i> cell</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_688"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-commit-and-block-on-queue<i> thread-queue</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_690"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-commit-and-make-ready<i> thread-or-queue</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_692"></a></p>
+</ul><p>
+<tt>Maybe-commit-and-block</tt> attempts to commit the current proposal.
+If this succeeds, the current thread is blocked, the thread&rsquo;s cell is
+set to <i>cell</i>, and <tt>#t</tt> is returned.  Otherwise, <tt>#f</tt>
+is returned.  <tt>Maybe-commit-and-block-on-queue</tt> is like
+<tt>maybe-commit-and-block</tt>, excepts that it creates a fresh cell
+for the thread and enqueues it in <i>thread-queue</i> if the commit
+succeeds.</p>
+<p>
+<tt>Maybe-commit-and-make-ready</tt> accepts either a thread object or a
+thread queue as an argument.  In either case,
+<tt>maybe-commit-and-make-ready</tt> tries to commit the current
+proposal.  If that succeeds, <tt>maybe-commit-and-make-ready</tt>
+makes its argument runnable: if <i>thread-or-queue</i> is a thread,
+that thread is made runnable, if it is a thread queue, all threads on
+the queue are made runnable.  (In the latter case, none of the threads
+actually runs until all have been made runnable.)
+<tt>Maybe-commit-and-make-ready</tt> returns <tt>#t</tt> if it succeeded,
+and <tt>#f</tt> otherwise.</p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_7.8"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8">7.8&nbsp;&nbsp;Concurrent ML abstractions</a></h2>
+<p>The interface to the Concurrent ML abstractions in Scheme&nbsp;48 is
+mostly analogous to the original implementation shipped with
+SML/NJ&nbsp;[<a href="manual-Z-H-11.html#node_bib_9">9</a>].  Note that both the interface and
+implementation are new and may change in future releases.</p>
+<p>
+The main terminological difference is that CML events are called
+<i>rendezvous</i> in Scheme&nbsp;48.  For more information on programming
+with the CML abstractions, Reppy&rsquo;s book&nbsp;[<a href="manual-Z-H-11.html#node_bib_9">9</a>] is
+recommended.</p>
+<p>
+</p>
+<a name="node_sec_7.8.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.1">7.8.1&nbsp;&nbsp;Basic rendezvous combinators</a></h3>
+<p>The basic rendezvous combinators live in the <tt>rendezvous</tt>
+structure.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>never-rv</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(rendezvous)<a name="node_idx_694"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(always-rv<i> value</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_696"></a></p>
+</ul><p>
+<tt>Never-rv</tt> is a rendezvous that is never enabled for
+synchronization.  (It is the same as the <tt>never</tt> event in CML.)
+<tt>Always-rv</tt> returns a rendezvous that is always enabled for
+synchronization, and always yields the same value <i>value</i>.  (This
+is the same as the <tt>alwaysEvt</tt> function in CML.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(choose<i> rendezvous <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_698"></a></p>
+</ul><p>
+<tt>Choose</tt> creates a rendezvous representing the choice of its
+arguments:  Synchronization on the resulting rendezvous will
+synchronize on one of the arguments to <tt>choose</tt>, depending on
+which becomes enabled first.  (This is the same as the <tt>choose</tt>
+function in CML.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(wrap<i> rendezvous proc</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_700"></a></p>
+</ul><p>
+<tt>Wrap</tt> wraps a post-synchronization procedure around <i>rendezvous</i>:
+When the resulting rendezvous is synchronized, <i>rendezvous</i> is
+synchronized, and the value it yields is passed to <i>proc</i>; the
+value returned by <i>proc</i> then is the result of the
+synchronization.  (This is the same as the CML <tt>wrap</tt> function.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(guard<i> thunk</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_702"></a></p>
+</ul><p>
+<tt>Guard</tt> delays the creation of a rendezvous until synchronization
+time: It returns a rendezvous that will, upon synchronization, turn
+into the rendezvous returned by <i>thunk</i>.  <tt>Guard</tt> can be
+used to perform pre-synchronization actions such as resource
+allocation.  (This is the same as the CML <tt>guard</tt> function.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(with-nack<i> proc</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_704"></a></p>
+</ul><p>
+<tt>With-nack</tt>, like <tt>guard</tt>, creates a delayed rendezvous: Upon
+synchronization, the rendezvous actually used is the one returned by
+<i>proc</i>.  In addition to the functionality offered by
+<tt>guard</tt>, <i>proc</i> receives, as an argument, another rendezvous
+which becomes enabled when <em>another</em> rendezvous involved in the
+synchronization (via <tt>choose</tt>) is picked instead of the one
+produced by <i>proc</i>.  (This is the same as the CML <tt>withNack</tt>
+function.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(sync<i> rendezvous</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_706"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(select<i> rendezvous <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_708"></a></p>
+</ul><p>
+<tt>Sync</tt> synchronizes the current thread on rendezvous
+<i>rendezvous</i>, returning the value it yields.  <tt>Select</tt>
+synchronizes on the choice of its argument; <tt>(select <em>r</em><sub>1</sub> <tt>...</tt><em>r</em><sub><em>n</em></sub>)</tt> is semantically equivalent to <tt>(sync (choose select <em>r</em><sub>1</sub> <tt>...</tt><em>r</em><sub><em>n</em></sub>))</tt>, but may be implemented more efficiently.  (These are the
+same as the CML functions <tt>sync</tt> and <tt>select</tt>.)</p>
+<p>
+</p>
+<a name="node_sec_7.8.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.2">7.8.2&nbsp;&nbsp;Synchronous channels</a></h3>
+<p>The <tt>rendezvous-channels</tt> structure contains abstractions for
+bidirectional, synchronous channels for communicating between two
+threads.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-channel<i></i>)&nbsp;--&gt;&nbsp;<i>channel</i></tt><a name="node_idx_710"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(channel?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_712"></a></p>
+</ul><p>
+<tt>Make-channel</tt> creates a new synchronous channel.  (This is the
+same as the CML <tt>channel</tt> function.)  <tt>Channel?</tt> is the
+predicate for synchronous channels.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(send-rv<i> channel value</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_714"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(send<i> channel value</i>)</tt><a name="node_idx_716"></a></p>
+</ul><p>
+<tt>Send-rv</tt> creates a rendezvous that, upon synchronization, sends
+message <i>value</i> on the synchronous channel <i>channel</i>.  The
+synchronization suceeds only when another thread attempts to receive a
+message from <i>channel</i>.  (This is the same as the CML
+<tt>sendEvt</tt> function.)  <tt>Send</tt> directly sends a message
+<i>value</i> on channel <i>channel</i>; <tt>(send <em>c</em> <em>v</em>)</tt> is
+equivalent to <tt>(sync (send-rv <em>c</em> <em>v</em>))</tt>.  (<tt>Send</tt> is the
+same as the CML <tt>send</tt> function.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(receive-rv<i> channel</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_718"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(receive<i> channel</i>)</tt><a name="node_idx_720"></a></p>
+</ul><p>
+<tt>Receive-rv</tt> creates a rendezvous which, upon synchronization,
+receives a message on channel <i>channel</i>.  (This is the same as
+the CML <tt>recEvt</tt> function.)  <tt>Receive</tt> directly
+receives a message on channel <i>channel</i>; <tt>(receive <em>c</em> <em>v</em>)</tt> is
+equivalent to <tt>(sync (receive-rv <em>c</em> <em>v</em>))</tt>.  (<tt>Receive</tt> is
+the same as the CML <tt>recv</tt> function.)</p>
+<p>
+</p>
+<a name="node_sec_7.8.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.3">7.8.3&nbsp;&nbsp;Synchronous variables</a></h3>
+<p>Two structures contain abstractions for synchronous variables: the
+<tt>rendezvous-placeholders</tt> structure for so-called
+<i>placeholders</i> (write-once variables), and the
+<tt>rendezvous-jars</tt> structure for <i>jars</i> (which allow
+multiple updates.)</p>
+<p>
+</p>
+<a name="node_sec_7.8.3.1"></a>
+<h4 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.3.1">7.8.3.1&nbsp;&nbsp;Placeholders</a></h4>
+<p>Placeholders are write-once variables.  The placeholders implemented
+by the <tt>rendezvous-placeholders</tt> structure offer equivalent
+functionality to the placeholders implemented by the
+<tt>placeholders</tt> structure (see Section&nbsp;<a href="#node_sec_7.6.2">7.6.2</a>), but
+additionally allow converting a placeholder into a rendezvous.  Note,
+however, that placeholders from <tt>placeholders</tt> are different from
+and not interchangeable with placeholders from
+<tt>rendezvous-placeholders</tt>.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-placeholder<i></i>)&nbsp;--&gt;&nbsp;<i>placeholder</i></tt><a name="node_idx_722"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-placeholder<i> id</i>)&nbsp;--&gt;&nbsp;<i>placeholder</i></tt><a name="node_idx_724"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_726"></a></p>
+</ul><p>
+<tt>Make-placeholder</tt> creates an empty placeholder.  (The optional
+<i>id</i> argument is only for debugging purposes; the discloser for
+placeholders prints it out if present.)  (This is the same as the CML
+<tt>iVar</tt> function.)  <tt>Placeholder?</tt> is the predicate for
+placeholders.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder-set!<i> placeholder value</i>)</tt><a name="node_idx_728"></a></p>
+</ul><p>
+<tt>Placeholder-set!</tt> places a value into a placeholder.  Doing this
+more than once signals an error.  (This is the same as the CML
+<tt>iPut</tt> function.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder-value-rv<i> placeholder</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_730"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(placeholder-value<i> placeholder</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_732"></a></p>
+</ul><p>
+<tt>Placeholder-value</tt> extracts the value from the placeholder and
+returns it.  If the placeholder is empty, it blocks the current thread
+until it becomes full.  (This is the same as the CML <tt>iGet</tt>
+function.)  <tt>Placeholder-value-rv</tt> creates a rendezvous that
+will, upon synchronization, extract the value from the placeholder
+and yield it as a result.  (This is the same as the CML <tt>iGetEvt</tt>
+function.)</p>
+<p>
+</p>
+<a name="node_sec_7.8.3.2"></a>
+<h4 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.3.2">7.8.3.2&nbsp;&nbsp;Jars</a></h4>
+<p>A jar is a synchronous variable which can have two states: full and
+empty.  It becomes full when a value it put into it; putting a value
+into a full jar is an error.  Conversely, it becomes empty when a
+value is taken out of it.  Trying to take a value out of an empty jar
+blocks until it becomes full.  (Jars are similar to ID-90
+M-structures.)  Jars live in the <tt>rendezvous-jars</tt> structure.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-jar<i></i>)&nbsp;--&gt;&nbsp;<i>jar</i></tt><a name="node_idx_734"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-jar<i> id</i>)&nbsp;--&gt;&nbsp;<i>jar</i></tt><a name="node_idx_736"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(jar?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_738"></a></p>
+</ul><p>
+<tt>Make-jar</tt> creates an empty jar.  (The optional <i>id</i>
+argument is only for debugging purposes; the discloser for jars prints
+it out if present.)  (This is the same as the CML <tt>mVar</tt>
+function.)  <tt>Jar?</tt> is the predicate for jars.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(jar-put!<i> jar value</i>)</tt><a name="node_idx_740"></a></p>
+</ul><p>
+<tt>Jar-put!</tt> places a value into a jar if it is empty.  Applying
+<tt>jar-put!</tt> to a full jar is an error.  (This is the same as the
+CML <tt>mPut</tt> function.)
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(jar-take-rv<i> placeholder</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_742"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(jar-take<i> placeholder</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_744"></a></p>
+</ul><p>
+<tt>Jar-take</tt> takes a value from a full jar, emptying it in the
+process.  If the jar is empty, <tt>jar-take</tt> blocks until it becomes
+full.  (This is the same as the CML <tt>mTake</tt> function.)
+<tt>Jar-take-rv</tt> creates a rendezvous that, upon synchronization,
+will extract the value from a jar and empty it in the process.  (This
+is the same as the CML <tt>mTakeEvt</tt> function.)</p>
+<p>
+</p>
+<a name="node_sec_7.8.4"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.4">7.8.4&nbsp;&nbsp;Timeouts</a></h3>
+<p>The <tt>rendezvous-time</tt> structure allows creating rendezvous for
+alarms and timeouts:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(after-time-rv<i> milliseconds</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_746"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(at-real-time-rv<i> time</i>)&nbsp;--&gt;&nbsp;<i>rendezvous</i></tt><a name="node_idx_748"></a></p>
+</ul><p>
+<tt>After-time-rv</tt> creates a rendezvous that becomes enabled at time
+interval <i>milliseconds</i> after synchronization.  (Actually,
+<i>milliseconds</i> is a minimum waiting time; the actual delay may be
+longer.)  (This is the same as the CML <tt>timeOutEvt</tt> function.)
+<tt>At-real-time-rv</tt> creates a rendezvous that becomes enabled at an
+absolute time specified by <i>time</i>; this absolute time is
+specified in the same way as the return value <tt>real-time</tt> from
+the <tt>time</tt> structure.  (This is the same as the CML
+<tt>atTimeEvt</tt> function.)</p>
+<p>
+</p>
+<a name="node_sec_7.8.5"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_7.8.5">7.8.5&nbsp;&nbsp;CML to Scheme correspondence</a></h3>
+<p>The following table lists the Scheme names that correspond to
+particular CML names.</p>
+<p>
+</p>
+<table border=0><tr><td valign=top >CML name </td><td valign=top >Scheme name</td></tr>
+<tr><td valign=top  colspan=2><tt>rendezvous</tt></td></tr>
+<tr><td valign=top ><tt>never</tt> </td><td valign=top ><tt>never-rv</tt></td></tr>
+<tr><td valign=top ><tt>alwaysEvt</tt> </td><td valign=top ><tt>always-rv</tt></td></tr>
+<tr><td valign=top ><tt>choose</tt> </td><td valign=top ><tt>choose</tt></td></tr>
+<tr><td valign=top ><tt>wrap</tt> </td><td valign=top ><tt>wrap</tt></td></tr>
+<tr><td valign=top ><tt>guard</tt> </td><td valign=top ><tt>guard</tt></td></tr>
+<tr><td valign=top ><tt>withNack</tt> </td><td valign=top ><tt>with-nack</tt></td></tr>
+<tr><td valign=top ><tt>sync</tt> </td><td valign=top ><tt>sync</tt></td></tr>
+<tr><td valign=top ><tt>select</tt> </td><td valign=top ><tt>select</tt></td></tr>
+<tr><td valign=top  colspan=2><tt>rendezvous-channels</tt></td></tr>
+<tr><td valign=top ><tt>channel</tt> </td><td valign=top ><tt>make-channel</tt></td></tr>
+<tr><td valign=top ><tt>sendEvt</tt> </td><td valign=top ><tt>send-rv</tt></td></tr>
+<tr><td valign=top ><tt>send</tt> </td><td valign=top ><tt>send</tt></td></tr>
+<tr><td valign=top ><tt>recEvt</tt> </td><td valign=top ><tt>receive-rv</tt></td></tr>
+<tr><td valign=top ><tt>rec</tt> </td><td valign=top ><tt>receive</tt></td></tr>
+<tr><td valign=top  colspan=2><tt>rendezvous-placeholders</tt></td></tr>
+<tr><td valign=top ><tt>iVar</tt> </td><td valign=top ><tt>make-placeholder</tt></td></tr>
+<tr><td valign=top ><tt>iPut</tt> </td><td valign=top ><tt>placeholder-set!</tt></td></tr>
+<tr><td valign=top ><tt>iGet</tt> </td><td valign=top ><tt>placeholder-value</tt></td></tr>
+<tr><td valign=top ><tt>iGetEvt</tt> </td><td valign=top ><tt>placeholder-value-rv</tt></td></tr>
+<tr><td valign=top  colspan=2><tt>rendezvous-jars</tt></td></tr>
+<tr><td valign=top ><tt>mVar</tt> </td><td valign=top ><tt>make-jar</tt></td></tr>
+<tr><td valign=top ><tt>mTake</tt> </td><td valign=top ><tt>jar-take</tt></td></tr>
+<tr><td valign=top ><tt>mTakeEvt</tt> </td><td valign=top ><tt>jar-take-rv</tt></td></tr>
+<tr><td valign=top ><tt>mPut</tt> </td><td valign=top ><tt>jar-put!</tt></td></tr>
+<tr><td valign=top  colspan=2><tt>rendezvous-time</tt></td></tr>
+<tr><td valign=top ><tt>timeOutEvt</tt> </td><td valign=top ><tt>after-time-rv</tt></td></tr>
+<tr><td valign=top ><tt>atTimeEvt</tt> </td><td valign=top ><tt>at-real-time-rv</tt>
+</td></tr></table><p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-7.html">previous</a></span><span>, <a href="manual-Z-H-9.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidetitle>
+<div align=right class=navigation>[Go to <span class=disable>first, previous</span><span><span class=disable>, </span><a href="manual-Z-H-1.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+
+
+
+
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+
+</p>
+<p>
+
+
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+
+
+
+
+
+
+
+
+
+
+
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+
+
+
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+
+
+
+</p>
+<p>
+</p>
+<p>
+
+
+</p>
+<p>
+
+</p>
+<h1 class=title>The Incomplete Scheme 48 Reference Manual for release 1.9.2</h1>
+
+<strong><hr>
+<p></strong>
+</p>
+<div align=right>&nbsp;</div>
+
+<div class=bigskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+</p>
+<div class=bigskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+</p>
+<div class=bigskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+</p>
+<div class=bigskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<strong>Richard Kelsey Jonathan Rees Mike Sperber
+Marcus Crestani Robert Ransom Roderic Morris Marcel Turino Martin Gasbichler</strong>
+<strong></p>
+<hr>
+<p></strong></p>
+<p>
+</p>
+
+A line may take us hours, yet if it does not seem a moment&rsquo;s thought <br>
+All our stitching and unstitching has been as nought.
+
+<table border=0><tr><td valign=top >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td><td valign=top >Yeats </td></tr>
+<tr><td valign=top ></td><td valign=top ><em>Adam&rsquo;s Curse</em>
+</td></tr></table>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span class=disable>first, previous</span><span><span class=disable>, </span><a href="manual-Z-H-1.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+<div align=right class=colophon>Last modified: Saturday, April 12th, 2014 5:04:41pm MET-1MST-2,M3.5.0,M10.5.0<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/index.html">T<span style="position: relative; top: 0.5ex; margin-left: -0.1667em; margin-right: -0.125em; text-transform: uppercase">e</span>X2page 20130325</a></div></div>
+</div>
+</body>
+</html>

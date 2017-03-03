@@ -1,0 +1,155 @@
+-*- Mode: Indented-text; -*-
+
+Here are some remarks to complement what's in the INSTALL file.
+
+-----
+
+Building packages
+
+The Makefile uses the DESTDIR variable to indicate where the installed
+files actually go.  So, for example
+
+make DESTDIR=/usr/local/build/scheme48
+
+allows populating /usr/local/build/scheme48 with an installation of
+Scheme 48, regardless of where it goes when actually installed.  Note
+that, if DESTDIR is not the same as the --prefix option specified with
+the 'configure' script, the Scheme 48 installation in $(DESTDIR) will
+not actually run from there---it needs to be moved to the prefix
+directory to work correctly, as several paths are compiled into the
+scheme48 script as well as scheme48.image.
+
+-----
+
+Customizing scheme48.image
+
+By default, the image consists of a core Scheme system (Revised^5
+Scheme plus a very minimal read-eval-print loop) together with a
+standard set of "options" (command processor, debugging commands,
+inspector, disassembler, generic arithmetic).  The set of options is
+controlled by the definitions of USUAL-COMMANDS and USUAL-FEATURES in
+more-packages.scm.  If you make the (open ...) clause empty, then
+"make scheme48.image" will create a Scheme system without any extras
+(such as error recovery), and the image will be smaller.  The files
+are listed in approximate order of decreasing desirability; you'll
+probably want at least these:
+
+    package-commands, build
+       - necessary for the scheme48.image script to work
+    debuginfo, disclosers
+       - necessary if you want error messages to be at all helpful
+    debugging
+       - defines important debugging commands such as ,preview and ,trace
+
+After editing the definition of usual-features, simply
+
+        make scheme48.image
+
+to rebuild the image.
+
+-----
+
+Deeper changes to the system -- for example, edits to most of the
+files in the rts/ directory -- will require using the static linker to
+make a new initial.image.  Say
+
+        make image
+
+to get the linker to build a new initial.image and initial.debug.
+scheme48.image will then be built from those.  You need a working
+installation of Scheme 48 in your path for this to work.  This
+installation should be Scheme 48 1.5 or later.  If your installed
+Scheme 48 is version 1.4 or earlier, you can still build, but need to
+make a small change to the Makefile.  Instructions are in the
+Makefile---look for "LINKER_WRITEBYTE".
+
+You might think that "make scheme48.image" ought to do this, but the
+circular dependency between scheme48.image and initial.image needs to
+be broken somewhere, or else make will (justifiably) barf.  I chose to
+break the cycle by making scheme48.image not depend on initial.image,
+since this is most robust for installation purposes.
+
+-----
+
+Changes to the VM require compiling the Scheme code to C code using
+the PreScheme compiler.  Use
+
+        make i-know-what-i-am-doing
+
+to rebuild the C sources from the Scheme sources.  (And you should
+know what you're doing when attempting this.)  This requires a working
+installation of Scheme 48 in the path.
+
+-----
+
+Other generated files:
+
+filenames.make is "include"d by the Makefile, but is automatically
+generated from the module dependencies laid out in the various
+configuration files (*-packages.scm).  If you edit any of these .scm
+files, you may want to do a "make filenames.make" before you do any
+further "make"s in order to update the depedencies.  This step isn't
+necessary if you're using GNU make, because GNU make will make
+included files automatically.
+
+Various tables for handling Unicode are also automatically generated
+by the default make target.  However, the generated files ship with
+the system, so you shouldn't need to do this unless you change the
+input files or the code generating them.
+
+
+-----
+
+Editor support
+
+We recommend interacting with the Scheme 48 command processor using
+the emacs/scheme interface written by Olin Shivers at CMU.  Copies of
+the relevant .el files, together with a "cmuscheme48.el", are in the
+emacs/ subdirectory of the release.  If you're an XEmacs user, note
+that cmuscheme48.el is part of the scheme XEmacs package, and is thus
+probably installed already.
+
+You will probably want to byte-compile the .el files to get .elc
+files.  Use M-x byte-compile-file to do this.
+
+-----
+
+Performance
+
+If you don't have a C compiler that optimizes as well as gcc does,
+then performance may suffer.  Take a look at the automatically
+generated code in scheme48vm.c to find out why.  With a good register
+allocator, all those variables (including some of the virtual
+machine's virtual registers) get allocated to hardware registers, and
+it really flies.  Without one, performance can be pretty bad.
+
+The configure script automatically sets the Makefile variable CFLAGS
+to -O2 -g if gcc is available, or to -O if it isn't.  This can be
+overriden by specifying a different CFLAGS, e.g. "make CFLAGS=-g" for
+no optimization.
+
+Even if you do have a good compiler, you should be able to improve
+overall performance even more, maybe about 6-10%, by removing the
+range check from the interpreter's instruction dispatch.  To do this,
+use the -S flag to get assembly code for scheme48vm.c, then find the
+instructions in scheme48vm.s corresponding to the big dispatch in
+restart():
+
+ L19173: {
+  code_pointer_83X = arg1K0;
+  switch ((*((unsigned char *) code_pointer_83X))) {
+    ... }
+
+There will be one or two comparison instructions to see whether the
+opcode is in range; just remove them.  For the 68000 I use a "sed"
+ script
+
+    /cmpl #137,d0/ N
+    /cmpl #137,d0\n     jhi L/ d
+
+but of course the constant will probably have to change when a new
+release comes along.
+
+See the user's guide for information on the ,bench command, which
+makes programs run faster.
+

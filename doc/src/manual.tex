@@ -1,0 +1,140 @@
+% Scheme 48 documentation
+
+% Part of Scheme 48 1.9.  See file COPYING for notices and license.
+
+% Authors: Richard Kelsey, Jonathan Rees, Mike Sperber
+
+\documentclass[twoside]{report}
+\usepackage{tex2page}
+
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{matter}
+\usepackage{ifpdf}
+\usepackage[latin1]{inputenc}
+
+\input{myindex}
+\input{proto}
+\input{hacks}
+
+\makeindex
+
+% \includeonly{module}
+
+\let\url\relax
+\ifpdf
+\usepackage[pdftex,hyperindex,
+     pdftitle={The Incomplete Scheme 48 Reference Manual},
+     pdfauthor={Richard Kelsey, Jonathan Rees, 
+       Mike Sperber, Marcus Crestani, Robert Ransom, Roderic Morris,
+       Marcel Turino, Martin Gasbichler},
+     colorlinks=true,linkcolor=blue,pagecolor=blue,urlcolor=blue,
+     pdfstartview=FitH,pdfview=FitH]{hyperref}
+\usepackage{thumbpdf}
+\usepackage{tocbibind}
+\else
+\usepackage[dvipdfm,hyperindex,hypertex,
+     pdftitle={The Incomplete Scheme 48 Reference Manual},
+     pdfauthor={Richard Kelsey, Jonathan Rees, Mike Sperber
+       Mike Sperber, Marcus Crestani, Robert Ransom, Roderic Morris,
+       Marcel Turino, Martin Gasbichler},
+     colorlinks=true,linkcolor=blue,pagecolor=blue,urlcolor=blue,
+     pdfstartview=FitH,pdfview=FitH]{hyperref}
+\fi
+\endtexonly
+
+%%% End preamble
+
+\begin{document}
+\frontmatter
+\label{top_node}
+
+\texonly
+\title{{\large The Incomplete} \\ Scheme 48 Reference Manual \\
+ {\large for release \input{version-number}}}
+\endtexonly
+\htmlonly
+\title{The Incomplete Scheme 48 Reference Manual for release \input{version-number}}
+\endhtmlonly
+\author{Richard Kelsey \and Jonathan Rees \and Mike Sperber
+  \and Marcus Crestani \and Robert Ransom \and Roderic Morris \and
+  Marcel Turino \and Martin Gasbichler}
+\date{}
+
+\maketitle
+
+\begin{verse}
+A line may take us hours, yet if it does not seem a moment's thought \\
+All our stitching and unstitching has been as nought.
+\end{verse}
+\texonly
+\begin{tabbing}
+A line may take us hours, yet if it does not seem\= \kill
+\> Yeats \\
+\> {\em Adam's Curse}
+\end{tabbing}
+\endtexonly
+\htmlonly
+\begin{tabular}{ll}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ & Yeats \\
+& {\em Adam's Curse}
+\end{tabular}
+\endhtmlonly
+
+\chapter*{Acknowledgements}
+
+Thanks to Scheme~48's users for their suggestions, bug reports,
+  and forbearance.
+Thanks also to Deborah Tatar for providing the Yeats quotation.
+
+\begin{verbatim}
+Copyright © 1986-2001 Richard Kelsey and Jonathan Rees.
+Copyright © 1993-2001 Richard Kelsey.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notices, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notices, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the authors may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+\end{verbatim}
+
+\tableofcontents
+
+\texonly
+\cleardoublepage\pagenumbering{arabic}\setcounter{page}{1}
+\endtexonly
+
+\mainmatter
+\include{intro}
+\include{user-guide}
+\include{command}
+\include{module}
+\include{utilities}
+\include{unicode}
+\include{thread}
+\include{external}
+\include{posix}
+\include{bibliography}
+
+\backmatter
+\printindex
+
+\end{document}    

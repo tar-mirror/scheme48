@@ -1,0 +1,3569 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-5.html">previous</a></span><span>, <a href="manual-Z-H-7.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_5"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_5">Chapter 5</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_5">Libraries</a></h1>
+<p>Use the
+<tt>,open</tt> command (section&nbsp;<a href="manual-Z-H-4.html#node_sec_3.4">3.4</a>)
+or
+the module language (chapter&nbsp;<a href="manual-Z-H-3.html#node_sec_2.6">2.6</a>)
+to open the structures described below.</p>
+<p>
+</p>
+<a name="node_sec_5.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.1">5.1&nbsp;&nbsp;General utilities</a></h2>
+<p></p>
+<p>
+</p>
+<p>
+These are in the <tt>big-util</tt> structure.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(atom?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_14"></a></p>
+</ul><p>
+<tt>(atom? <i>x</i>)</tt> is the same as <tt>(not (pair? <i>x</i>))</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(null-list?<i> list</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_16"></a></p>
+</ul><p>
+Returns true for the empty list, false for a pair, and signals an
+error otherwise.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(neq?<i> value value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_18"></a></p>
+</ul><p>
+<tt>(neq? <i>x</i> <i>y</i>)</tt> is the same as <tt>(not (eq? <i>x</i>
+<i>y</i>))</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(n=<i> number number</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_20"></a></p>
+</ul><p>
+<tt>(n= <i>x</i> <i>y</i>)</tt> is the same as <tt>(not (= <i>x</i>
+<i>y</i>))</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(identity<i> value</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_22"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(no-op<i> value</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_24"></a></p>
+</ul><p>
+These both just return their argument.  <tt>No-op</tt> is guaranteed not to
+be compiled in-line, <tt>identity</tt> may be.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(memq?<i> value list</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_26"></a></p>
+</ul><p>
+Returns true if <i>value</i> is in <i>list</i>, false otherwise.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(any?<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_28"></a></p>
+</ul><p>
+Returns true if <i>predicate</i> is true for any element of <i>list</i>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(every?<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_30"></a></p>
+</ul><p>
+Returns true if <i>predicate</i> is true for every element of <i>list</i>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(any<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_32"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(first<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_34"></a></p>
+</ul><p>
+<tt>Any</tt> returns some element of <i>list</i> for which <i>predicate</i> is true, or
+false if there are none.  <tt>First</tt> does the same except that it returns
+the first element for which <i>predicate</i> is true.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(filter<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_36"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(filter!<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_38"></a></p>
+</ul><p>
+Returns a list containing all of the elements of <i>list</i> for which
+<i>predicate</i> is true.  The order of the elements is preserved.
+<tt>Filter!</tt> may reuse the storage of <i>list</i>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(filter-map<i> procedure list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_40"></a></p>
+</ul><p>
+The same as <tt>filter</tt> except the returned list contains the results of
+applying <i>procedure</i> instead of elements of <i>list</i>.  <tt>(filter-map <i>p</i>
+<i>l</i>)</tt> is the same as <tt>(filter identity (map <i>p</i> <i>l</i>))</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(partition-list<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>list list</i></tt><a name="node_idx_42"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(partition-list!<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>list list</i></tt><a name="node_idx_44"></a></p>
+</ul><p>
+The first return value contains those elements <i>list</i> for which
+<i>predicate</i> is true, the second contains the remaining elements.
+The order of the elements is preserved.  <tt>Partition-list!</tt> may
+reuse the storage of the <i>list</i>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(remove-duplicates<i> list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_46"></a></p>
+</ul><p>
+Returns its argument with all duplicate elements removed.  The first
+instance of each element is preserved.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(delq<i> value list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_48"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(delq!<i> value list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_50"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(delete<i> predicate list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_52"></a></p>
+</ul><p>
+All three of these return <i>list</i> with some elements removed.
+<tt>Delq</tt> removes all elements <tt>eq?</tt> to <i>value</i>.  <tt>Delq!</tt>
+does the same and may modify the list argument.  <tt>Delete</tt> removes
+all elements for which <i>predicate</i> is true.  Both <tt>delq</tt> and
+<tt>delete</tt> may reuse some of the storage in the list argument, but
+won&rsquo;t modify it.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(reverse!<i> list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_54"></a></p>
+</ul><p>
+Destructively reverses <i>list</i>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(concatenate-symbol<i> value <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>symbol</i></tt><a name="node_idx_56"></a></p>
+</ul><p>
+Returns the symbol whose name is produced by concatenating the
+<tt>display</tt>ed
+representations of <i>value</i>&nbsp;<tt>...</tt>.</p>
+<p>
+</p>
+<pre class=verbatim>(concatenate-symbol 'abc &quot;-&quot; 4) ===&rArr; 'abc-4
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.2">5.2&nbsp;&nbsp;Pretty-printing</a></h2>
+<p>These are in the <tt>pp</tt> structure.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(p<i> value</i>)</tt><a name="node_idx_58"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(p<i> value output-port</i>)</tt><a name="node_idx_60"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(pretty-print<i> value output-port position</i>)</tt><a name="node_idx_62"></a></p>
+</ul><p>
+Pretty-print <i>value</i> The current output port is used if no port is
+specified.  <i>Position</i> is the starting offset.  <i>Value</i> will be
+pretty-printed to the right of this column.</p>
+<p>
+</p>
+<a name="node_sec_5.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.3">5.3&nbsp;&nbsp;Bitwise integer operations</a></h2>
+<p>These functions use the two&rsquo;s-complement representation for integers.
+There is no limit to the number of bits in an integer.
+They are in the structures <tt>bitwise</tt> and <tt>big-scheme</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(bitwise-and<i> integer integer <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_64"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(bitwise-ior<i> integer integer <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_66"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(bitwise-xor<i> integer integer <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_68"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(bitwise-not<i> integer</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_70"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These perform various logical operations on integers on a bit-by-bit
+basis. &lsquo;<tt>ior</tt>&rsquo; is inclusive OR and &lsquo;<tt>xor</tt>&rsquo; is exclusive OR.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(arithmetic-shift<i> integer bit-count</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_72"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Shifts the integer by the given bit count, which must be an integer,
+shifting left for positive counts and right for negative ones.
+Shifting preserves the integer&rsquo;s sign.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(bit-count<i> integer</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_74"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Counts the number of bits set in the integer.
+If the argument is negative a bitwise NOT operation is performed
+before counting.</p>
+<p>
+</p>
+<a name="node_sec_5.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.4">5.4&nbsp;&nbsp;Byte vectors</a></h2>
+<p>These are homogeneous vectors of small integers (0 &le; <em>i</em> &le; 255).
+The functions that operate on them are analogous to those for vectors.
+They are in the structure <tt>byte-vectors</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_76"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-byte-vector<i> k fill</i>)&nbsp;--&gt;&nbsp;<i>byte-vector</i></tt><a name="node_idx_78"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector<i> b <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>byte-vector</i></tt><a name="node_idx_80"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector-length<i> byte-vector</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_82"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector-ref<i> byte-vector k</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_84"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector-set!<i> byte-vector k b</i>)</tt><a name="node_idx_86"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector=?<i> byte-vector byte-vector</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_88"></a></p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_5.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.5">5.5&nbsp;&nbsp;Sparse vectors</a></h2>
+<p>These are vectors that grow as large as they need to.  That is, they
+can be indexed by arbitrarily large nonnegative integers.  The
+implementation allows for arbitrarily large gaps by arranging the
+entries in a tree.  They are in the structure <tt>sparse-vectors</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-sparse-vector<i></i>)&nbsp;--&gt;&nbsp;<i>sparse-vector</i></tt><a name="node_idx_90"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(sparse-vector-ref<i> sparse-vector k</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_92"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(sparse-vector-set!<i> sparse-vector k value</i>)</tt><a name="node_idx_94"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(sparse-vector-&gt;list<i> sparse-vector</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_96"></a></p>
+</ul><p>
+<tt>Make-sparse-vector</tt>, <tt>sparse-vector-ref</tt>, and
+<tt>sparse-vector-set!</tt> are analogous to <tt>make-vector</tt>,
+<tt>vector-ref</tt>, and <tt>vector-set!</tt>, except that the indices
+passed to <tt>sparse-vector-ref</tt> and <tt>sparse-vector-set!</tt> can
+be arbitrarily large.  For indices whose elements have not been set in
+a sparse vector, <tt>sparse-vector-ref</tt> returns <tt>#f</tt>.</p>
+<p>
+<tt>Sparse-vector-&gt;list</tt> is for debugging: It returns a list of the
+consecutive elements in a sparse vector from 0 to the highest element
+that has been set.  Note that the list will also include all the
+<tt>#f</tt> elements for the unset elements.</p>
+<p>
+</p>
+<a name="node_sec_5.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.6">5.6&nbsp;&nbsp;Cells</a></h2>
+<p></p>
+<p>
+These hold a single value and are useful when a simple indirection is
+required.
+The system uses these to hold the values of lexical variables that
+may be <tt>set!</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(cell?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_98"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-cell<i> value</i>)&nbsp;--&gt;&nbsp;<i>cell</i></tt><a name="node_idx_100"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(cell-ref<i> cell</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_102"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(cell-set!<i> cell value</i>)</tt><a name="node_idx_104"></a></p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_5.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.7">5.7&nbsp;&nbsp;Queues</a></h2>
+<p>These are ordinary first-in, first-out queues.
+The procedures are in structure <tt>queues</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-queue<i></i>)&nbsp;--&gt;&nbsp;<i>queue</i></tt><a name="node_idx_106"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(queue?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_108"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(queue-empty?<i> queue</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_110"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-&gt;queue<i> values</i>)&nbsp;--&gt;&nbsp;<i>queue</i></tt><a name="node_idx_112"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enqueue!<i> queue value</i>)</tt><a name="node_idx_114"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enqueue-many!<i> queue list</i>)</tt><a name="node_idx_116"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(queue-head-or-value<i> queue value</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_118"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(queue-head-or-thunk<i> queue thunk</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_120"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(queue-head<i> queue</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_122"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-queue-head<i> queue</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_124"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(dequeue-or-value!<i> queue value</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_126"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(dequeue-or-thunk!<i> queue thunk</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_128"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(dequeue!<i> queue</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_130"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-dequeue!<i> queue</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_132"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(empty-queue!<i> queue</i>)</tt><a name="node_idx_134"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-queue</tt> creates an empty queue, <tt>queue?</tt> is a predicate for
+identifying queues, and <tt>queue-empty?</tt> tells you if a queue is empty.
+<tt>List-&gt;queue</tt> returns a queue containing <i>values</i>, preserving
+their order.
+<tt>Enqueue!</tt> adds one value to the queue; <tt>enqueue-many!</tt> adds a
+list of values to the queue.
+<tt>Queue-head-or-value</tt>, <tt>queue-head-or-thunk</tt>, <tt>queue-head</tt>,
+and <tt>maybe-queue-head</tt> return the first value in <i>queue</i> if it is
+not empty; if the queue is empty, <tt>queue-head-or-value</tt> returns
+<i>value</i>, <tt>queue-head-or-thunk</tt> tail-calls <i>thunk</i>,
+<tt>queue-head</tt> raises an error, and <tt>maybe-queue-head</tt> returns
+<tt>#f</tt>.
+<tt>Dequeue-or-value!</tt>, <tt>dequeue-or-thunk!</tt>, <tt>dequeue!</tt>, and
+<tt>maybe-dequeue!</tt> remove a value from the queue if one is available; if
+the queue is empty, <tt>dequeue-or-value!</tt> returns <i>value</i>,
+<tt>dequeue-or-thunk!</tt> tail-calls <i>thunk</i>, <tt>dequeue!</tt> raises an
+error, and <tt>maybe-dequeue!</tt> returns <tt>#f</tt>.
+<tt>Empty-queue!</tt> removes all values from <i>queue</i>.</p>
+<p>
+<tt>(Dequeue-or-value! q value)</tt> is more efficient than, but otherwise
+equivalent to:
+</p>
+<pre class=verbatim>(ensure-atomicity
+ (if (queue-empty? q)
+     value
+     (dequeue! q)))
+</pre><p></p>
+<p>
+Because <tt>queue-head</tt> and <tt>dequeue!</tt> raise exceptions if they are
+called on an empty queue, they <em>must not</em> be called with a proposal
+already active unless <tt>queue-empty?</tt> has returned <tt>#f</tt> with the
+same proposal active.</p>
+<p>
+The following procedures are not used in the Scheme&nbsp;48 system, and are <em>very</em> slow.  These operations may be removed from the <tt>queues</tt>
+structure in a future revision.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(queue-length<i> queue</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_136"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(queue-&gt;list<i> queue</i>)&nbsp;--&gt;&nbsp;<i>values</i></tt><a name="node_idx_138"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(delete-from-queue!<i> queue value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_140"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(on-queue?<i> queue value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_142"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Queue-length</tt> returns the number of values in <i>queue</i>.
+<tt>Queue-&gt;list</tt> returns the values in <i>queue</i> as a list, in the
+order in which the values were added.
+<tt>Delete-from-queue!</tt> removes the first instance of <i>value</i> from
+<i>queue</i>, using <tt>eqv?</tt> for comparisons.
+<tt>Delete-from-queue!</tt> returns <tt>#t</tt> if it removes an element and
+<tt>#f</tt> if it does not.
+<tt>On-queue?</tt> returns <tt>#t</tt> if <i>value</i> is in the <i>queue</i>
+(using <tt>eqv?</tt> for comparisons) and <tt>#f</tt> if it is not.</p>
+<p>
+</p>
+<a name="node_sec_5.8"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.8">5.8&nbsp;&nbsp;Arrays</a></h2>
+<p>These provide N-dimensional, zero-based arrays and
+are in the structure <tt>arrays</tt>.
+The array interface is derived from one invented by Alan Bawden.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-array<i> value dimension<sub>0</sub> <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>array</i></tt><a name="node_idx_144"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(array<i> dimensions element<sub>0</sub> <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>array</i></tt><a name="node_idx_146"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(copy-array<i> array</i>)&nbsp;--&gt;&nbsp;<i>array</i></tt><a name="node_idx_148"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-array</tt> makes a new array with the given dimensions, each of which
+must be a non-negative integer.
+Every element is initially set to <i>value</i>.
+<tt>Array</tt> Returns a new array with the given dimensions and elements.
+<i>Dimensions</i> must be a list of positive integers, 
+The number of elements should be the equal to the product of the
+dimensions.
+The elements are stored in row-major order.
+</p>
+<pre class=verbatim>(make-array 'a 2 3) <code class=verbatim>=&gt; </code>{Array 2 3}
+
+(array '(2 3) 'a 'b 'c 'd 'e 'f)
+    <code class=verbatim>=&gt; </code>{Array 2 3}
+</pre><p></p>
+<p>
+<tt>Copy-array</tt> returns a copy of <i>array</i>.
+The copy is identical to the <i>array</i> but does not share storage with it.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(array?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_150"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Returns <tt>#t</tt> if <i>value</i> is an array.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(array-ref<i> array index<sub>0</sub> <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_152"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(array-set!<i> array value index<sub>0</sub> <tt>...</tt></i>)</tt><a name="node_idx_154"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(array-&gt;vector<i> array</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_156"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(array-shape<i> array</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_158"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Array-ref</tt> returns the specified array element and <tt>array-set!</tt>
+replaces the element with <i>value</i>.
+</p>
+<pre class=verbatim>(let ((a (array '(2 3) 'a 'b 'c 'd 'e 'f)))
+  (let ((x (array-ref a 0 1)))
+    (array-set! a 'g 0 1)
+    (list x (array-ref a 0 1))))
+    <code class=verbatim>=&gt; </code>'(b g)
+</pre><p></p>
+<p>
+<tt>Array-&gt;vector</tt> returns a vector containing the elements of <i>array</i>
+in row-major order.
+<tt>Array-shape</tt> returns the dimensions of
+the array as a list.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-shared-array<i> array linear-map dimension<sub>0</sub> <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>array</i></tt><a name="node_idx_160"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-shared-array</tt> makes a new array that shares storage with <i>array</i>
+and uses <i>linear-map</i> to map indexes to elements.
+<i>Linear-map</i> must accept as many arguments as the number of
+<i>dimension</i>s given and must return a list of non-negative integers
+that are valid indexes into <i>array</i>.
+</p>
+<pre class=verbatim>(array-ref (make-shared-array a f i0 i1 ...)
+           j0 j1 ...)
+</pre><p>
+is equivalent to
+</p>
+<pre class=verbatim>(apply array-ref a (f j0 j1 ...))
+</pre><p></p>
+<p>
+As an example, the following function makes the transpose of a two-dimensional
+array:
+</p>
+<pre class=verbatim>(define (transpose array)
+  (let ((shape (array-shape array)))
+    (make-shared-array array
+                       (lambda (x y)
+                         (list y x))
+                       (cadr shape)
+                       (car shape))))
+
+(array-&gt;vector
+  (transpose
+    (array '(2 3) 'a 'b 'c 'd 'e 'f)))
+      <code class=verbatim>=&gt; </code>'(a d b e c f)
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.9"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.9">5.9&nbsp;&nbsp;Records</a></h2>
+<p></p>
+<p>
+New types can be constructed using the <tt>define-record-type</tt> macro
+from the <tt>define-record-types</tt> structure
+The general syntax is:
+</p>
+<pre class=verbatim>(define-record-type [<i>tag</i>] <i>type-name</i>
+  (<i>constructor-name</i> <i>field-tag</i> <tt>...</tt>)
+  <i>predicate-name</i>
+  (<i>field-tag</i> <i>accessor-name</i> [<i>modifier-name</i>])
+  <tt>...</tt>)
+</pre><p>
+This makes the following definitions:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt><i>type-name</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(type)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(<i>constructor-name</i><i> field-init <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>type-name</i></tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(<i>predicate-name</i><i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(<i>accessor-name</i><i> type-name</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(<i>modifier-name</i><i> type-name value</i>)</tt>
+</p>
+</ul><p>
+</p>
+
+<p class=noindent><i>Type-name</i> is the record type itself, and can be used to
+specify a print method (see below).
+<i>Constructor-name</i> is a constructor that accepts values
+for the fields whose tags are specified.
+<i>Predicate-name</i> is a predicate that returns <tt>#t</tt> for
+elements of the type and <tt>#f</tt> for everything else.
+The <i>accessor-name</i>s retrieve the values of fields,
+and the <i>modifier-name</i>&rsquo;s update them.
+<i>Tag</i> is used in printing instances of the record type and
+the <i>field-tag</i>s are used in the inspector and to match
+constructor arguments with fields. If <i>tag</i> is not specified,
+<i>type-name</i> is used instead.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(define-record-discloser<i> type discloser</i>)</tt><a name="node_idx_162"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Define-record-discloser</tt> determines how
+records of type <i>type</i> are printed.
+<i>Discloser</i> should be procedure which takes a single
+record of type <i>type</i> and returns a list whose car is
+a symbol.
+The record will be printed as the value returned by <i>discloser</i>
+with curly braces used instead of the usual parenthesis.</p>
+<p>
+For example
+</p>
+<pre class=verbatim>(define-record-type pare :pare
+  (kons x y)
+  pare?
+  (x kar set-kar!)
+  (y kdr))
+</pre><p>
+defines <tt>kons</tt> to be a constructor, <tt>kar</tt> and <tt>kdr</tt> to be
+accessors, <tt>set-kar!</tt> to be a modifier, and <tt>pare?</tt> to be a predicate
+for a new type of object.
+The type itself is named <tt>:pare</tt>.
+<tt>Pare</tt> is a tag used in printing the new objects.</p>
+<p>
+By default, the new objects print as <tt>#{Pare}</tt>.
+The print method can be modified using <tt>define-record-discloser</tt>:
+</p>
+<pre class=verbatim>(define-record-discloser :pare
+  (lambda (p) `(pare ,(kar p) ,(kdr p))))
+</pre><p>
+will cause the result of <tt>(kons 1 2)</tt> to print as
+<tt>#{Pare 1 2}</tt>.</p>
+<p>
+<tt>Define-record-resumer</tt> (section&nbsp;<a href="manual-Z-H-9.html#node_sec_8.7.6">8.7.6</a>)
+can be used to control how records are stored in heap images.</p>
+<p>
+</p>
+<a name="node_sec_5.9.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.9.1">5.9.1&nbsp;&nbsp;Low-level access to records</a></h3>
+<p>Records are implemented using primitive objects exactly analogous
+to vectors.
+Every record has a record type (which is another record) in the first slot.
+Note that use of these procedures, especially <tt>record-set!</tt>, breaks
+the record abstraction described above; caution is advised.</p>
+<p>
+These procedures are in the structure <tt>records</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-record<i> n value</i>)&nbsp;--&gt;&nbsp;<i>record</i></tt><a name="node_idx_164"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record<i> value <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>record-vector</i></tt><a name="node_idx_166"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_168"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-length<i> record</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_170"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-type<i> record</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_172"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-ref<i> record i</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_174"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-set!<i> record i value</i>)</tt><a name="node_idx_176"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These the same as the standard <tt>vector-</tt> procedures except that they
+operate on records.
+The value returned by <tt>record-length</tt> includes the slot holding the
+record&rsquo;s type.
+<tt>(record-type <i>x</i>)</tt> is equivalent to <tt>(record-ref <i>x</i> 0)</tt>.</p>
+<p>
+</p>
+<a name="node_sec_5.9.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.9.2">5.9.2&nbsp;&nbsp;Record types</a></h3>
+<p>Record types are themselves records of a particular type (the first slot
+of <tt>:record-type</tt> points to itself).
+A record type contains four values: the name of the record type, a list of
+the names its fields, and procedures for disclosing and resuming records
+of that type.
+Procedures for manipulating them are in the structure <tt>record-types</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-record-type<i> name field-names</i>)&nbsp;--&gt;&nbsp;<i>record-type</i></tt><a name="node_idx_178"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-type?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_180"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-type-name<i> record-type</i>)&nbsp;--&gt;&nbsp;<i>symbol</i></tt><a name="node_idx_182"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-type-field-names<i> record-type</i>)&nbsp;--&gt;&nbsp;<i>symbols</i></tt><a name="node_idx_184"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(record-constructor<i> record-type field-names</i>)&nbsp;--&gt;&nbsp;<i>procedure</i></tt><a name="node_idx_186"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-predicate<i> record-type</i>)&nbsp;--&gt;&nbsp;<i>procedure</i></tt><a name="node_idx_188"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-accessor<i> record-type field-name</i>)&nbsp;--&gt;&nbsp;<i>procedure</i></tt><a name="node_idx_190"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(record-modifier<i> record-type field-name</i>)&nbsp;--&gt;&nbsp;<i>procedure</i></tt><a name="node_idx_192"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These procedures construct the usual record-manipulating procedures.
+<tt>Record-constructor</tt> returns a constructor that is passed the initial
+values for the fields specified and returns a new record.
+<tt>Record-predicate</tt> returns a predicate that return true when passed
+a record of type <i>record-type</i> and false otherwise.
+<tt>Record-accessor</tt> and <tt>record-modifier</tt> return procedures that
+reference and set the given field in records of the appropriate type.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(define-record-discloser<i> record-type discloser</i>)</tt><a name="node_idx_194"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(define-record-resumer<i> record-type resumer</i>)</tt><a name="node_idx_196"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent></p>
+
+<p class=noindent><tt>Record-types</tt> is the initial exporter of
+<tt>define-record-discloser</tt>
+(re-exported by <tt>define-record-types</tt> described above)
+and
+<tt>define-record-resumer</tt>
+(re-exported by
+<tt>external-calls</tt> (section&nbsp;<a href="manual-Z-H-9.html#node_sec_8.7.6">8.7.6</a>)).</p>
+<p>
+The procedures described in this section can be used to define new
+record-type-defining macros.
+</p>
+<pre class=verbatim>(define-record-type pare :pare
+  (kons x y)
+  pare?
+  (x kar set-kar!)
+  (y kdr))
+</pre><p>
+is (semantically) equivalent to
+</p>
+<pre class=verbatim>(define :pare (make-record-type 'pare '(x y)))
+(define kons (record-constructor :pare '(x y)))
+(define kar (record-accessor :pare 'x))
+(define set-kar! (record-modifier :pare 'x))
+(define kdr (record-accessor :pare 'y))
+</pre><p></p>
+<p>
+The &lsquo;&lsquo;(semantically)&rsquo;&rsquo; above is because <tt>define-record-type</tt> adds
+declarations, which allows the type checker to detect some misuses of records,
+and uses more efficient definitions for the constructor, accessors, and
+modifiers.
+Ignoring the declarations, which will have to wait for another edition of
+the manual, what the above example actually expands into is:
+</p>
+<pre class=verbatim>(define :pare (make-record-type 'pare '(x y)))
+(define (kons x y) (record :pare x y))
+(define (kar r) (checked-record-ref r :pare 1))
+(define (set-kar! r new)
+  (checked-record-set! r :pare 1 new))
+(define (kdr r) (checked-record-ref r :pare 2))
+</pre><p> 
+<tt>Checked-record-ref</tt> and <tt>Checked-record-set!</tt> are
+low-level procedures that check the type of the
+record and access or modify it using a single VM instruction.</p>
+<p>
+</p>
+<a name="node_sec_5.10"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.10">5.10&nbsp;&nbsp;Finite record types</a></h2>
+<p></p>
+<p>
+The structure <tt>finite-types</tt> has
+two macros for defining &lsquo;finite&rsquo; record types.
+These are record types for which there are a fixed number of instances,
+all of which are created at the same time as the record type itself.
+The syntax for defining an enumerated type is:
+</p>
+<pre class=verbatim>(define-enumerated-type <i>tag</i> <i>type-name</i>
+  <i>predicate-name</i>
+  <i>vector-of-instances-name</i>
+  <i>name-accessor</i>
+  <i>index-accessor</i>
+  (<i>instance-name</i> <tt>...</tt>))
+</pre><p>
+This defines a new record type, bound to <i>type-name</i>, with as many
+instances as there are <i>instance-name</i>&rsquo;s.
+<i>Vector-of-instances-name</i> is bound to a vector containing the instances
+of the type in the same order as the <i>instance-name</i> list.
+<i>Tag</i> is bound to a macro that when given an <i>instance-name</i> expands
+into an expression that returns corresponding instance.
+The name lookup is done at macro expansion time.
+<i>Predicate-name</i> is a predicate for the new type.
+<i>Name-accessor</i> and <i>index-accessor</i> are accessors for the
+name and index (in <i>vector-of-instances</i>) of instances of the type.</p>
+<p>
+</p>
+<pre class=verbatim>(define-enumerated-type color :color
+  color?
+  colors
+  color-name
+  color-index
+  (black white purple maroon))
+
+(color-name (vector-ref colors 0)) <code class=verbatim>=&gt; </code>black
+(color-name (color white))         <code class=verbatim>=&gt; </code>white
+(color-index (color purple))       <code class=verbatim>=&gt; </code>2
+</pre><p></p>
+<p>
+Finite types are enumerations that allow the user to add additional
+fields in the type.
+The syntax for defining a finite type is:
+</p>
+<pre class=verbatim>(define-finite-type <i>tag</i> <i>type-name</i>
+  (<i>field-tag</i> <tt>...</tt>)
+  <i>predicate-name</i>
+  <i>vector-of-instances-name</i>
+  <i>name-accessor</i>
+  <i>index-accessor</i>
+  (<i>field-tag</i> <i>accessor-name</i> [<i>modifier-name</i>])
+  <tt>...</tt>((<i>instance-name</i> <i>field-value</i> <tt>...</tt>)
+   <tt>...</tt>))
+</pre><p>
+The additional fields are specified exactly as with <tt>define-record-type</tt>.
+The field arguments to the constructor are listed after the <i>type-name</i>;
+these do not include the name and index fields.
+The form ends with the names and the initial field values for
+the instances of the type.
+The instances are constructed by applying the (unnamed) constructor to
+these initial field values.
+The name must be first and 
+the remaining values must match the <i>field-tag</i>s in the constructor&rsquo;s
+argument list.</p>
+<p>
+</p>
+<p>
+</p>
+<pre class=verbatim>(define-finite-type color :color
+  (red green blue)
+  color?
+  colors
+  color-name
+  color-index
+  (red   color-red)
+  (green color-green)
+  (blue  color-blue)
+  ((black    0   0   0)
+   (white  255 255 255)
+   (purple 160  32 240)
+   (maroon 176  48  96)))
+
+(color-name (color black))         <code class=verbatim>=&gt; </code>black
+(color-name (vector-ref colors 1)) <code class=verbatim>=&gt; </code>white
+(color-index (color purple))       <code class=verbatim>=&gt; </code>2
+(color-red (color maroon))         <code class=verbatim>=&gt; </code>176
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.11"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.11">5.11&nbsp;&nbsp;Sets over finite types</a></h2>
+<p></p>
+<p>
+The structure <tt>enum-sets</tt> has a macro for defining types for sets
+of elements of finite types.  These work naturally with the finite
+types defined by the <tt>finite-types</tt> structure, but are not tied
+to them.  The syntax for defining such a type is:</p>
+<p>
+</p>
+<pre class=verbatim>(define-enum-set-type <i>id</i> <i>type-name</i> <i>predicate</i> <i>constructor</i>
+   <i>element-syntax</i> <i>element-predicate</i> <i>all-elements</i> <i>element-index-ref</i>)
+</pre><p>
+This defines <i>id</i> to be syntax for constructing sets,
+<i>type-name</i> to be a value representing the type,
+<i>predicate</i> to be a predicate for those sets, and
+<i>constructor</i> a procedure for constructing one from a list.</p>
+<p>
+<i>Element-syntax</i> must be the name of a macro for constructing set
+elements from names (akin to the <i>tag</i> argument to
+<tt>define-enumerated-type</tt>).  <i>Element-predicate</i> must be a
+predicate for the element type, <i>all-elements</i> a vector of all
+values of the element type, and <i>element-index-ref</i> must return
+the index of an element within the <i>all-elements</i> vector.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-&gt;list<i> enum-set</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_198"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-member?<i> enum-set enumerand</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_200"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set=?<i> enum-set enum-set</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_202"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-subset?<i> enum-set enum-set</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_204"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-union<i> enum-set enum-set</i>)&nbsp;--&gt;&nbsp;<i>enum-set</i></tt><a name="node_idx_206"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-intersection<i> enum-set enum-set</i>)&nbsp;--&gt;&nbsp;<i> enum-set</i></tt><a name="node_idx_208"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-difference<i> enum-set enum-set</i>)&nbsp;--&gt;&nbsp;<i> enum-set</i></tt><a name="node_idx_210"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(enum-set-negation<i> enum-set</i>)&nbsp;--&gt;&nbsp;<i>enum-set</i></tt><a name="node_idx_212"></a></p>
+</ul><p>
+<tt>Enum-set-&gt;list</tt> converts a set into a list of its elements.
+<tt>Enum-set-member?</tt> tests for membership.  <tt>Enum-set=?</tt> tests
+two sets of equal type for equality.  (If its arguments are not of the
+same type, <tt>enum-set=?</tt> raises an exception.)
+<tt>Enum-set-subset?</tt> tests, for two sets of equal type, 
+if the first set is a subset of the second one.
+<tt>Enum-set-union</tt> computes the union of two sets of equal type,
+<tt>enum-set-intersection</tt> computes the intersection, 
+<tt>enum-set-difference</tt> computes the intersection, 
+and
+<tt>enum-set-negation</tt> computes the complement of a set.</p>
+<p>
+Here is an example.  Given an enumerated type:</p>
+<p>
+</p>
+<pre class=verbatim>(define-enumerated-type color :color
+  color?
+  colors
+  color-name
+  color-index
+  (red blue green))
+</pre><p></p>
+<p>
+we can define sets of colors:</p>
+<p>
+</p>
+<pre class=verbatim>(define-enum-set-type color-set :color-set
+                      color-set?
+                      make-color-set
+  color color? colors color-index)
+</pre><p></p>
+<p>
+</p>
+<pre class=verbatim>&gt; (enum-set-&gt;list (color-set red blue))
+(#{Color red} #{Color blue})
+&gt; (enum-set-&gt;list (enum-set-negation (color-set red blue)))
+(#{Color green})
+&gt; (enum-set-member? (color-set red blue) (color blue))
+#t
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.12"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.12">5.12&nbsp;&nbsp;Hash tables</a></h2>
+<p>These are generic hash tables, and are in the structure <tt>tables</tt>.
+Strictly speaking they are more maps than tables, as every table has a
+value for every possible key (for that type of table).
+All but a finite number of those values are <tt>#f</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-table<i></i>)&nbsp;--&gt;&nbsp;<i>table</i></tt><a name="node_idx_214"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-symbol-table<i></i>)&nbsp;--&gt;&nbsp;<i>symbol-table</i></tt><a name="node_idx_216"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-string-table<i></i>)&nbsp;--&gt;&nbsp;<i>string-table</i></tt><a name="node_idx_218"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-integer-table<i></i>)&nbsp;--&gt;&nbsp;<i>integer-table</i></tt><a name="node_idx_220"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-table-maker<i> compare-proc hash-proc</i>)&nbsp;--&gt;&nbsp;<i>procedure</i></tt><a name="node_idx_222"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-table-immutable!<i> table</i>)</tt><a name="node_idx_224"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The first four functions listed make various kinds of tables.
+<tt>Make-table</tt> returns a table whose keys may be symbols, integer,
+characters, booleans, or the empty list (these are also the values
+that may be used in <tt>case</tt> expressions).
+As with <tt>case</tt>, comparison is done using <tt>eqv?</tt>.
+The comparison procedures used in symbol, string, and integer tables are
+<tt>eq?</tt>, <tt>string=?</tt>, and <tt>=</tt>.</p>
+<p>
+<tt>Make-table-maker</tt> takes two procedures as arguments and returns
+a nullary table-making procedure.
+<i>Compare-proc</i> should be a two-argument equality predicate.
+<i>Hash-proc</i> should be a one argument procedure that takes a key
+and returns a non-negative integer hash value.
+If <tt>(<i>compare-proc</i> <i>x</i> <i>y</i>)</tt> returns true,
+then <tt>(= (<i>hash-proc</i> <i>x</i>) (<i>hash-proc</i> <i>y</i>))</tt>
+must also return true.
+For example, <tt>make-integer-table</tt> could be defined
+as <tt>(make-table-maker = abs)</tt>.</p>
+<p>
+<tt>Make-table-immutable!</tt> prohibits future modification to its argument.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(table?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_226"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(table-ref<i> table key</i>)&nbsp;--&gt;&nbsp;<i>value or <tt>#f</tt></i></tt><a name="node_idx_228"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(table-set!<i> table key value</i>)</tt><a name="node_idx_230"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(table-walk<i> procedure table</i>)</tt><a name="node_idx_232"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(table-&gt;entry-list<i> table</i>)&nbsp;--&gt;&nbsp;<i>list of pairs</i></tt><a name="node_idx_234"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Table?</tt> is the predicate for tables.
+<tt>Table-ref</tt> and <tt>table-set!</tt> access and modify the value of <i>key</i>
+in <i>table</i>.
+<tt>Table-walk</tt> applies <i>procedure</i>, which must accept two arguments,
+to every associated key and non-<tt>#f</tt> value in <tt>table</tt>.
+<tt>Table-&gt;entry-list</tt> returns a list with the values of
+the table.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(default-hash-function<i> value</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_236"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-hash<i> string</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_238"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(symbol-hash<i> symbol</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_240"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Default-hash-function</tt> is the hash function used in the tables
+returned by <tt>make-table</tt>, <tt>string-hash</tt> is the one used
+by <tt>make-string-table</tt>, and <tt>symbol-hash</tt> is the one used
+by <tt>make-symbol-table</tt>.</p>
+<p>
+</p>
+<a name="node_sec_5.13"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.13">5.13&nbsp;&nbsp;Port extensions</a></h2>
+<p>These procedures are in structure <tt>extended-ports</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-string-input-port<i> string</i>)&nbsp;--&gt;&nbsp;<i>input-port</i></tt><a name="node_idx_242"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-string-output-port<i></i>)&nbsp;--&gt;&nbsp;<i>output-port</i></tt><a name="node_idx_244"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-output-port-output<i> string-output-port</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_246"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-string-input-port</tt> returns an input port that
+that reads characters from the supplied string.  An end-of-file
+object is returned if the user reads past the end of the string.
+<tt>Make-string-output-port</tt> returns an output port that saves
+the characters written to it.
+These are then returned as a string by <tt>string-output-port-output</tt>.</p>
+<p>
+</p>
+<pre class=verbatim>(read (make-string-input-port &quot;(a b)&quot;))
+    <code class=verbatim>=&gt; </code>'(a b)
+
+(let ((p (make-string-output-port)))
+  (write '(a b) p)
+  (let ((s (string-output-port-output p)))
+    (display &quot;c&quot; p)
+    (list s (string-output-port-output p))))
+    <code class=verbatim>=&gt; </code>'(&quot;(a b)&quot; &quot;(a b)c&quot;)
+</pre><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(limit-output<i> output-port n procedure</i>)</tt><a name="node_idx_248"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><i>Procedure</i> is called on an output port.
+Output written to that port is copied to <i>output-port</i> until <i>n</i>
+characters have been written, at which point <tt>limit-output</tt> returns.
+If <i>procedure</i> returns before writing <i>n</i> characters, then
+<tt>limit-output</tt> also returns at that time, regardless of how many
+characters have been written.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-tracking-input-port<i> input-port</i>)&nbsp;--&gt;&nbsp;<i>input-port</i></tt><a name="node_idx_250"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-tracking-output-port<i> output-port</i>)&nbsp;--&gt;&nbsp;<i>output-port</i></tt><a name="node_idx_252"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(current-row<i> port</i>)&nbsp;--&gt;&nbsp;<i>integer or <tt>#f</tt></i></tt><a name="node_idx_254"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(current-column<i> port</i>)&nbsp;--&gt;&nbsp;<i>integer or <tt>#f</tt></i></tt><a name="node_idx_256"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(fresh-line<i> output-port</i>)</tt><a name="node_idx_258"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-tracking-input-port</tt> and <tt>make-tracking-output-port</tt>
+return ports that keep track of the current row and column and
+are otherwise identical to their arguments.
+Closing a tracking port does not close the underlying port.
+<tt>Current-row</tt> and <tt>current-column</tt> return
+<i>port</i>&rsquo;s current read or write location.
+They return <tt>#f</tt> if <i>port</i> does not keep track of its location.
+<tt>Fresh-line</tt> writes a newline character to <i>output-port</i> if
+<tt>(current-row <i>port</i>)</tt> is not 0.</p>
+<p>
+</p>
+<pre class=verbatim>(define p (make-tracking-output-port (open-output-file &quot;/tmp/temp&quot;)))
+(list (current-row p) (current-column p))
+    <code class=verbatim>=&gt; </code>'(0 0)
+(display &quot;012&quot; p)
+(list (current-row p) (current-column p))
+    <code class=verbatim>=&gt; </code>'(0 3)
+(fresh-line p)
+(list (current-row p) (current-column p))
+    <code class=verbatim>=&gt; </code>'(1 0)
+(fresh-line p)
+(list (current-row p) (current-column p))
+    <code class=verbatim>=&gt; </code>'(1 0)
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.14"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.14">5.14&nbsp;&nbsp;Fluid bindings</a></h2>
+<p>These procedures implement dynamic binding and are in structure <tt>fluids</tt>.
+A <i>fluid</i> is a cell whose value can be bound dynamically.
+Each fluid has a top-level value that is used when the fluid
+is unbound in the current dynamic environment.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-fluid<i> value</i>)&nbsp;--&gt;&nbsp;<i>fluid</i></tt><a name="node_idx_260"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(fluid<i> fluid</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_262"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(let-fluid<i> fluid value thunk</i>)&nbsp;--&gt;&nbsp;<i>value(s)</i></tt><a name="node_idx_264"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(let-fluids<i> fluid<sub>0</sub> value<sub>0</sub>  fluid<sub>1</sub> value<sub>1</sub> <tt>...</tt>thunk</i>)&nbsp;--&gt;&nbsp;<i>value(s)</i></tt><a name="node_idx_266"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-fluid</tt> returns a new fluid with <i>value</i> as its initial
+top-level value.
+<tt>Fluid</tt> returns <tt>fluid</tt>&rsquo;s current value.
+<tt>Let-fluid</tt> calls <tt>thunk</tt>, with <i>fluid</i> bound to <i>value</i>
+until <tt>thunk</tt> returns.
+Using a continuation to throw out of the call to <tt>thunk</tt> causes
+<i>fluid</i> to revert to its original value, while throwing back
+in causes <i>fluid</i> to be rebound to <i>value</i>.
+<tt>Let-fluid</tt> returns the value(s) returned by <i>thunk</i>.
+<tt>Let-fluids</tt> is identical to <tt>let-fluid</tt> except that it binds
+an arbitrary number of fluids to new values.</p>
+<p>
+</p>
+<pre class=verbatim>(let* ((f (make-fluid 'a))
+       (v0 (fluid f))
+       (v1 (let-fluid f 'b
+             (lambda ()
+               (fluid f))))
+       (v2 (fluid f)))
+  (list v0 v1 v2))
+  <code class=verbatim>=&gt; </code>'(a b a)
+</pre><p></p>
+<p>
+</p>
+<pre class=verbatim>(let ((f (make-fluid 'a))
+      (path '())
+      (c #f))
+  (let ((add (lambda ()
+               (set! path (cons (fluid f) path)))))
+    (add)
+    (let-fluid f 'b
+      (lambda ()
+        (call-with-current-continuation
+          (lambda (c0)
+            (set! c c0)))
+        (add)))
+    (add)
+    (if (&lt; (length path) 5)
+        (c)
+        (reverse path))))
+  <code class=verbatim>=&gt; </code>'(a b a b a)
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.15"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.15">5.15&nbsp;&nbsp;OS strings</a></h2>
+<p></p>
+<p>
+<a name="node_idx_268"></a>On common operating systems such as Unix and Windows, various
+parameters to OS functionality---such as file names, user names,
+command-line arguments etc.---appear as text in most contexts, but are
+really byte sequences: On Unix, the byte sequence may be interpreted
+as text through some locale-determined encoding.  On Windows, such
+parameters are typically represented as sequences of UTF-16 code
+units.  In both cases, not every such byte sequence has a string
+equivalent: On Unix, a byte sequence encoding a file name using
+Latin-1 often cannot be decoded using UTF-8.  On Windows, unpaired
+UTF-16 surrogates are admissible in encodings, and no lossless text
+decoding for them exists.</p>
+<p>
+For representing such string-like parameters, Scheme&nbsp;48 uses an
+abstraction called <i>OS strings</i>.  An OS string is created from
+either a string or a NUL-terminated byte sequence stored in a byte
+vector, and has an associated text codec (see
+section&nbsp;<a href="manual-Z-H-7.html#node_sec_6.6.1">6.6.1</a>) that is able to convert from one
+representation to the other.  The exact meaning of a NUL-terminated
+byte sequence is dependent on this text codec.  However, only codecs
+for encodings that are a conservative extension of ASCII (such as
+ASCII itself, Latin-1, or UTF-8) should be used here, to allow a
+minimal set of portable file names.  (The Windows port uses a special
+synthetic encoding called UTF-8of16 compatible with UTF-8 but capable
+of encoding even invalid UTF-16 internally, but uses the UTF-8 codec
+at the Scheme level.)</p>
+<p>
+Most procedures accepting OS strings also accept strings or byte
+vectors, which are then used to construct a OS string.  In the headers
+of the specifications of these procedures, such arguments occur as
+<i>os-string-thing</i>.<a name="node_idx_270"></a>The standard Scheme procedures such as <tt>open-input-file</tt> that
+take file names all accept <i>os-string-thing</i> arguments.  OS
+strings are in the <tt>os-strings</tt> structure.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(os-string?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_272"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-os-string<i> text-codec string/byte-vector</i>)&nbsp;--&gt;&nbsp;<i>os-string</i></tt><a name="node_idx_274"></a></p>
+</ul><p>
+The <tt>os-string?</tt> predicate returns <tt>#t</tt> if its argument is
+an OS string, <tt>#f</tt> otherwise.</p>
+<p>
+The <tt>make-os-string</tt> procedure creates an OS string from a text
+codec and a byte vector or string that defines its contents.  If the
+argument is a byte vector, it does not matter if it is NUL-terminated
+or not.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(string-&gt;os-string<i> string</i>)&nbsp;--&gt;&nbsp;<i>os-string</i></tt><a name="node_idx_276"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(byte-vector-&gt;os-string<i> byte-vector</i>)&nbsp;--&gt;&nbsp;<i>os-string</i></tt><a name="node_idx_278"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(x-&gt;os-string<i> os-string-thing</i>)&nbsp;--&gt;&nbsp;<i>os-string</i></tt><a name="node_idx_280"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These procedures create an OS string from a string, a byte-vector
+(whose last value should be 0), and an <i>os-string-thing</i> argument,
+respectively, always using the standard OS-string text codec (see
+below).</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(os-string-&gt;byte-vector<i> os-string</i>)&nbsp;--&gt;&nbsp;<i>byte-vector</i></tt><a name="node_idx_282"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(os-string-&gt;string<i> os-string</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_284"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These procedures yield the contents of an OS string.  For an OS string
+created from a string, <tt>os-string-&gt;string</tt> will return a string
+with the same contents; for an OS string created from a byte vector,
+<tt>os-string-&gt;byte-vector</tt> will return a byte vector with the same
+contents.  For the other cases, data loss as determined by the text
+codec is possible.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(os-string-text-codec<i> os-string</i>)&nbsp;--&gt;&nbsp;<i>text-codec</i></tt><a name="node_idx_286"></a></p>
+</ul><p>
+This procedure returns the text codec of the OS string.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(os-string=?<i> os-string os-string</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_288"></a></p>
+</ul><p>
+This procedure returns <tt>#t</tt> if its arguments denote the same
+byte sequence, <tt>#f</tt> otherwise.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(x-&gt;os-byte-vector<i> os-string-thing</i>)&nbsp;--&gt;&nbsp;<i>byte-vector</i></tt><a name="node_idx_290"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-&gt;os-byte-vector<i> string</i>)&nbsp;--&gt;&nbsp;<i>byte-vector</i></tt><a name="node_idx_292"></a></p>
+</ul><p>
+These are convenience procedures: The first is the composition of
+<tt>x-&gt;os-string</tt> and <tt>os-string-&gt;byte-vector</tt>, and the second
+is the composition of <tt>string-&gt;os-string</tt> and
+<tt>os-string-&gt;byte-vector</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(current-os-string-text-codec<i></i>)&nbsp;--&gt;&nbsp;<i>text-codec</i></tt><a name="node_idx_294"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(call-with-os-string-text-codec<i> text-codec thunk</i>)&nbsp;--&gt;&nbsp;<i> value(s)</i></tt><a name="node_idx_296"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The <tt>current-os-string-text-codec</tt> returns the current text codec
+used for creating new OS strings.  The initial default is determined
+by the operating system.  (On Unix, this is the text codec determined
+by the locale.  On Windows, this is UTF-8.)  The
+<tt>call-with-os-string-text-codec</tt> procedure dynamically binds the
+current text codec to <i>text-codec</i> during the invocation of
+<i>thunk</i>.</p>
+<p>
+</p>
+<a name="node_sec_5.16"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.16">5.16&nbsp;&nbsp;Shell commands</a></h2>
+<p>Structure <tt>c-system-function</tt> provides access to the C <tt>system()</tt>
+function.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(have-system?<i></i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_298"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(system<i> os-string-thing</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_300"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Have-system?</tt> returns true if the underlying C implementation
+has a command processor.
+<tt>(System <i>string</i>)</tt> passes <i>string</i> to the C
+<tt>system()</tt> function and returns the result.</p>
+<p>
+</p>
+<pre class=verbatim>(begin
+  (system &quot;echo foo &gt; test-file&quot;)
+  (call-with-input-file &quot;test-file&quot; read))
+<code class=verbatim>=&gt; </code>'foo
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.17"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.17">5.17&nbsp;&nbsp;Sockets</a></h2>
+<p></p>
+<p>
+Structure <tt>sockets</tt> provides access to TCP/IP sockets for interprocess
+and network communication.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(open-socket<i></i>)&nbsp;--&gt;&nbsp;<i>socket</i></tt><a name="node_idx_302"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(open-socket<i> port-number</i>)&nbsp;--&gt;&nbsp;<i>socket</i></tt><a name="node_idx_304"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(socket-port-number<i> socket</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_306"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(close-socket<i> socket</i>)</tt><a name="node_idx_308"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(socket-accept<i> socket</i>)&nbsp;--&gt;&nbsp;<i>input-port output-port</i></tt><a name="node_idx_310"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-host-name<i></i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_312"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Open-socket</tt> creates a new socket.
+If no <i>port-number</i> is supplied the system picks one at random.
+<tt>Socket-port-number</tt> returns a socket&rsquo;s port number.
+<tt>Close-socket</tt> closes a socket, preventing any further connections.
+<tt>Socket-accept</tt> accepts a single connection on <i>socket</i>, returning
+an input port and an output port for communicating with the client.
+If no client is waiting <tt>socket-accept</tt> blocks until one appears.
+<tt>Get-host-name</tt> returns the network name of the machine.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(socket-client<i> host-name port-number</i>)&nbsp;--&gt;&nbsp;<i>input-port output-port</i></tt><a name="node_idx_314"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Socket-client</tt> connects to the server at <i>port-number</i> on
+the machine named <i>host-name</i>.
+<tt>Socket-client</tt> blocks until the server accepts the connection.</p>
+<p>
+The following simple example shows a server and client for a centralized UID
+service.
+</p>
+<pre class=verbatim>(define (id-server)
+  (let ((socket (open-socket)))
+    (display &quot;Waiting on port &quot;)
+    (display (socket-port-number socket))
+    (newline)
+    (let loop ((next-id 0))
+      (call-with-values
+        (lambda ()
+          (socket-accept socket))
+        (lambda (in out)
+          (display next-id out)
+          (close-input-port in)
+          (close-output-port out)
+          (loop (+ next-id 1)))))))
+         
+(define (get-id machine port-number)
+  (call-with-values
+    (lambda ()
+      (socket-client machine port-number))
+    (lambda (in out)
+      (let ((id (read in)))
+        (close-input-port in)
+        (close-output-port out)
+        id))))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.18"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.18">5.18&nbsp;&nbsp;Profiling</a></h2>
+<p>The profiler can be used programmatically from within the code and
+its results can be processed dynamically.</p>
+<p>
+The structure <tt>profiler</tt> offers basic data structures and functions.
+All functions need a <tt>profile-data</tt> record argument that can be created with
+<tt>make-empty-profile-data</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-empty-profile-data<i></i>)&nbsp;--&gt;&nbsp;<i>profile-data</i></tt><a name="node_idx_316"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-thunk<i> profile-data thunk [interrupt-time [with-non-instr?]]</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_318"></a></p>
+</ul><p></p>
+<p>
+<tt>profile-thunk</tt> executes a thunk under the profiler. The data is stored in
+the <i>profile-data</i> record passed as argument. Optionally the timeout for the profiler interrupt
+can be passed (in milliseconds). The return value of <tt>profile-thunk</tt> is the return value
+of <tt>thunk</tt>. By default, non-instrumented code will be profiled by the sampling process.
+By passing <tt>with-non-instr? = #f</tt> only instrumented functions will be profiled.</p>
+<p>
+After profiling data, can be retrieved with the following accessors:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-starttime<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_320"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-endtime<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_322"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-runtime<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_324"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-memoryuse<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_326"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-gcruns<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_328"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-samples<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_330"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-data-interrupttime<i> profile-data</i>)&nbsp;--&gt;&nbsp;<i>number</i></tt><a name="node_idx_332"></a></p>
+</ul><p></p>
+<p>
+Times are in milliseconds, memory usage in bytes.</p>
+<p>
+The following functions produce the same output as the <tt>,profile</tt> command
+(see section <a href="manual-Z-H-4.html#node_sec_3.6">3.6</a>).
+They all take an optional <i>port</i> argument. Default is the <tt>current-output-port</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(profile-display<i> profile-data [port]</i>)</tt><a name="node_idx_334"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-display-overview<i> profile-data [port]</i>)</tt><a name="node_idx_336"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-display-flat<i> profile-data [port]</i>)</tt><a name="node_idx_338"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-display-tree<i> profile-data [port]</i>)</tt><a name="node_idx_340"></a></p>
+</ul><p></p>
+<p>
+<tt>profile-display</tt> prints the full output of the profiler.
+The other <tt>profile-display-<tt>...</tt></tt> functions only display the respective part of the output.</p>
+<p>
+The single fields in the flat profile can be retrieved with the following accessors:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-calls<i> profile-data names</i>)</tt><a name="node_idx_342"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-reccalls<i> profile-data names</i>)</tt><a name="node_idx_344"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-nonreccalls<i> profile-data names</i>)</tt><a name="node_idx_346"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-occurs<i> profile-data names</i>)</tt><a name="node_idx_348"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-hist<i> profile-data names</i>)</tt><a name="node_idx_350"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-memoryuse<i> profile-data names</i>)</tt><a name="node_idx_352"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-timeshare<i> profile-data names</i>)</tt><a name="node_idx_354"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-time-cumulative<i> profile-data names</i>)</tt><a name="node_idx_356"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(profile-function-time-self<i> profile-data names</i>)</tt><a name="node_idx_358"></a></p>
+</ul><p></p>
+<p>
+Here <i>names</i> is the list of names specifying the function, optionally
+with it&rsquo;s module. For example, <tt>names = (&quot;dynamic-wind&quot;, &quot;wind&quot;)</tt>
+would specify the <tt>dynamic-wind</tt> function in the module <tt>wind</tt>, if
+it was seen while profiling. If two or more functions match, the first one
+is used. If no function matches, the functions return <tt>#{Unspecific}</tt>.</p>
+<p>
+The argument <i>names</i> can also be a plain string, as in
+<tt>(profile-display-function-flat prof-data &quot;module&quot;)</tt>. This will display
+all flat function profiles that have &lsquo;&lsquo;module&rsquo;&rsquo; either as name or module.</p>
+<p>
+The meanings of the fields that the functions return are as follows:
+</p>
+<ul>
+<li><p><tt>calls</tt>:
+total number of calls (recursive and non-recursive) to the function
+</p>
+<li><p><tt>reccalls</tt>: 
+total number of recursive calls to the function
+</p>
+<li><p><tt>nonreccalls</tt>: 
+total number of non-recursive calls to the function
+</p>
+<li><p><tt>occurs</tt>: 
+number of times the function was seen on stack while profiling
+</p>
+<li><p><tt>hist</tt>: 
+number of times the function was seen running while profiling
+</p>
+<li><p><tt>memoryuse</tt>: 
+bytes of memory used by the function
+</p>
+<li><p><tt>timeshare</tt>: 
+percentage of time used by the function itself (number from 0 to 1)
+</p>
+<li><p><tt>time-cumulative</tt>: 
+total time in ms the function was on call-stack
+</p>
+<li><p><tt>time-self</tt>: 
+total time in ms the function actively running
+</p>
+</ul><p></p>
+<p>
+The following shows a short example of the usage of the profiler interface, where <tt>main</tt>
+is the function to be profiled:
+</p>
+<pre class=verbatim>(define prof-data (make-empty-profile-data))
+
+(profile-thunk prof-data (lambda () (main 22)))
+(display &quot;Samples: &quot;)
+(display (profile-data-samples prof-data))
+(newline)
+
+(profile-display-overview prof-data)
+(profile-display-flat prof-data (current-output-port))
+(profile-display-tree prof-data)
+
+; print only function &quot;a&quot;
+(profile-display-function-flat prof-data '(&quot;a&quot;))
+
+; print only function &quot;a&quot; in file &quot;x.scm&quot;
+(profile-display-function-flat prof-data '(&quot;a&quot; &quot;x.scm&quot;))
+
+; print all profiled functions in file &quot;x.scm&quot;
+(profile-display-function-flat prof-data &quot;x.scm&quot;)
+
+; print percentage of time &quot;a&quot; was running
+(display (* (profile-function-timeshare prof-data '(&quot;a&quot;)) 100))
+</pre><p></p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_5.19"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19">5.19&nbsp;&nbsp;Macros for writing loops</a></h2>
+<p></p>
+<p>
+<tt>Iterate</tt> and <tt>reduce</tt> are extensions of named-<tt>let</tt> for
+writing loops that walk down one or more sequences,
+such as the elements of a list or vector, the
+characters read from a port, or an arithmetic series.
+Additional sequences can be defined by the user.
+<tt>Iterate</tt> and <tt>reduce</tt> are in structure <tt>reduce</tt>.</p>
+<p>
+</p>
+<a name="node_sec_5.19.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.1">5.19.1&nbsp;&nbsp;<tt>Iterate</tt></a></h3>
+<p>The syntax of <tt>iterate</tt> is:
+</p>
+<pre class=verbatim>  (iterate <i>loop-name</i>
+           ((<i>sequence-type</i> <i>element-variable</i> <i>sequence-data</i> <tt>...</tt>)
+            <tt>...</tt>)
+           ((<i>state-variable</i> <i>initial-value</i>)
+            <tt>...</tt>)
+    <i>body-expression</i>
+    [<i>final-expression</i>])
+</pre><p></p>
+<p>
+<tt>Iterate</tt> steps the <i>element-variable</i>s in parallel through the
+sequences, while each <i>state-variable</i> has the corresponding
+<i>initial-value</i> for the first iteration and have later values
+supplied by <i>body-expression</i>. 
+If any sequence has reached its limit the value of the <tt>iterate</tt>
+expression is
+the value of <i>final-expression</i>, if present, or the current values of
+the <i>state-variable</i>s, returned as multiple values.
+If no sequence has reached
+its limit, <i>body-expression</i> is evaluated and either calls <i>loop-name</i> with
+new values for the <i>state-variable</i>s, or returns some other value(s).</p>
+<p>
+The <i>loop-name</i> and the <i>state-variable</i>s and <i>initial-value</i>s behave
+exactly as in named-<tt>let</tt>.  The named-<tt>let</tt> expression
+</p>
+<pre class=verbatim>  (let loop-name ((state-variable initial-value) ...)
+    body ...)
+</pre><p>
+is equivalent to an <tt>iterate</tt> expression with no sequences
+(and with an explicit
+<tt>let</tt> wrapped around the body expressions to take care of any
+internal <tt>define</tt>s):
+</p>
+<pre class=verbatim>  (iterate loop-name
+           ()
+           ((state-variable initial-value) ...)
+    (let () body ...))
+</pre><p></p>
+<p>
+The <i>sequence-type</i>s are keywords (they are actually macros of a particular
+form; it is easy to add additional types of sequences).
+Examples are <tt>list*</tt> which walks down the elements of a list and
+<tt>vector*</tt> which does the same for vectors.
+For each iteration, each <i>element-variable</i> is bound to the next
+element of the sequence.
+The <i>sequence-data</i> gives the actual list or vector or whatever.</p>
+<p>
+If there is a <i>final-expression</i>, it is evaluated when the end of one or more
+sequences is reached.
+If the <i>body-expression</i> does not call <i>loop-name</i> the
+<i>final-expression</i> is not evaluated.
+The <i>state-variable</i>s are visible in
+<i>final-expression</i> but the <i>sequence-variable</i>s are not.  </p>
+<p>
+The <i>body-expression</i> and the <i>final-expression</i> are in tail-position within
+the <tt>iterate</tt>.
+Unlike named-<tt>let</tt>, the behavior of a non-tail-recursive call to
+<i>loop-name</i> is unspecified (because iterating down a sequence may involve side
+effects, such as reading characters from a port).</p>
+<p>
+</p>
+<a name="node_sec_5.19.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.2">5.19.2&nbsp;&nbsp;<tt>Reduce</tt></a></h3>
+<p>If an <tt>iterate</tt> expression is not meant to terminate before a sequence
+has reached its end,
+<i>body-expression</i> will always end with a tail call to <i>loop-name</i>.
+<tt>Reduce</tt> is a macro that makes this common case explicit.
+The syntax of <tt>reduce</tt> is
+the same as that of <tt>iterate</tt>, except that there is no <i>loop-name</i>.
+The <i>body-expression</i> returns new values of the <i>state-variable</i>s
+instead of passing them to <i>loop-name</i>.
+Thus <i>body-expression</i> must return as many values as there are state
+variables.
+By special dispensation, if there are
+no state variables then <i>body-expression</i> may return any number of values,
+all of which are ignored.</p>
+<p>
+The syntax of <tt>reduce</tt> is:
+</p>
+<pre class=verbatim>  (reduce ((<i>sequence-type</i> <i>element-variable</i> <i>sequence-data</i> <tt>...</tt>)
+            <tt>...</tt>)
+           ((<i>state-variable</i> <i>initial-value</i>)
+            <tt>...</tt>)
+    <i>body-expression</i>
+    [<i>final-expression</i>])
+</pre><p></p>
+<p>
+The value(s) returned by an instance of <tt>reduce</tt> is the value(s) returned
+by the <i>final-expression</i>, if present, or the current value(s) of the state
+variables when the end of one or more sequences is reached.</p>
+<p>
+A <tt>reduce</tt> expression can be rewritten as an equivalent <tt>iterate</tt>
+expression by adding a <i>loop-var</i> and a wrapper for the
+<i>body-expression</i> that calls the <i>loop-var</i>.
+</p>
+<pre class=verbatim>(iterate loop
+         ((<i>sequence-type</i> <i>element-variable</i> <i>sequence-data</i> <tt>...</tt>)
+          <tt>...</tt>)
+         ((<i>state-variable</i> <i>initial-value</i>)
+          <tt>...</tt>)
+  (call-with-values (lambda ()
+                      <i>body-expression</i>)
+                    loop)
+  [<i>final-expression</i>])
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.19.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.3">5.19.3&nbsp;&nbsp;Sequence types</a></h3>
+<p>The predefined sequence types are:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list* <i>elt-var</i> <i>list</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(list-spine* <i>elt-var</i> <i>list</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(list-spine-cycle-safe* <i>elt-var</i> <i>list</i> <i>on-cycle-thunk</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(vector* <i>elt-var</i> <i>vector</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(string* <i>elt-var</i> <i>string</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(count* <i>elt-var</i> <i>start</i> [<i>end</i> [<i>step</i>]])</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(bits* <i>elt-var</i> <i>i</i> [<i>size</i>])</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(input* <i>elt-var</i> <i>input-port</i> <i>read-procedure</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(stream* <i>elt-var</i> <i>procedure</i> <i>initial-data</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p></p>
+<p>
+For lists, vectors, and strings the element variable is bound to the
+successive elements of the list or vector, or the characters in the
+string.</p>
+<p>
+For <tt>list-spine*</tt> the element variable is bound to the successive
+pairs in the spine of the list.
+<tt>List-spine-cycle-safe*</tt> is similar, but calls <i>on-cycle-thunk</i>
+with no arguments and with the continuation of the loop macro at an
+unspecified time if <i>list</i> contains a cycle.</p>
+<p>
+For <tt>count*</tt> the element variable is bound to the elements of the sequence
+</p>
+<pre class=verbatim> <i>start</i>, <i>start</i> + <i>step</i>, <i>start</i> + 2<i>step</i>, <tt>...</tt>, <i>end</i>
+</pre><p>
+inclusive of <i>start</i> and exclusive of <i>end</i>.
+The default <i>step</i> is 1.
+The sequence does not terminate if no <i>end</i> is given or if there
+is no <em>N</em> &gt; 0 such that <i>end</i> = <i>start</i> + N<i>step</i>
+(<tt>=</tt> is used to test for termination).
+For example, <tt>(count* i 0 -1)</tt> doesn&rsquo;t terminate
+because it begins past the <i>end</i> value and <tt>(count* i 0 1 2)</tt> doesn&rsquo;t
+terminate because it skips over the <i>end</i> value.</p>
+<p>
+For <tt>bits*</tt>, the element variable is bound to a sequence of
+representations of successive bit-fields of <i>i</i>, from least to most
+significant.
+If <i>size</i> is present, it must be a positive exact integer, and the
+element variable is bound to a sequence of <i>size</i>-bit integers.
+If <i>size</i> is omitted, <tt>bits*</tt> iterates through single bits, and the
+element variable is bound to a sequence of booleans. <tt>#t</tt> represents 1,
+and <tt>#f</tt> represents 0.</p>
+<p>
+For <tt>input*</tt> the elements are the results of successive applications
+of <i>read-procedure</i> to <i>input-port</i>.
+The sequence ends when <i>read-procedure</i> returns an end-of-file object.</p>
+<p>
+For a stream, the <i>procedure</i> takes the current data value as an argument
+and returns two values, the next value of the sequence and a new data value.
+If the new data is <tt>#f</tt> then the previous element was the last
+one.  For example,
+</p>
+<pre class=verbatim>  (list* elt my-list)
+</pre><p>
+is the same as
+</p>
+<pre class=verbatim>  (stream* elt list-&gt;stream my-list)
+</pre><p>
+where <tt>list-&gt;stream</tt> is
+</p>
+<pre class=verbatim>  (lambda (list)
+    (if (null? list)
+        (values 'ignored #f)
+        (values (car list) (cdr list))))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.19.4"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.4">5.19.4&nbsp;&nbsp;Synchronous sequences</a></h3>
+<p>When using the sequence types described above, a loop terminates when any of
+its sequences reaches its end.  To help detect bugs it is useful to have
+sequence types that check to see if two or more sequences end on the same
+iteration.  For this purpose there is second set of sequence types called
+synchronous sequences.  These are identical to the ones listed above except
+that they cause an error to be signalled if a loop is terminated by a
+synchronous sequence and some other synchronous sequence did not reach its
+end on the same iteration.</p>
+<p>
+Sequences are checked for termination in order, from left to right, and
+if a loop is terminated by a non-synchronous sequence no further checking
+is done.</p>
+<p>
+The synchronous sequences are:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list% <i>elt-var</i> <i>list</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(list-spine% <i>elt-var</i> <i>list</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(list-spine-cycle-safe% <i>elt-var</i> <i>list</i> <i>on-cycle-thunk</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(vector% <i>elt-var</i> <i>vector</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(string% <i>elt-var</i> <i>string</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(count% <i>elt-var</i> <i>start</i> <i>end</i> [<i>step</i>])</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(input% <i>elt-var</i> <i>input-port</i> <i>read-procedure</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(stream% <i>elt-var</i> <i>procedure</i> <i>initial-data</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p></p>
+<p>
+Note that the synchronous <tt>count%</tt> must have an <i>end</i>, unlike the
+nonsynchronous <tt>count*</tt>.</p>
+<p>
+</p>
+<a name="node_sec_5.19.5"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.5">5.19.5&nbsp;&nbsp;Examples</a></h3>
+<p></p>
+
+<p class=noindent>Gathering the indexes of list elements that answer true to some
+predicate.
+</p>
+<pre class=verbatim>(lambda (my-list predicate)
+  (reduce ((list* elt my-list)
+           (count* i 0))
+          ((hits '()))
+    (if (predicate elt)
+        (cons i hits)
+        hits)
+    (reverse hits))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>Looking for the index of an element of a list.
+</p>
+<pre class=verbatim>(lambda (my-list predicate)
+  (iterate loop
+           ((list* elt my-list)
+            (count* i 0))
+           ()                                ; no state
+    (if (predicate elt)
+        i
+        (loop))))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>Reading one line.
+</p>
+<pre class=verbatim>(define (read-line port)
+  (iterate loop
+           ((input* c port read-char))
+           ((chars '()))
+    (if (char=? c #<code class=verbatim>\</code>newline)
+        (list-&gt;string (reverse chars))
+        (loop (cons c chars)))
+    (if (null? chars)
+        (eof-object)
+        ; no newline at end of file
+        (list-&gt;string (reverse chars)))))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>Counting the lines in a file.  We can&rsquo;t use <tt>count*</tt> because we
+need the value of the count after the loop has finished.
+</p>
+<pre class=verbatim>(define (line-count name)
+  (call-with-input-file name
+    (lambda (in)
+      (reduce ((input* l in read-line))
+              ((i 0))
+        (+ i 1)))))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.19.6"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.6">5.19.6&nbsp;&nbsp;Defining sequence types</a></h3>
+<p>The sequence types are object-oriented macros similar to enumerations.
+A non-synchronous sequence macro needs to supply three values:
+<tt>#f</tt> to indicate that it isn&rsquo;t synchronous, a list of state variables
+and their initializers, and the code for one iteration.
+The first
+two methods are CPS&rsquo;ed: they take another macro and argument to
+which to pass their result.
+The <tt>sync</tt> method gets no additional arguments.
+The <tt>state-vars</tt> method is passed a list of names which
+will be bound to the arguments to the sequence.
+The final method, for the step, is passed the list of names bound to
+the arguments and the list of state variables.
+In addition there is
+a variable to be bound to the next element of the sequence, the
+body expression for the loop, and an expression for terminating the
+loop.</p>
+<p>
+The definition of <tt>list*</tt> is
+</p>
+<pre class=verbatim>(define-syntax list*
+  (syntax-rules (sync state-vars step)
+    ((list* sync (next more))
+     (next #f more))
+    ((list* state-vars (start-list) (next more))
+     (next ((list-var start-list)) more))
+    ((list* step (start-list) (list-var)
+            value-var loop-body final-exp)
+     (if (null? list-var)
+         final-exp
+         (let ((value-var (car list-var))
+               (list-var (cdr list-var)))
+           loop-body)))))
+</pre><p></p>
+<p>
+Synchronized sequences are the same, except that they need to
+provide a termination test to be used when some other synchronized
+method terminates the loop.
+</p>
+<pre class=verbatim>(define-syntax list%
+  (syntax-rules (sync done)
+    ((list% sync (next more))
+     (next #t more))
+    ((list% done (start-list) (list-var))
+     (null? list-var))
+    ((list% stuff ...)
+     (list* stuff ...))))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.19.7"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.19.7">5.19.7&nbsp;&nbsp;Expanded code</a></h3>
+<p>The expansion of 
+</p>
+<pre class=verbatim>  (reduce ((list* x '(1 2 3)))
+          ((r '()))
+    (cons x r))
+</pre><p>
+is
+</p>
+<pre class=verbatim>  (let ((final (lambda (r) (values r)))
+        (list '(1 2 3))
+        (r '()))
+    (let loop ((list list) (r r))
+      (if (null? list)
+          (final r)
+          (let ((x (car list))
+                (list (cdr list)))
+            (let ((continue (lambda (r)
+                              (loop list r))))
+              (continue (cons x r)))))))
+</pre><p></p>
+<p>
+The only inefficiencies in this code are the <tt>final</tt> and <tt>continue</tt>
+procedures, both of which could be substituted in-line.
+The macro expander could do the substitution for <tt>continue</tt> when there
+is no explicit proceed variable, as in this case, but not in general.</p>
+<p>
+</p>
+<a name="node_sec_5.20"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.20">5.20&nbsp;&nbsp;Sorting lists and vectors</a></h2>
+<p></p>
+<p>
+(This section, as the libraries it describes, was written mostly by
+Olin Shivers for the draft of SRFI&nbsp;32.)</p>
+<p>
+The sort libraries in Scheme&nbsp;48 include
+</p>
+<ul>
+<li><p>vector insert sort (stable)
+</p>
+<li><p>vector heap sort
+</p>
+<li><p>vector quick sort (with regular comparisons and with median-of-3 pivot picking)
+</p>
+<li><p>vector merge sort (stable)
+</p>
+<li><p>pure and destructive list merge sort (stable)
+</p>
+<li><p>stable vector and list merge
+</p>
+<li><p>miscellaneous sort-related procedures: vector and list merging, 
+sorted predicates, vector binary search, vector and list 
+delete-equal-neighbor procedures.
+</p>
+<li><p>a general, non-algorithmic set of procedure names for general sorting
+and merging
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_5.20.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.20.1">5.20.1&nbsp;&nbsp;Design rules</a></h3>
+<p></p>
+<a name="node_sec_Temp_5"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_5">What vs. how</a></h5>
+<p>There are two different interfaces: &lsquo;&lsquo;what&rsquo;&rsquo; (simple) and &lsquo;&lsquo;how&rsquo;&rsquo; (detailed).</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b>Simple</b></dt><dd> you specify semantics: datatype (list or vector), 
+mutability, and stability.<p>
+</p>
+</dd><dt><b>Detailed</b></dt><dd> you specify the actual algorithm (quick, heap,
+insert, merge). Different algorithms have different properties,
+both semantic and pragmatic, so these exports are necessary.<p>
+It is necessarily the case that the specifications of these procedures
+make statements about execution &lsquo;&lsquo;pragmatics.&rsquo;&rsquo; For example, the sole
+distinction between heap sort and quick sort---both of which are
+provided by this library----is one of execution time, which is not a
+&lsquo;&lsquo;semantic&rsquo;&rsquo; distinction. Similar resource-use statements are made about
+&lsquo;&lsquo;iterative&rsquo;&rsquo; procedures, meaning that they can execute on input of
+arbitrary size in a constant number of stack frames.
+</p>
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_6"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_6">Consistency across procedure signatures</a></h5>
+<p>The two interfaces share common procedure signatures wherever
+possible, to facilitate switching a given call from one procedure
+to another.</p>
+<p>
+</p>
+<a name="node_sec_Temp_7"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_7">Less-than parameter first, data parameter after</a></h5>
+<p>These procedures uniformly observe the following parameter order:
+the data to be sorted comes after the comparison procedure.
+That is, we write</p>
+<p>
+</p>
+<pre class=verbatim>  (sort &lt; <i>list</i>)
+</pre><p></p>
+<p>
+not</p>
+<p>
+</p>
+<pre class=verbatim>  (sort <i>list</i> &lt;)
+</pre><p>
+</p>
+<p>
+</p>
+<a name="node_sec_Temp_8"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_8">Ordering, comparison procedures and stability</a></h5>
+<p>These routines take a &lt; comparison procedure, not a &le; comparison
+procedure, and they sort into increasing order. The difference between
+a &lt; spec and a &le; spec comes up in two places: </p>
+<p>
+</p>
+<ul>
+<li><p>the definition of an ordered or sorted data set, and
+</p>
+<li><p>the definition of a stable sorting algorithm.
+</p>
+</ul><p>
+</p>
+<p>
+We say that a data set (a list or vector) is <i>sorted</i> or
+<i>ordered</i> if it contains no adjacent pair of values <tt>...</tt> <em>x</em>,
+<em>y</em> <tt>...</tt> such that <em>y</em> &lt; <em>x</em>.</p>
+<p>
+In other words, scanning across the data never takes a &lsquo;&lsquo;downwards&rsquo;&rsquo; step.</p>
+<p>
+If you use a &le; procedure where these algorithms expect a &lt;
+procedure, you may not get the answers you expect. For example,
+the <tt>list-sorted?</tt> procedure will return false if you pass it a &le; comparison
+procedure and an ordered list containing adjacent equal elements.</p>
+<p>
+A &lsquo;&lsquo;stable&rsquo;&rsquo; sort is one that preserves the pre-existing order of equal
+elements. Suppose, for example, that we sort a list of numbers by 
+comparing their absolute values, i.e., using comparison procedure
+</p>
+<pre class=verbatim>(lambda (x y) (&lt; (abs x) (abs y)))
+</pre><p>
+If we sort a list that contains both 3 and -3: </p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center><tt>...</tt> 3, <tt>...</tt>, &minus;3 <tt>...</tt></td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+then a stable sort is an algorithm that will not swap the order
+of these two elements, that is, the answer is guaranteed to to look like
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center><tt>...</tt> 3, &minus;3 <tt>...</tt></td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+not
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center><tt>...</tt> &minus;3, 3 <tt>...</tt></td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+Choosing &lt; for the comparison procedure instead of &le; affects
+how stability is coded. Given an adjacent pair <em>x</em>, <em>y</em>, <tt>(&lt;
+<em>y</em> <em>x</em>)</tt> means &lsquo;&lsquo;<em>x</em> should be moved in front of <em>x</em>&rsquo;&rsquo;---otherwise,
+leave things as they are. So using a &le; procedure where a &lt;
+procedure is expected will <em>invert</em> stability.</p>
+<p>
+This is due to the definition of equality, given a &lt; comparator:
+</p>
+<pre class=verbatim>    (and (not (&lt; x y))
+         (not (&lt; y x)))
+</pre><p>
+The definition is rather different, given a &le; comparator:
+</p>
+<pre class=verbatim>    (and (&lt;= x y)
+         (&lt;= y x))
+</pre><p>
+A &lsquo;&lsquo;stable&rsquo;&rsquo; merge is one that reliably favors one of its data sets
+when equal items appear in both data sets. <em>All merge operations in
+this library are stable</em>, breaking ties between data sets in favor
+of the first data set---elements of the first list come before equal 
+elements in the second list.</p>
+<p>
+So, if we are merging two lists of numbers ordered by absolute value,
+the stable merge operation <tt>list-merge</tt>
+</p>
+<pre class=verbatim>    (list-merge (lambda (x y) (&lt; (abs x) (abs y)))
+                '(0 -2 4 8 -10) '(-1 3 -4 7))
+</pre><p>
+reliably places the 4 of the first list before the equal-comparing -4
+of the second list:
+</p>
+<pre class=verbatim>    (0 -1 -2 4 -4 7 8 -10)
+</pre><p>
+Some sort algorithms <em>will not work correctly</em> if given a &le;
+when they expect a &lt; comparison (or vice-versa).</p>
+<p>
+</p>
+<p>
+In short, if your comparison procedure <em>f</em> answers true to <tt>(<em>f</em> x x)</tt>, then 
+</p>
+<ul>
+<li><p>using a stable sorting or merging algorithm will not give you a
+stable sort or merge, 
+</p>
+<li><p><tt>list-sorted?</tt> may surprise you.
+</p>
+</ul><p>
+Note that  you can synthesize a &lt; procedure from a &le; procedure with
+</p>
+<pre class=verbatim>    (lambda (x y) (not (&lt;= y x)))
+</pre><p>
+if need be. </p>
+<p>
+Precise definitions give sharp edges to tools, but require care in use. 
+&lsquo;&lsquo;Measure twice, cut once.&rsquo;&rsquo;</p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_Temp_9"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_9">All vector operations accept optional subrange parameters</a></h5>
+<p>The vector operations specified below all take optional
+<tt>start</tt>/<tt>end</tt> arguments indicating a selected subrange
+of a vector&rsquo;s elements. If a <tt>start</tt> parameter or
+<tt>start</tt>/<tt>end</tt> parameter pair is given to such a
+procedure, they must be exact, non-negative integers, such that
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center>
+0 &le; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>start</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td> &le; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>end</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td> &le; <tt></td><td><table><tr><td align=center></td><td><table><tr><td align=center>(vector-length </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>vector</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>)</td></tr></table></td><td></td></tr></table></td><td></tt>
+</td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+where <i>vector</i> is the related vector parameter. If not specified,
+they default to 0 and the length of the vector, respectively. They are
+interpreted to select the range [<i>start</i>,<i>end</i>), that
+is, all elements from index <i>start</i> (inclusive) up to, but not
+including, index <i>end</i>.</p>
+<p>
+</p>
+<a name="node_sec_Temp_10"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_10">Required vs. allowed side-effects</a></h5>
+<p><tt>List-sort!</tt> and <tt>List-stable-sort!</tt> are allowed, but
+not required, to alter their arguments&rsquo; cons cells to construct the
+result list. This is consistent with the what-not-how character of the
+group of procedures to which they belong (the <tt>sorting</tt> structure).</p>
+<p>
+The <tt>list-delete-neighbor-dups!</tt>, <tt>list-merge!</tt> and
+<tt>list-merge-sort!</tt> procedures, on the other hand, provide
+specific algorithms, and, as such, explicitly commit to the use of
+side-effects on their input lists in order to guarantee their key
+algorithmic properties (e.g., linear-time operation).</p>
+<p>
+</p>
+<a name="node_sec_5.20.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.20.2">5.20.2&nbsp;&nbsp;Procedure specification</a></h3>
+<p></p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top >Structure name </td><td valign=top >Functionality</td></tr>
+<tr><td valign=top ><tt>sorting</tt> </td><td valign=top >General sorting for lists and vectors</td></tr>
+<tr><td valign=top ><tt>sorted</tt> </td><td valign=top >Sorted predicates for lists and vectors</td></tr>
+<tr><td valign=top ><tt>list-merge-sort</tt></td><td valign=top >List merge sort</td></tr>
+<tr><td valign=top ><tt>vector-merge-sort</tt> </td><td valign=top >Vector merge sort</td></tr>
+<tr><td valign=top ><tt>vector-heap-sort</tt> </td><td valign=top >Vector heap sort</td></tr>
+<tr><td valign=top ><tt>vector-quick-sort</tt> </td><td valign=top >Vector quick sort</td></tr>
+<tr><td valign=top ><tt>vector-quick-sort3</tt> </td><td valign=top >Vector quick sort with 3-way comparisons</td></tr>
+<tr><td valign=top ><tt>vector-insert-sort</tt> </td><td valign=top >Vector insertion sort</td></tr>
+<tr><td valign=top ><tt>delete-neighbor-duplicates</tt> </td><td valign=top >List and vector delete neighbor duplicates</td></tr>
+<tr><td valign=top ><tt>binary-searches</tt> </td><td valign=top >Vector binary search
+</td></tr></table>
+</td></tr></table></div>
+
+Note that there is no &lsquo;&lsquo;list insert sort&rsquo;&rsquo; package, as you might as well always
+use list merge sort. The reference implementation&rsquo;s destructive list merge
+sort will do fewer <tt>set-cdr!</tt>s than a destructive insert sort.<p>
+</p>
+<a name="node_sec_Temp_11"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_11">Procedure naming and functionality</a></h5>
+<p>Almost all of the procedures described below are variants of two basic
+operations: sorting and merging. These procedures are consistently named
+by composing a set of basic lexemes to indicate what they do.
+</p>
+<div align=center><table><tr><td>
+</td></tr><tr><td>
+<p>
+</p>
+<table border=0><tr><td valign=top >Lexeme </td><td valign=top >Meaning</td></tr>
+<tr><td valign=top ><tt>sort</tt></td><td valign=top >The procedure sorts its input data set by some &lt; comparison procedure.
+</td></tr>
+<tr><td valign=top ><tt>merge</tt></td><td valign=top >The procedure merges two ordered data sets into a single ordered
+result.
+</td></tr>
+<tr><td valign=top ><tt>stable</tt> </td><td valign=top >This lexeme indicates that the sort is a stable one.
+</td></tr>
+<tr><td valign=top ><tt>vector</tt></td><td valign=top >The procedure operates upon vectors.
+</td></tr>
+<tr><td valign=top ><tt>list</tt> </td><td valign=top >The procedure operates upon lists.
+</td></tr>
+<tr><td valign=top ><tt>!</tt>      </td><td valign=top >Procedures that end in <tt>!</tt> are allowed, and sometimes required, 
+to reuse their input storage to construct their answer.
+</td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+<a name="node_sec_Temp_12"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_12">Types of parameters and return values</a></h5>
+<p>In the procedures specified below,
+</p>
+<ul>
+<li><p>A <tt>&lt;</tt> or <tt>=</tt> parameter is a procedure accepting
+two arguments taken from the specified procedure&rsquo;s data set(s), and
+returning a boolean;
+</p>
+<li><p><tt>Start</tt> and <tt>end</tt> parameters are exact, non-negative integers that 
+serve as vector indices selecting a subrange of some associated vector.
+When specified, they must satisfy the relation
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center>
+0 &le; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>start</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td> &le; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>end</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td> &le; <tt></td><td><table><tr><td align=center></td><td><table><tr><td align=center>(vector-length </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>vector</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>)</td></tr></table></td><td></td></tr></table></td><td></tt>
+</td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+where <i>vector</i> is the associated vector.
+</p>
+</ul><p>
+Passing values to procedures with these parameters that do not satisfy
+these types is an error.</p>
+<p>
+If a procedure is said to return &lsquo;&lsquo;unspecified,&rsquo;&rsquo; this means that
+nothing at all is said about what the procedure returns, not even the
+number of return values. Such a procedure is not even required to be
+consistent from call to call in the nature or number of its return
+values. It is simply required to return a value (or values) that may
+be passed to a command continuation, e.g.  as the value of an
+expression appearing as a non-terminal subform of a <tt>begin</tt>
+expression. Note that in R<sup>5</sup>RS, this restricts such a procedure to
+returning a single value; non-R<sup>5</sup>RS systems may not even provide this
+restriction.</p>
+<p>
+</p>
+<a name="node_sec_5.20.2.1"></a>
+<h4 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.20.2.1">5.20.2.1&nbsp;&nbsp;<tt>sorting</tt>---general sorting package</a></h4>
+<p>This library provides basic sorting and merging functionality suitable for
+general programming. The procedures are named by their semantic properties,
+i.e., what they do to the data (sort, stable sort, merge, and so forth).</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list-sorted?<i> &lt; list</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_360"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-merge<i> &lt; list<sub>1</sub> list<sub>2</sub></i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_362"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-merge!<i> &lt; list<sub>1</sub> list<sub>2</sub></i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_364"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-sort<i> &lt; lis</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_366"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-sort!<i> &lt; lis</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_368"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-stable-sort<i>  &lt; list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_370"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-stable-sort!<i> &lt; list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_372"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-delete-neighbor-dups<i>   =  list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_374"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-sorted?<i> &lt; v [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_376"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-merge<i> &lt; v<sub>1</sub> v<sub>2</sub> [start1 [end1 [start2 [end2]]]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_378"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-merge!<i> &lt; v v<sub>1</sub> v<sub>2</sub> [start [start1 [end1 [start2 [end2]]]]]</i>)</tt><a name="node_idx_380"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-sort<i> &lt; v [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_382"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-sort!<i> &lt; v [start [end]]</i>)</tt><a name="node_idx_384"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-stable-sort<i> &lt; v [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_386"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-stable-sort!<i> &lt; v [start [end]]</i>)</tt><a name="node_idx_388"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-delete-neighbor-dups<i>  =  v [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_390"></a></p>
+</ul><p></p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top >Procedure </td><td valign=top >Suggested algorithm
+</td></tr>
+<tr><td valign=top ><tt>list-sort</tt> </td><td valign=top >vector heap or quick</td></tr>
+<tr><td valign=top ><tt>list-sort!</tt> </td><td valign=top >list merge sort</td></tr>
+<tr><td valign=top ><tt>list-stable-sort</tt> </td><td valign=top >vector merge sort</td></tr>
+<tr><td valign=top ><tt>list-stable-sort!</tt> </td><td valign=top >list merge sort</td></tr>
+<tr><td valign=top ><tt>vector-sort</tt> </td><td valign=top >heap or quick sort</td></tr>
+<tr><td valign=top ><tt>vector-sort!</tt> </td><td valign=top >heap or quick sort</td></tr>
+<tr><td valign=top ><tt>vector-stable-sort</tt> </td><td valign=top >vector merge sort</td></tr>
+<tr><td valign=top ><tt>vector-stable-sort!</tt> merge sort
+</td></tr></table>
+</td></tr></table></div>
+
+<tt>List-Sorted?</tt> and <tt>vector-sorted?</tt> return true if their
+input list or vector is in sorted order, as determined by their <i>&lt;</i>
+comparison parameter.<p>
+All four merge operations are stable: an element of the initial list
+<i>list<sub>1</sub></i> or vector <i>vector<sub>1</sub></i> will come before an
+equal-comparing element in the second list <i>list<sub>2</sub></i> or vector
+<i>vector<sub>2</sub></i> in the result.</p>
+<p>
+The procedures
+</p>
+<ul>
+<li><p><tt>list-merge</tt>
+</p>
+<li><p><tt>list-sort</tt>
+</p>
+<li><p><tt>list-stable-sort</tt>
+</p>
+<li><p><tt>list-delete-neighbor-dups</tt>
+</p>
+</ul><p>
+do not alter their inputs and are allowed to return a value that shares 
+a common tail with a list argument.</p>
+<p>
+The procedure
+</p>
+<ul>
+<li><p><tt>list-sort!</tt>
+</p>
+<li><p><tt>list-stable-sort!</tt>
+</p>
+</ul><p>
+are &lsquo;&lsquo;linear update&rsquo;&rsquo; operators---they are allowed, but not required, to
+alter the cons cells of their arguments to produce their results. </p>
+<p>
+On the other hand, the <tt>list-merge!</tt> procedure 
+make only a single, iterative, linear-time pass over its argument
+list, using <tt>set-cdr!</tt>s to rearrange the cells of the list
+into the final result ---it works &lsquo;&lsquo;in place.&rsquo;&rsquo; Hence, any cons cell
+appearing in the result must have originally appeared in an input. The
+intent of this iterative-algorithm commitment is to allow the
+programmer to be sure that if, for example, <tt>list-merge!</tt> is asked to
+merge two ten-million-element lists, the operation will complete
+without performing some extremely (possibly twenty-million) deep
+recursion.</p>
+<p>
+The vector procedures
+</p>
+<ul>
+<li><p><tt>vector-sort</tt>
+</p>
+<li><p><tt>vector-stable-sort</tt>
+</p>
+<li><p><tt>vector-delete-neighbor-dups</tt>
+</p>
+</ul><p>
+do not alter their inputs, but allocate a fresh vector for their result,
+of length <i>end</i> &minus; <i>start</i>. </p>
+<p>
+The vector procedures
+</p>
+<ul>
+<li><p><tt>vector-sort!</tt>
+</p>
+<li><p><tt>vector-stable-sort!</tt>
+</p>
+</ul><p>
+sort their data in-place. (But note that <tt>vector-stable-sort!</tt>
+may allocate temporary storage proportional to the size of the
+input
+.)</p>
+<p>
+<tt>Vector-merge</tt> returns a vector of length (<i>end<sub>1</sub></i>&minus;<i>start<sub>1</sub></i> + (<i>end<sub>2</sub></i>&minus;<i>start<sub>2</sub></i>).</p>
+<p>
+<tt>Vector-merge!</tt> writes its result into vector <i>v</i>,
+beginning at index <i>start</i>, for indices less than <i>end</i>  = 
+<i>start</i>  +  (<i>end<sub>1</sub></i>&minus;<i>start<sub>1</sub></i>)  + 
+(<i>end<sub>2</sub></i>&minus;<i>start<sub>2</sub></i>). The target subvector
+<i>v</i>[<i>start</i>,<i>end</i>) may not overlap either source
+subvector <i>vector<sub>1</sub></i>[<i>start<sub>1</sub></i>,<i>end<sub>1</sub></i>) <i>vector<sub>2</sub></i>[<i>start<sub>2</sub></i>,<i>end<sub>2</sub></i>).</p>
+<p>
+The <tt><tt>...</tt>-delete-neighbor-dups-<tt>...</tt></tt> procedures:
+These procedures delete adjacent duplicate elements from a list or a
+vector, using a given element-equality procedure. The first/leftmost
+element of a run of equal elements is the one that survives. The list or
+vector is not otherwise disordered.</p>
+<p>
+These procedures are linear time---much faster than the <em>O</em>(<em>n</em><sup>2</sup>) general
+duplicate-element deletors that do not assume any &lsquo;&lsquo;bunching&rsquo;&rsquo; of elements
+(such as the ones provided by SRFI&nbsp;1). If you want to delete duplicate
+elements from a large list or vector, you can sort the elements to bring
+equal items together, then use one of these procedures, for a total time
+of <em>O</em>(<em>n</em>log(<em>n</em>)).</p>
+<p>
+The comparison procedure  =  passed to these procedures is always
+applied
+<tt>( =  <em>x</em> <em>y</em>)</tt>
+where <em>x</em> comes before <em>y</em> in the containing list or vector.</p>
+<p>
+</p>
+<ul>
+<li><p><tt>List-delete-neighbor-dups</tt> does not alter its input list; its answer
+may share storage with the input list.
+</p>
+<li><p><tt>Vector-delete-neighbor-dups</tt> does not alter its input vector, but
+rather allocates a fresh vector to hold the result.
+</p>
+</ul><p>
+Examples:</p>
+<p>
+</p>
+<pre class=verbatim>(list-delete-neighbor-dups = '(1 1 2 7 7 7 0 -2 -2))
+  ===&rArr; (1 2 7 0 -2)
+
+(vector-delete-neighbor-dups = '#(1 1 2 7 7 7 0 -2 -2))
+  ===&rArr; #(1 2 7 0 -2)
+
+(vector-delete-neighbor-dups = '#(1 1 2 7 7 7 0 -2 -2) 3 7)
+  ===&rArr; #(7 0 -2)
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.20.2.2"></a>
+<h4 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.20.2.2">5.20.2.2&nbsp;&nbsp;Algorithm-specific sorting packages</a></h4>
+<p>These packages provide more specific sorting functionality, that is,
+specific commitment to particular algorithms that have particular
+pragmatic consequences (such as memory locality, asymptotic running time)
+beyond their semantic behaviour (sorting, stable sorting, merging, etc.).
+Programmers that need a particular algorithm can use one of these packages.</p>
+<p>
+</p>
+<a name="node_sec_Temp_13"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_13"><tt>sorted</tt>---sorted predicates</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list-sorted?<i> &lt; list</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_392"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-sorted?<i> &lt; vector</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_394"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-sorted?<i> &lt; vector start</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_396"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-sorted?<i> &lt; vector start end</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_398"></a></p>
+</ul><p></p>
+<p>
+Return <tt>#f</tt> iff there is an adjacent pair <tt>...</tt> <em>x</em>, <em>y</em> <tt>...</tt> in the input
+list or vector such that <em>y</em> &lt; <em>x</em>. The optional <i>start</i>/<i>end</i> range 
+arguments restrict <tt>vector-sorted?</tt> to the indicated subvector.</p>
+<p>
+</p>
+<a name="node_sec_Temp_14"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_14"><tt>list-merge-sort</tt>---list merge sort</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list-merge-sort<i> &lt; list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_400"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-merge-sort!<i> &lt; list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_402"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-merge<i> list<sub>1</sub> &lt; list<sub>2</sub></i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_404"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-merge!<i> list<sub>1</sub> &lt; list<sub>2</sub></i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_406"></a></p>
+</ul><p>
+The sort procedures sort their data using a list merge sort, which is
+stable. (The reference implementation is, additionally, a &lsquo;&lsquo;natural&rsquo;&rsquo; sort.
+See below for the properties of this algorithm.)</p>
+<p>
+The <tt>!</tt> procedures are destructive---they use <tt>set-cdr!</tt>s to
+rearrange the cells of the lists into the proper order. As such, they
+do not allocate any extra cons cells---they are &lsquo;&lsquo;in place&rsquo;&rsquo; sorts.
+</p>
+<p>
+The merge operations are stable: an element of <i>list<sub>1</sub></i> will
+come before an equal-comparing element in <i>list<sub>2</sub></i> in the result
+list.</p>
+<p>
+</p>
+<a name="node_sec_Temp_15"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_15"><tt>vector-merge-sort</tt>---vector merge sort</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(vector-merge-sort<i> &lt; vector [start [end [temp]]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_408"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-merge-sort!<i> &lt; vector [start [end [temp]]]</i>)</tt><a name="node_idx_410"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-merge<i> &lt; vector<sub>1</sub> vector<sub>2</sub> [start<sub>1</sub> [end<sub>1</sub> [start<sub>2</sub> [end<sub>2</sub>]]]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_412"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-merge!<i> &lt; vector vector<sub>1</sub> vector<sub>2</sub> [start [start<sub>1</sub> [end<sub>1</sub> [start<sub>2</sub> [end<sub>2</sub>]]]]]</i>)</tt><a name="node_idx_414"></a></p>
+</ul><p>
+The sort procedures sort their data using vector merge sort, which is
+stable. (The reference implementation is, additionally, a &lsquo;&lsquo;natural&rsquo;&rsquo; sort.
+See below for the properties of this algorithm.)</p>
+<p>
+The optional <i>start</i>/<i>end</i> arguments provide for sorting of subranges, and
+default to 0 and the length of the corresponding vector.</p>
+<p>
+Merge-sorting a vector requires the allocation of a temporary
+&lsquo;&lsquo;scratch&rsquo;&rsquo; work vector for the duration of the sort. This scratch
+vector can be passed in by the client as the optional <i>temp</i>
+argument; if so, the supplied vector must be of size &le; <i>end</i>,
+and will not be altered outside the range [start,end). If not
+supplied, the sort routines allocate one themselves.</p>
+<p>
+The merge operations are stable: an element of <i>vector<sub>1</sub></i> will
+come before an equal-comparing element in <i>vector<sub>2</sub></i> in the
+result vector.</p>
+<p>
+</p>
+<ul>
+<li><p><tt>Vector-merge-sort!</tt> leaves its result in
+<i>vector</i>[<i>start</i>,<i>end</i>).
+</p>
+<li><p><tt>Vector-merge-sort</tt> returns a vector of length
+<i>end</i>&minus;<i>start</i>.
+</p>
+<li><p><tt>Vector-merge</tt> returns a vector of length
+(<i>end<sub>1</sub></i>&minus;<i>start<sub>1</sub></i>) + (<i>end<sub>2</sub></i>&minus;<i>start<sub>2</sub></i>).
+</p>
+<li><p><tt>Vector-merge!</tt> writes its result into <i>vector</i>, beginning
+at index <i>start</i>,
+for indices less than <i>end</i>  = <i>start</i>  + 
+(<i>end<sub>1</sub></i>&minus;<i>start<sub>1</sub></i>)  +  (<i>end<sub>2</sub></i>&minus;<i>start<sub>2</sub></i>).
+The target subvector
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center></td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>vector</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>[</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>start</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>,</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>end</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>)</td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+may not overlap either source subvector
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center></td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>vector<sub>1</sub></td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>[</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>start<sub>1</sub></td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>,</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>end<sub>1</sub></td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>), </td><td><table><tr><td align=center></td><td><table><tr><td align=center> or </td></tr></table></td><td></td></tr></table></td><td>
+</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>vector<sub>2</sub></td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>[</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>start<sub>2</sub></td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>,</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>end<sub>2</sub></td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>).</td></tr></table></td><td></td></tr></table></div>
+<p class=noindent>
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_16"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_16"><tt>vector-heap-sort</tt>---vector heap sort</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(vector-heap-sort<i> &lt; vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_416"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-heap-sort!<i> &lt; vector [start [end]]</i>)</tt><a name="node_idx_418"></a></p>
+</ul><p>
+These procedures sort their data using heap sort, 
+which is not a stable sorting algorithm.</p>
+<p>
+<tt>Vector-heap-sort</tt> returns a vector of length <i>end</i>&minus;<i>start</i>. 
+<tt>Vector-heap-sort!</tt> is in-place, leaving its result in
+<i>vector</i>[<i>start</i>,<i>end</i>).</p>
+<p>
+</p>
+<a name="node_sec_Temp_17"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_17"><tt>vector-quick-sort</tt>---vector quick sort</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(vector-quick-sort<i> &lt; vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_420"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-quick-sort!<i> &lt; vector [start [end]]</i>)</tt><a name="node_idx_422"></a></p>
+</ul><p>
+These procedures sort their data using quick sort, 
+which is not a stable sorting algorithm.</p>
+<p>
+<tt>Vector-quick-sort</tt> returns a vector of length <i>end</i>&minus;<i>start</i>. 
+<tt>Vector-quick-sort!</tt> is in-place, leaving its result in
+<i>vector</i>[<i>start</i>,<i>end</i>).</p>
+<p>
+</p>
+<a name="node_sec_Temp_18"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_18"><tt>vector-quick-sort3</tt>---vector quick sort with 3-way comparisons</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(vector-quick-sort3<i> comp vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_424"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-quick-sort3!<i> comp vector [start [end]]</i>)</tt><a name="node_idx_426"></a></p>
+</ul><p>
+These procedures sort their data using quick sort, 
+which is not a stable sorting algorithm.</p>
+<p>
+<tt>Vector-quick-sort3</tt> returns a vector of length <i>end</i>&minus;<i>start</i>. 
+<tt>Vector-quick-sort3!</tt> is in-place, leaving its result in
+<i>vector</i>[<i>start</i>,<i>end</i>).</p>
+<p>
+These procedures implement a variant of quick-sort that takes a three-way
+comparison procedure <em>C</em>. <em>C</em> compares a pair of elements and returns
+an exact integer whose sign indicates their relationship:
+</p>
+<a name="node_eqn_Temp_19"></a>
+<div align=center><table width=100%>
+<tr><td align=right>
+(<em>C</em> <em>x</em> <em>y</em>) &lt; 0   </td><td align=center width=2%>&rArr;</td><td>   <em>x</em>&lt;<em>y</em></td></tr>
+<tr><td align=right>(<em>C</em> <em>x</em> <em>y</em>)  =  0   </td><td align=center width=2%>&rArr;</td><td>   <em>x</em> = <em>y</em></td></tr>
+<tr><td align=right>(<em>C</em> <em>x</em> <em>y</em>) &gt; 0   </td><td align=center width=2%>&rArr;</td><td>   <em>x</em>&gt;<em>y</em>
+</td></tr>
+</table></div><p>*</p>
+<p>
+To help remember the relationship between the sign of the result and
+the relation, use the procedure &minus; as the model for <em>C</em>: (&minus; <em>x</em> <em>y</em>) &lt; 0
+means that <em>x</em> &lt; <em>y</em>; (&minus; <em>x</em> <em>y</em>) &gt; 0 means that <em>x</em> &gt; <em>y</em>.</p>
+<p>
+</p>
+<a name="node_sec_Temp_20"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_20"><tt>vector-insert-sort</tt>---vector insertion sort</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(vector-insert-sort<i> &lt; vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_428"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-insert-sort!<i> &lt; vector [start [end]]</i>)</tt><a name="node_idx_430"></a></p>
+</ul><p>
+These procedures stably sort their data using insertion sort.
+</p>
+<ul>
+<li><p><tt>Vector-insert-sort</tt> returns a vector of length <i>end</i>&minus;<i>start</i>.
+</p>
+<li><p><tt>Vector-insert-sort!</tt> is in-place, leaving its result in
+<i>vector</i>[<i>start</i>,<i>end</i>).
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_21"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_21"><tt>delete-neighbor-duplicates</tt>---list and vector
+delete neighbor duplicates</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list-delete-neighbor-dups<i>  =  list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_432"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(list-delete-neighbor-dups!<i>  =  list</i>)&nbsp;--&gt;&nbsp;<i>list</i></tt><a name="node_idx_434"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-delete-neighbor-dups<i>  =  vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>vector</i></tt><a name="node_idx_436"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-delete-neighbor-dups!<i>  =  vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>end&prime;</i></tt><a name="node_idx_438"></a></p>
+</ul><p>
+These procedures delete adjacent duplicate elements from a list or
+a vector, using a given element-equality procedure  = . The first/leftmost
+element of a run of equal elements is the one that survives. The list
+or vector is not otherwise disordered.</p>
+<p>
+These procedures are linear time---much faster than the <em>O</em>(<em>n</em><sup>2</sup>) general
+duplicate-element deletors that do not assume any &lsquo;&lsquo;bunching&rsquo;&rsquo; of elements
+(such as the ones provided by SRFI&nbsp;1). If you want to delete duplicate
+elements from a large list or vector, you can sort the elements to bring
+equal items together, then use one of these procedures, for a total time
+of <em>O</em>(<em>n</em>log(<em>n</em>)).</p>
+<p>
+The comparison procedure = passed to these procedures is always
+applied</p>
+<p>
+</p>
+<pre class=verbatim>( =  <em>x</em> <em>y</em>)
+</pre><p></p>
+<p>
+where <em>x</em> comes before <em>y</em> in the containing list or vector.
+</p>
+<ul>
+<li><p><tt>List-delete-neighbor-dups</tt> does not alter its input list; its
+answer may share storage with the input list.
+</p>
+<li><p><tt>Vector-delete-neighbor-dups</tt> does not alter its input vector, but
+rather allocates a fresh vector to hold the result.
+</p>
+<li><p><tt>List-delete-neighbor-dups!</tt> is permitted, but not required, to
+mutate its input list in order to construct its answer.
+</p>
+<li><p><tt>Vector-delete-neighbor-dups!</tt> reuses its input vector to hold the
+answer, packing its answer into the index range
+[<i>start</i>,<i>end&prime;</i>), where
+<i>end&prime;</i> is the non-negative exact integer returned as its value. It
+returns <i>end&prime;</i> as its result. The vector is not altered outside the range
+[<i>start</i>,<i>end&prime;</i>).
+</p>
+</ul><p>
+Examples:</p>
+<p>
+</p>
+<pre class=verbatim>(list-delete-neighbor-dups = '(1 1 2 7 7 7 0 -2 -2))
+  ===&rArr; (1 2 7 0 -2)
+
+(vector-delete-neighbor-dups = '#(1 1 2 7 7 7 0 -2 -2))
+  ===&rArr; #(1 2 7 0 -2)
+
+(vector-delete-neighbor-dups = '#(1 1 2 7 7 7 0 -2 -2) 3 7)
+  ===&rArr; #(7 0 -2)
+
+;; Result left in v[3,9):
+(let ((v (vector 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6)))
+  (cons (vector-delete-neighbor-dups! = v 3)
+        v))
+   ===&rArr; (9 . #(0 0 0 1 2 3 4 5 6 4 4 5 5 6 6))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_22"></a>
+<h5 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_22"><tt>binary-searches</tt>---vector binary search</a></h5>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(vector-binary-search<i> &lt; elt-&gt;key key vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>integer or <tt>#f</tt></i></tt><a name="node_idx_440"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(vector-binary-search3<i> compare-proc vector [start [end]]</i>)&nbsp;--&gt;&nbsp;<i>integer or <tt>#f</tt></i></tt><a name="node_idx_442"></a></p>
+</ul><p></p>
+<p>
+<tt>vector-binary-search</tt> searches <i>vector</i> in range
+[<i>start</i>,<i>end</i>) (which default to 0 and the length of
+<i>vector</i>, respectively) for an element whose
+associated key is equal to <i>key</i>. The procedure <i>elt-&gt;key</i> is used to map
+an element to its associated key. The elements of the vector are assumed
+to be ordered by the &lt; relation on these keys. That is, </p>
+<p>
+</p>
+<pre class=verbatim>(vector-sorted? (lambda (x y) (&lt; (<i>elt-&gt;key</i> x) (<i>elt-&gt;key</i> y)))
+                <i>vector</i> <i>start</i> <i>end</i>) ===&rArr; true
+</pre><p></p>
+<p>
+An element <i>e</i> of <i>vector</i> is a match for <i>key</i> if it&rsquo;s
+neither less nor greater than the key:</p>
+<p>
+</p>
+<pre class=verbatim>(and (not (&lt; (<i>elt-&gt;key</i> <i>e</i>) <i>key</i>))
+     (not (&lt; <i>key</i> (<i>elt-&gt;key</i> <i>e</i>))))
+</pre><p></p>
+<p>
+If there is such an element, the procedure returns its index in the
+vector as an exact integer. If there is no such element in the searched 
+range, the procedure returns false.</p>
+<p>
+</p>
+<pre class=verbatim>(vector-binary-search &lt; car 4 '#((1 . one) (3 . three)
+                                 (4 . four) (25 . twenty-five)))
+===&rArr; 2
+
+(vector-binary-search &lt; car 7 '#((1 . one) (3 . three)
+                                 (4 . four) (25 . twenty-five)))
+===&rArr; #f
+</pre><p>    </p>
+<p>
+<tt>Vector-binary-search3</tt> is a variant that uses a three-way comparison
+procedure <i>compare-proc</i>. <i>Compare-proc</i> compares its
+parameter to the search key, and returns an
+exact integer whose sign indicates its relationship to the search key.
+</p>
+<div class=mathdisplay align=center><table><tr><td></td><td><table><tr><td align=center>
+</td><td><table><tr><td align=center>array</td><td><table><tr><td align=center><em>r</em><em>c</em><em>l</em><em>c</em><em>r</em><em>c</em><em>l</em></td></tr></table></td><td>
+(</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>compare-proc</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>&nbsp;<em>x</em>) &nbsp;</td><td align=center>&nbsp;&lt;&nbsp;</td><td align=center>&nbsp; 0&nbsp;</td><td align=center>&nbsp; &rArr;&nbsp;</td><td align=center>&nbsp;  <em>x</em> &nbsp;</td><td align=center>&nbsp;&lt;&nbsp;</td><td align=center>&nbsp; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>search-key</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td></td></tr>
+<tr><td align=center>
+(</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>compare-proc</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>&nbsp;<em>x</em>) &nbsp;</td><td align=center>&nbsp; = &nbsp;</td><td align=center>&nbsp; 0&nbsp;</td><td align=center>&nbsp; &rArr;&nbsp;</td><td align=center>&nbsp;  <em>x</em> &nbsp;</td><td align=center>&nbsp; = &nbsp;</td><td align=center>&nbsp; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>search-key</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td></td></tr>
+<tr><td align=center>
+(</td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>compare-proc</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>&nbsp;<em>x</em>) &nbsp;</td><td align=center>&nbsp;&gt;&nbsp;</td><td align=center>&nbsp; 0&nbsp;</td><td align=center>&nbsp; &rArr;&nbsp;</td><td align=center>&nbsp;  <em>x</em> &nbsp;</td><td align=center>&nbsp;&gt;&nbsp;</td><td align=center>&nbsp; </td><td><table><tr><td align=center><i></td><td><table><tr><td align=center></td><td><table><tr><td align=center>search-key</td></tr></table></td><td></td></tr></table></td><td></i></td></tr></table></td><td>
+endarray</td></tr></table></td><td>
+</td></tr></table></td><td></td></tr></table></div>
+<p class=noindent></p>
+<p>
+</p>
+<pre class=verbatim>(vector-binary-search3 (lambda (elt) (- (car elt) 4))
+                       '#((1 . one) (3 . three)
+                          (4 . four) (25 . twenty-five)))
+===&rArr; 2
+</pre><p></p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_5.20.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.20.3">5.20.3&nbsp;&nbsp;Algorithmic properties</a></h3>
+<p>Different sort and merge algorithms have different properties.
+Choose the algorithm that matches your needs:</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b>Vector insert sort</b></dt><dd>
+Stable, but only suitable for small vectors---<em>O</em>(<em>n</em><sup>2</sup>).
+</dd><dt><b>Vector quick sort</b></dt><dd>
+Not stable. Is fast on average---<em>O</em>(<em>n</em>log(<em>n</em>))---but has bad worst-case
+behaviour. Has good memory locality for big vectors (unlike heap sort). 
+A clever pivot-picking trick (median of three samples) helps avoid 
+worst-case behaviour, but pathological cases can still blow up.
+</dd><dt><b>Vector heap sort</b></dt><dd>
+Not stable. Guaranteed fast---<em>O</em>(<em>n</em>log(<em>n</em>)) <em>worst</em> case. Poor
+locality on large vectors. A very reliable workhorse.
+</dd><dt><b>Vector merge sort</b></dt><dd>
+Stable. Not in-place---requires a temporary buffer of equal size. 
+Fast---<em>O</em>(<em>n</em>log(<em>n</em>))---and has good memory locality for large vectors.<p>
+The implementation of vector merge sort provided by this
+implementation is, additionally, a &lsquo;&lsquo;natural&rsquo;&rsquo; sort, meaning that it
+exploits existing order in the input data, providing <em>O</em>(<em>n</em>) best case.
+</p>
+</dd><dt><b>Destructive list merge sort</b></dt><dd>
+Stable, fast and in-place (i.e., allocates no new cons cells). &lsquo;&lsquo;Fast&rsquo;&rsquo;
+means <em>O</em>(<em>n</em>log(<em>n</em>)) worst-case, and substantially better if the data
+is already mostly ordered, all the way down to linear time for
+a completely-ordered input list (i.e., it is a &lsquo;&lsquo;natural&rsquo;&rsquo; sort).<p>
+Note that sorting lists involves chasing pointers through memory, which
+can be a loser on modern machine architectures because of poor cache and
+page locality.
+Sorting vectors has inherently better locality.</p>
+<p>
+This implementation&rsquo;s destructive list merge and merge sort
+implementations are opportunistic---they avoid redundant
+<tt>set-cdr!</tt>s, and try to take long
+already-ordered runs of list structure as-is when doing the merges.
+</p>
+</dd><dt><b>Pure list merge sort</b></dt><dd>
+Stable and fast---<em>O</em>(<em>n</em>log(<em>n</em>)) worst-case, and possibly <em>O</em>(<em>n</em>),
+depending upon the input list (see discussion above).
+</dd></dl><p></p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top >Algorithm </td><td valign=top >Stable? </td><td valign=top >Worst case </td><td valign=top >Average case </td><td valign=top >In-place</td></tr>
+<tr><td valign=top >Vector insert </td><td valign=top >Yes</td><td valign=top ><em>O</em>(<em>n</em><sup>2</sup>) </td><td valign=top ><em>O</em>(<em>n</em><sup>2</sup>)</td><td valign=top >Yes</td></tr>
+<tr><td valign=top >Vector quick  </td><td valign=top >No </td><td valign=top ><em>O</em>(<em>n</em><sup>2</sup>)  </td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top >Yes</td></tr>
+<tr><td valign=top >Vector heap   </td><td valign=top >No </td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top >Yes</td></tr>
+<tr><td valign=top >Vector merge  </td><td valign=top >Yes</td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top >No</td></tr>
+<tr><td valign=top >List merge    </td><td valign=top >Yes</td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top ><em>O</em>(<em>n</em>log(<em>n</em>))</td><td valign=top >Either
+</td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+<a name="node_sec_5.21"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.21">5.21&nbsp;&nbsp;Regular expressions</a></h2>
+<p></p>
+<p>
+This section describes a functional interface for building regular
+expressions and matching them against strings.
+The matching is done using the POSIX regular expression package.
+Regular expressions are in the structure <tt>regexps</tt>.</p>
+<p>
+A regular expression is either a character set, which matches any character
+in the set, or a composite expression containing one or more subexpressions.
+A regular expression can be matched against a string to determine success
+or failure, and to determine the substrings matched by particular subexpressions.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(regexp?<i> value</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_444"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Returns <tt>#t</tt> if <i>value</i> is a regular expression created
+using the functional interface for regular expressions, and <tt>#f</tt>
+otherwise.</p>
+<p>
+</p>
+<a name="node_sec_5.21.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.21.1">5.21.1&nbsp;&nbsp;Character sets</a></h3>
+<p>Character sets may be defined using a list of characters and strings,
+using a range or ranges of characters, or by using set operations on
+existing character sets.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(set<i> character-or-string <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_446"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(range<i> low-char high-char</i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_448"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(ranges<i> low-char high-char <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_450"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(ascii-range<i> low-char high-char</i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_452"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(ascii-ranges<i> low-char high-char <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_454"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Set</tt> returns a set that contains the character arguments and the
+characters in any string arguments.  <tt>Range</tt> returns a character
+set that contain all characters between <i>low-char</i> and <i>high-char</i>,
+inclusive.  <tt>Ranges</tt> returns a set that contains all characters in
+the given ranges.  <tt>Range</tt> and <tt>ranges</tt> use the ordering induced by
+<tt>char-&gt;integer</tt>.  <tt>Ascii-range</tt> and <tt>ascii-ranges</tt> use the
+ASCII ordering.
+It is an error for a <i>high-char</i> to be less than the preceding
+<i>low-char</i> in the appropriate ordering.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(negate<i> char-set</i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_456"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(intersection<i> char-set char-set</i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_458"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(union<i> char-set char-set</i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_460"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(subtract<i> char-set char-set</i>)&nbsp;--&gt;&nbsp;<i>char-set</i></tt><a name="node_idx_462"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These perform the indicated operations on character sets.</p>
+<p>
+The following character sets are predefined:
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><tt>lower-case</tt> </td><td valign=top ><tt>(set &quot;abcdefghijklmnopqrstuvwxyz&quot;)</tt> </td></tr>
+<tr><td valign=top ><tt>upper-case</tt> </td><td valign=top ><tt>(set &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;)</tt> </td></tr>
+<tr><td valign=top ><tt>alphabetic</tt> </td><td valign=top ><tt>(union lower-case upper-case)</tt> </td></tr>
+<tr><td valign=top ><tt>numeric</tt> </td><td valign=top ><tt>(set &quot;0123456789&quot;)</tt> </td></tr>
+<tr><td valign=top ><tt>alphanumeric</tt> </td><td valign=top ><tt>(union alphabetic numeric)</tt> </td></tr>
+<tr><td valign=top ><tt>punctuation</tt> </td><td valign=top ><tt>(set &quot;</tt><code class=verbatim>!\&quot;#$%&amp;'()*+,&#x2011;./:;&lt;=&gt;?@[\\]^_`{|}~</code><tt>&quot;)</tt> </td></tr>
+<tr><td valign=top ><tt>graphic</tt> </td><td valign=top ><tt>(union alphanumeric punctuation)</tt> </td></tr>
+<tr><td valign=top ><tt>printing</tt> </td><td valign=top ><tt>(union graphic (set #</tt><code class=verbatim>\</code><tt>space))</tt> </td></tr>
+<tr><td valign=top ><tt>control</tt> </td><td valign=top ><tt>(negate printing)</tt> </td></tr>
+<tr><td valign=top ><tt>blank</tt> </td><td valign=top ><tt>(set #</tt><code class=verbatim>\</code><tt>space (ascii-&gt;char 9))</tt> ; 9 is tab </td></tr>
+<tr><td valign=top ><tt>whitespace</tt> </td><td valign=top ><tt>(union (set #</tt><code class=verbatim>\</code><tt>space) (ascii-range 9 13))</tt> </td></tr>
+<tr><td valign=top ><tt>hexdigit</tt> </td><td valign=top ><tt>(set &quot;0123456789abcdefABCDEF&quot;)</tt> </td></tr>
+<tr><td valign=top ></td></tr></table></td></tr></table></div>
+
+
+<p class=noindent>The above are taken from the default locale in POSIX.
+The characters in <tt>whitespace</tt> are <i>space</i>, <i>tab</i>,
+<i>newline</i> (= <i>line feed</i>), <i>vertical tab</i>, <i>form feed</i>, and
+<i>carriage return</i>.</p>
+<p>
+</p>
+<a name="node_sec_5.21.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.21.2">5.21.2&nbsp;&nbsp;Anchoring</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(string-start<i></i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_464"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-end<i></i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_466"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>String-start</tt> returns a regular expression that matches the beginning
+of the string being matched against; string-end returns one that matches
+the end.</p>
+<p>
+</p>
+<a name="node_sec_5.21.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.21.3">5.21.3&nbsp;&nbsp;Composite expressions</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(sequence<i> reg-exp <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_468"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(one-of<i> reg-exp <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_470"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Sequence</tt> matches the concatenation of its arguments, <tt>one-of</tt> matches
+any one of its arguments.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(text<i> string</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_472"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Text</tt> returns a regular expression that matches the characters in
+<i>string</i>, in order.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(repeat<i> reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_474"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(repeat<i> count reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_476"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(repeat<i> min max reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_478"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Repeat</tt> returns a regular expression that matches zero or more
+occurrences of its <i>reg-exp</i> argument.  With no count the result
+will match any number of times (<i>reg-exp</i>*).  With a single
+count the returned expression will match
+<i>reg-exp</i> exactly that number of times.
+The final case will match from <i>min</i> to <i>max</i>
+repetitions, inclusive.
+<i>Max</i> may be <tt>#f</tt>, in which case there
+is no maximum number of matches.
+<i>Count</i> and <i>min</i> should be exact, non-negative integers;
+<i>max</i> should either be an exact non-negative integer or <tt>#f</tt>.</p>
+<p>
+</p>
+<a name="node_sec_5.21.4"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.21.4">5.21.4&nbsp;&nbsp;Case sensitivity</a></h3>
+<p>Regular expressions are normally case-sensitive.
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(ignore-case<i> reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_480"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(use-case<i> reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_482"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The value returned by
+<tt>ignore-case</tt> is identical its argument except that case will be
+ignored when matching.
+The value returned by <tt>use-case</tt> is protected
+from future applications of <tt>ignore-case</tt>.
+The expressions returned
+by <tt>use-case</tt> and <tt>ignore-case</tt> are unaffected by later uses of the
+these procedures.
+By way of example, the following matches <tt>&quot;ab&quot;</tt> but not <tt>&quot;aB&quot;</tt>,
+<tt>&quot;Ab&quot;</tt>, or <tt>&quot;AB&quot;</tt>.
+</p>
+<pre class=verbatim><tt>(text &quot;ab&quot;)</tt>
+</pre><p>
+</p>
+
+<p class=noindent>while
+</p>
+<pre class=verbatim><tt>(ignore-case (test &quot;ab&quot;))</tt>
+</pre><p>
+</p>
+
+<p class=noindent>matches <tt>&quot;ab&quot;</tt>, <tt>&quot;aB&quot;</tt>,
+<tt>&quot;Ab&quot;</tt>, and <tt>&quot;AB&quot;</tt> and
+</p>
+<pre class=verbatim>(ignore-case (sequence (text &quot;a&quot;)
+                       (use-case (text &quot;b&quot;))))
+</pre><p>
+</p>
+
+<p class=noindent>matches <tt>&quot;ab&quot;</tt> and <tt>&quot;Ab&quot;</tt> but not <tt>&quot;aB&quot;</tt> or <tt>&quot;AB&quot;</tt>.</p>
+<p>
+</p>
+<a name="node_sec_5.21.5"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.21.5">5.21.5&nbsp;&nbsp;Submatches and matching</a></h3>
+<p>A subexpression within a larger expression can be marked as a submatch.
+When an expression is matched against a string, the success or failure
+of each submatch within that expression is reported, as well as the
+location of the substring matched be each successful submatch.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(submatch<i> key reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_484"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(no-submatches<i> reg-exp</i>)&nbsp;--&gt;&nbsp;<i>reg-exp</i></tt><a name="node_idx_486"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Submatch</tt> returns a regular expression that matches its argument and
+causes the result of matching its argument to be reported by the <tt>match</tt>
+procedure.
+<i>Key</i> is used to indicate the result of this particular submatch 
+in the alist of successful submatches returned by <tt>match</tt>.
+Any value may be used as a <i>key</i>.
+<tt>No-submatches</tt> returns an expression identical to its
+argument, except that all submatches have been elided.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(any-match?<i> reg-exp string</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_488"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(exact-match?<i> reg-exp string</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_490"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(match<i> reg-exp string</i>)&nbsp;--&gt;&nbsp;<i>match or <tt>#f</tt></i></tt><a name="node_idx_492"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(match-start<i> match</i>)&nbsp;--&gt;&nbsp;<i>index</i></tt><a name="node_idx_494"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(match-end<i> match</i>)&nbsp;--&gt;&nbsp;<i>index</i></tt><a name="node_idx_496"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(match-submatches<i> match</i>)&nbsp;--&gt;&nbsp;<i>alist</i></tt><a name="node_idx_498"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Any-match?</tt> returns <tt>#t</tt> if <i>string</i> matches <i>reg-exp</i> or
+contains a substring that does, and <tt>#f</tt> otherwise.
+<tt>Exact-match?</tt> returns <tt>#t</tt> if <i>string</i> matches
+<i>reg-exp</i> and <tt>#f</tt> otherwise.</p>
+<p>
+<tt>Match</tt> returns <tt>#f</tt> if <i>reg-exp</i> does not match <i>string</i>
+and a match record if it does match.
+A match record contains three values: the beginning and end of the substring
+that matched
+the pattern and an a-list of submatch keys and corresponding match records
+for any submatches that also matched.
+<tt>Match-start</tt> returns the index of
+the first character in the matching substring and <tt>match-end</tt> gives index
+of the first character after the matching substring.
+<tt>Match-submatches</tt> returns an alist of submatch keys and match records.
+Only the top match record returned by <tt>match</tt> has a submatch alist.</p>
+<p>
+Matching occurs according to POSIX.
+The match returned is the one with the lowest starting index in <i>string</i>.
+If there is more than one such match, the longest is returned.
+Within that match the longest possible submatches are returned.</p>
+<p>
+All three matching procedures cache a compiled version of <i>reg-exp</i>.
+Subsequent calls with the same <i>reg-exp</i> will be more efficient.</p>
+<p>
+The C interface to the POSIX regular expression code uses ASCII <tt>nul</tt>
+as an end-of-string marker.
+The matching procedures will ignore any characters following an
+embedded ASCII <tt>nul</tt>s in <i>string</i>.</p>
+<p>
+</p>
+<pre class=verbatim>(define pattern (text &quot;abc&quot;))
+(any-match? pattern &quot;abc&quot;)         <code class=verbatim>=&gt; </code>#t
+(any-match? pattern &quot;abx&quot;)         <code class=verbatim>=&gt; </code>#f
+(any-match? pattern &quot;xxabcxx&quot;)     <code class=verbatim>=&gt; </code>#t
+
+(exact-match? pattern &quot;abc&quot;)       <code class=verbatim>=&gt; </code>#t
+(exact-match? pattern &quot;abx&quot;)       <code class=verbatim>=&gt; </code>#f
+(exact-match? pattern &quot;xxabcxx&quot;)   <code class=verbatim>=&gt; </code>#f
+
+(match pattern &quot;abc&quot;)              <code class=verbatim>=&gt; </code>#{match 0 3}
+(match pattern &quot;abx&quot;)              <code class=verbatim>=&gt; </code>#f
+(match pattern &quot;xxabcxx&quot;)          <code class=verbatim>=&gt; </code>#{match 2 5}
+
+(let ((x (match (sequence (text &quot;ab&quot;)
+                          (submatch 'foo (text &quot;cd&quot;))
+                          (text &quot;ef&quot;))
+                &quot;xxxabcdefxx&quot;)))
+  (list x (match-submatches x)))
+  <code class=verbatim>=&gt; </code>(#{match 3 9} ((foo . #{match 5 7}))
+
+(match-submatches
+  (match (sequence
+           (set &quot;a&quot;)
+           (one-of (submatch 'foo (text &quot;bc&quot;))
+                   (submatch 'bar (text &quot;BC&quot;))))
+         &quot;xxxaBCd&quot;))
+  <code class=verbatim>=&gt; </code>((bar . #{match 4 6}))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_5.22"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_5.22">5.22&nbsp;&nbsp;SRFIs</a></h2>
+<p>&lsquo;SRFI&rsquo; stands for &lsquo;Scheme Request For Implementation&rsquo;.
+An SRFI is a description of an extension to standard Scheme.
+Draft and final SRFI documents, a FAQ, and other information about SRFIs
+can be found at
+<a href="http://srfi.schemers.org">the SRFI web site</a>.</p>
+<p>
+Scheme&nbsp;48 includes implementations of the following (final) SRFIs:
+</p>
+<ul>
+<li><p>SRFI 1 -- List Library
+</p>
+<li><p>SRFI 2 -- <tt>and-let*</tt>
+</p>
+<li><p>SRFI 4 -- Homogeneous numeric vector datatypes (see note below)
+</p>
+<li><p>SRFI 5 -- <tt>let</tt> with signatures and rest arguments
+</p>
+<li><p>SRFI 6 -- Basic string ports
+</p>
+<li><p>SRFI 7 -- Program configuration
+</p>
+<li><p>SRFI 8 -- <tt>receive</tt>
+</p>
+<li><p>SRFI 9 -- Defining record types
+</p>
+<li><p>SRFI 11 -- Syntax for receiving multiple values 
+</p>
+<li><p>SRFI 13 -- String Library
+</p>
+<li><p>SRFI 14 -- Character-Set Library (see note below)
+</p>
+<li><p>SRFI 16 -- Syntax for procedures of variable arity
+</p>
+<li><p>SRFI 17 -- Generalized <tt>set!</tt>
+</p>
+<li><p>SRFI 19 -- Time Data Types and Procedures
+</p>
+<li><p>SRFI 22 -- Running Scheme Scripts on Unix
+</p>
+<li><p>SRFI 23 -- Error reporting mechanism
+</p>
+<li><p>SRFI 25 -- Multi-dimensional Array Primitives 
+</p>
+<li><p>SRFI 26 -- Notation for Specializing Parameters without Currying
+</p>
+<li><p>SRFI 27 -- Sources of Random Bits
+</p>
+<li><p>SRFI 28 -- Basic Format Strings
+</p>
+<li><p>SRFI 31 -- A special form <tt>rec</tt> for recursive evaluation
+</p>
+<li><p>SRFI 34 -- Exception Handling for Programs
+</p>
+<li><p>SRFI 37 -- args-fold: a program argument processor
+</p>
+<li><p>SRFI 40 -- A Library of Streams
+</p>
+<li><p>SRFI 42 -- Eager Comprehensions
+</p>
+<li><p>SRFI 43 -- Vector library
+</p>
+<li><p>SRFI 45 -- Primitives for Expressing Iterative Lazy Algorithms
+</p>
+<li><p>SRFI 60 -- Integers as Bits
+</p>
+<li><p>SRFI 61 -- A more general cond clause
+</p>
+<li><p>SRFI 62 -- S-expression comments
+</p>
+<li><p>SRFI 63 -- Homogeneous and Heterogeneous Arrays
+</p>
+<li><p>SRFI 66 -- Octet Vectors
+</p>
+<li><p>SRFI 67 -- Compare Procedures
+</p>
+<li><p>SRFI 74 -- Octet-Addressed Binary Blocks
+</p>
+<li><p>SRFI 78 -- Lightweight testing
+</p>
+</ul><p>
+Documentation on these can be found at the web site mentioned above.</p>
+<p>
+SRFI&nbsp;4 specifies an external representation for homogeneous numeric
+vectors that is incompatible with R<sup>5</sup>RS.  The Scheme&nbsp;48 version of
+SRFI&nbsp;4 does not support this external representation.</p>
+<p>
+SRFI&nbsp;14 includes the procedure <tt>-&gt;char-set</tt> which is not a standard
+Scheme identifier (in R<sup>5</sup>RS the only required identifier starting
+with <tt>-</tt> is <tt>-</tt> itself).
+In the Scheme&nbsp;48 version of SRFI&nbsp;14 we have renamed <tt>-&gt;char-set</tt>
+as <tt>x-&gt;char-set</tt>.</p>
+<p>
+SRFI bindings can be accessed
+either by opening the appropriate structure
+(the structure <tt>srfi-</tt><i>n</i> contains SRFI <i>n</i>)
+or by loading structure <tt>srfi-7</tt> and then using
+the <tt>,load-srfi-7-program</tt> command to load an SRFI&nbsp;7-style program.
+The syntax for the command is
+</p>
+<pre class=verbatim><tt>,load-srfi-7-program <i>name</i> <i>filename</i></tt>
+</pre><p>
+This creates a new structure and associated package, binds the structure
+to <i>name</i> in the configuration package, and then loads the program
+found in <i>filename</i> into the package.</p>
+<p>
+As an example, if the file <tt>test.scm</tt> contains
+</p>
+<pre class=verbatim>(program (code (define x 10)))
+</pre><p>
+this program can be loaded as follows:
+</p>
+<pre class=verbatim>&gt; ,load-package srfi-7
+&gt; ,load-srfi-7-program test test.scm
+[test]
+&gt; ,in test
+test&gt; x
+10
+test&gt; 
+</pre><p></p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-5.html">previous</a></span><span>, <a href="manual-Z-H-7.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

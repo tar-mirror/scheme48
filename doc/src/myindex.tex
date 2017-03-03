@@ -1,0 +1,14 @@
+%%
+%% Manual index.
+%%
+
+% Part of Scheme 48 1.9.  See file COPYING for notices and license.
+
+% Authors: Mike Sperber
+
+\newcommand{\mainschindex}[1]{\index{#1@\texttt{#1}}}
+\newcommand{\mainindex}[1]{\index{#1}}
+\newcommand{\schindex}[1]{\index{#1@\texttt{#1}}}
+
+\newcommand{\codemainindex}[1]{\mainschindex{#1}\code{#1}}
+\newcommand{\codeindex}[1]{\schindex{#1}\code{#1}}

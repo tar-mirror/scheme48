@@ -1,0 +1,39 @@
+Part of Scheme 48 1.9.  See file COPYING for notices and license.
+
+The following information is only a suggestion applicable to the
+Scheme 48 1.9 distribution.  It constitutes neither legal advice nor
+a license.
+
+The license in file COPYING permits you and others to build on the
+work found in this distribution and redistribute the resulting
+work(s), as long as you meet the terms of that license.  That license
+applies to material that comes from our work, not necessarily your
+additions.  If you happen to like the license in COPYING, you might
+consider licensing the resulting work as follows:
+
+1. Add your own copyright notice immediately above "All rights
+   reserved" in file COPYING:
+
+   Copyright © 1986-2001 Richard Kelsey and Jonathan Rees.
+   Copyright © 2001-2007 Michael Sperber and Martin Gasbichler.
+   Copyright © 2007-2012 Michael Sperber and Marcus Crestani.
+   Copyright © 2086 Energetic Hacker.
+   All rights reserved.
+
+2. Change occurrences of "Scheme 48 1.9" to a name of your choice when
+   appropriate, e.g. in the paragraph preceding the notices and at the
+   top of COPYING (but NOT in "Scheme 48 0.58 [...] was developed by
+   Richard Kelsey and Jonathan Rees"!).
+
+3. Adjust the explanations in COPYING, specifically the sentence
+   starting "Scheme 48 1.9 derives" to something like this:
+
+   Better Scheme 2.0 derives from Scheme 48 1.9.  Scheme 48 1.9
+   derives from Scheme 48 0.58, which was developed by Richard Kelsey
+   and Jonathan Rees and incorporates PreScheme 0.5 by Richard Kelsey.
+
+If you've made modifications to our source files, the statement "Part
+of Scheme 48 1.9" in those files will not be true of the
+changed files.  Those files should be updated to say "Derived from
+Scheme 48 1.9" or "Part of Better Scheme 2.0" or something
+similar that is true.

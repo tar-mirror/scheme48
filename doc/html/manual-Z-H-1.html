@@ -1,0 +1,310 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual.html">previous</a></span><span>, <a href="manual-Z-H-2.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span class=disable>contents</span><span><span class=disable>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_Temp_1"></a>
+<h1 class=chapter>
+<div class=chapterheading>&nbsp;</div><br>
+<a href="#node_toc_node_chap_Temp_1">Acknowledgements</a></h1>
+<p>Thanks to Scheme&nbsp;48&rsquo;s users for their suggestions, bug reports,
+and forbearance.
+Thanks also to Deborah Tatar for providing the Yeats quotation.</p>
+<p>
+</p>
+<pre class=verbatim>Copyright � 1986-2001 Richard Kelsey and Jonathan Rees.
+Copyright � 1993-2001 Richard Kelsey.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notices, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notices, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the authors may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre><p></p>
+<p>
+</p>
+<a name="node_chap_Temp_2"></a>
+<h1 class=chapter>
+<div class=chapterheading>&nbsp;</div><br>
+Contents</h1>
+<p><a name="node_toc_start"></a></p>
+
+<p class=noindent></p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_1"></a><a href="manual-Z-H-2.html#node_chap_1">1&nbsp;&nbsp;Introduction</a></b><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_2"></a><a href="manual-Z-H-3.html#node_chap_2">2&nbsp;&nbsp;User&rsquo;s guide</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.1"></a><a href="manual-Z-H-3.html#node_sec_2.1">2.1&nbsp;&nbsp;Command line arguments</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.2"></a><a href="manual-Z-H-3.html#node_sec_2.2">2.2&nbsp;&nbsp;Command processor</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.3"></a><a href="manual-Z-H-3.html#node_sec_2.3">2.3&nbsp;&nbsp;Editing</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.4"></a><a href="manual-Z-H-3.html#node_sec_2.4">2.4&nbsp;&nbsp;Performance</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.5"></a><a href="manual-Z-H-3.html#node_sec_2.5">2.5&nbsp;&nbsp;Disassembler</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.6"></a><a href="manual-Z-H-3.html#node_sec_2.6">2.6&nbsp;&nbsp;Module system</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_2.7"></a><a href="manual-Z-H-3.html#node_sec_2.7">2.7&nbsp;&nbsp;Library</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_3"></a><a href="manual-Z-H-4.html#node_chap_3">3&nbsp;&nbsp;Command processor</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.1"></a><a href="manual-Z-H-4.html#node_sec_3.1">3.1&nbsp;&nbsp;Current focus value and <tt>##</tt></a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.2"></a><a href="manual-Z-H-4.html#node_sec_3.2">3.2&nbsp;&nbsp;Command levels</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.3"></a><a href="manual-Z-H-4.html#node_sec_3.3">3.3&nbsp;&nbsp;Logistical commands</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.4"></a><a href="manual-Z-H-4.html#node_sec_3.4">3.4&nbsp;&nbsp;Module commands</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.5"></a><a href="manual-Z-H-4.html#node_sec_3.5">3.5&nbsp;&nbsp;Debugging commands</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.6"></a><a href="manual-Z-H-4.html#node_sec_3.6">3.6&nbsp;&nbsp;Profiling commands</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.6.1"></a><a href="manual-Z-H-4.html#node_sec_3.6.1">3.6.1&nbsp;&nbsp;How the profiler works</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.7"></a><a href="manual-Z-H-4.html#node_sec_3.7">3.7&nbsp;&nbsp;Settings</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.8"></a><a href="manual-Z-H-4.html#node_sec_3.8">3.8&nbsp;&nbsp;Inspection mode</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.9"></a><a href="manual-Z-H-4.html#node_sec_3.9">3.9&nbsp;&nbsp;Command programs</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.10"></a><a href="manual-Z-H-4.html#node_sec_3.10">3.10&nbsp;&nbsp;Building images</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.11"></a><a href="manual-Z-H-4.html#node_sec_3.11">3.11&nbsp;&nbsp;Resource query and control</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.12"></a><a href="manual-Z-H-4.html#node_sec_3.12">3.12&nbsp;&nbsp;Threads</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_3.13"></a><a href="manual-Z-H-4.html#node_sec_3.13">3.13&nbsp;&nbsp;Quite obscure</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_4"></a><a href="manual-Z-H-5.html#node_chap_4">4&nbsp;&nbsp;Module system</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.1"></a><a href="manual-Z-H-5.html#node_sec_4.1">4.1&nbsp;&nbsp;Introduction</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.2"></a><a href="manual-Z-H-5.html#node_sec_4.2">4.2&nbsp;&nbsp;The configuration language</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.3"></a><a href="manual-Z-H-5.html#node_sec_4.3">4.3&nbsp;&nbsp;Interfaces</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.4"></a><a href="manual-Z-H-5.html#node_sec_4.4">4.4&nbsp;&nbsp;Macros</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.5"></a><a href="manual-Z-H-5.html#node_sec_4.5">4.5&nbsp;&nbsp;Higher-order modules</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.6"></a><a href="manual-Z-H-5.html#node_sec_4.6">4.6&nbsp;&nbsp;Compiling and linking</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.7"></a><a href="manual-Z-H-5.html#node_sec_4.7">4.7&nbsp;&nbsp;Semantics of configuration mutation</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.8"></a><a href="manual-Z-H-5.html#node_sec_4.8">4.8&nbsp;&nbsp;Command processor support</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.9"></a><a href="manual-Z-H-5.html#node_sec_4.9">4.9&nbsp;&nbsp;Configuration packages</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_4.10"></a><a href="manual-Z-H-5.html#node_sec_4.10">4.10&nbsp;&nbsp;Discussion</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_5"></a><a href="manual-Z-H-6.html#node_chap_5">5&nbsp;&nbsp;Libraries</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.1"></a><a href="manual-Z-H-6.html#node_sec_5.1">5.1&nbsp;&nbsp;General utilities</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.2"></a><a href="manual-Z-H-6.html#node_sec_5.2">5.2&nbsp;&nbsp;Pretty-printing</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.3"></a><a href="manual-Z-H-6.html#node_sec_5.3">5.3&nbsp;&nbsp;Bitwise integer operations</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.4"></a><a href="manual-Z-H-6.html#node_sec_5.4">5.4&nbsp;&nbsp;Byte vectors</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.5"></a><a href="manual-Z-H-6.html#node_sec_5.5">5.5&nbsp;&nbsp;Sparse vectors</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.6"></a><a href="manual-Z-H-6.html#node_sec_5.6">5.6&nbsp;&nbsp;Cells</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.7"></a><a href="manual-Z-H-6.html#node_sec_5.7">5.7&nbsp;&nbsp;Queues</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.8"></a><a href="manual-Z-H-6.html#node_sec_5.8">5.8&nbsp;&nbsp;Arrays</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.9"></a><a href="manual-Z-H-6.html#node_sec_5.9">5.9&nbsp;&nbsp;Records</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.9.1"></a><a href="manual-Z-H-6.html#node_sec_5.9.1">5.9.1&nbsp;&nbsp;Low-level access to records</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.9.2"></a><a href="manual-Z-H-6.html#node_sec_5.9.2">5.9.2&nbsp;&nbsp;Record types</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.10"></a><a href="manual-Z-H-6.html#node_sec_5.10">5.10&nbsp;&nbsp;Finite record types</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.11"></a><a href="manual-Z-H-6.html#node_sec_5.11">5.11&nbsp;&nbsp;Sets over finite types</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.12"></a><a href="manual-Z-H-6.html#node_sec_5.12">5.12&nbsp;&nbsp;Hash tables</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.13"></a><a href="manual-Z-H-6.html#node_sec_5.13">5.13&nbsp;&nbsp;Port extensions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.14"></a><a href="manual-Z-H-6.html#node_sec_5.14">5.14&nbsp;&nbsp;Fluid bindings</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.15"></a><a href="manual-Z-H-6.html#node_sec_5.15">5.15&nbsp;&nbsp;OS strings</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.16"></a><a href="manual-Z-H-6.html#node_sec_5.16">5.16&nbsp;&nbsp;Shell commands</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.17"></a><a href="manual-Z-H-6.html#node_sec_5.17">5.17&nbsp;&nbsp;Sockets</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.18"></a><a href="manual-Z-H-6.html#node_sec_5.18">5.18&nbsp;&nbsp;Profiling</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19"></a><a href="manual-Z-H-6.html#node_sec_5.19">5.19&nbsp;&nbsp;Macros for writing loops</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.1"></a><a href="manual-Z-H-6.html#node_sec_5.19.1">5.19.1&nbsp;&nbsp;<tt>Iterate</tt></a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.2"></a><a href="manual-Z-H-6.html#node_sec_5.19.2">5.19.2&nbsp;&nbsp;<tt>Reduce</tt></a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.3"></a><a href="manual-Z-H-6.html#node_sec_5.19.3">5.19.3&nbsp;&nbsp;Sequence types</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.4"></a><a href="manual-Z-H-6.html#node_sec_5.19.4">5.19.4&nbsp;&nbsp;Synchronous sequences</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.5"></a><a href="manual-Z-H-6.html#node_sec_5.19.5">5.19.5&nbsp;&nbsp;Examples</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.6"></a><a href="manual-Z-H-6.html#node_sec_5.19.6">5.19.6&nbsp;&nbsp;Defining sequence types</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.19.7"></a><a href="manual-Z-H-6.html#node_sec_5.19.7">5.19.7&nbsp;&nbsp;Expanded code</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.20"></a><a href="manual-Z-H-6.html#node_sec_5.20">5.20&nbsp;&nbsp;Sorting lists and vectors</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.20.1"></a><a href="manual-Z-H-6.html#node_sec_5.20.1">5.20.1&nbsp;&nbsp;Design rules</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_5"></a><a href="manual-Z-H-6.html#node_sec_Temp_5">What vs. how</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_6"></a><a href="manual-Z-H-6.html#node_sec_Temp_6">Consistency across procedure signatures</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_7"></a><a href="manual-Z-H-6.html#node_sec_Temp_7">Less-than parameter first, data parameter after</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_8"></a><a href="manual-Z-H-6.html#node_sec_Temp_8">Ordering, comparison procedures and stability</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_9"></a><a href="manual-Z-H-6.html#node_sec_Temp_9">All vector operations accept optional subrange parameters</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_10"></a><a href="manual-Z-H-6.html#node_sec_Temp_10">Required vs. allowed side-effects</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.20.2"></a><a href="manual-Z-H-6.html#node_sec_5.20.2">5.20.2&nbsp;&nbsp;Procedure specification</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_11"></a><a href="manual-Z-H-6.html#node_sec_Temp_11">Procedure naming and functionality</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_12"></a><a href="manual-Z-H-6.html#node_sec_Temp_12">Types of parameters and return values</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.20.2.1"></a><a href="manual-Z-H-6.html#node_sec_5.20.2.1">5.20.2.1&nbsp;&nbsp;<tt>sorting</tt>---general sorting package</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.20.2.2"></a><a href="manual-Z-H-6.html#node_sec_5.20.2.2">5.20.2.2&nbsp;&nbsp;Algorithm-specific sorting packages</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_13"></a><a href="manual-Z-H-6.html#node_sec_Temp_13"><tt>sorted</tt>---sorted predicates</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_14"></a><a href="manual-Z-H-6.html#node_sec_Temp_14"><tt>list-merge-sort</tt>---list merge sort</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_15"></a><a href="manual-Z-H-6.html#node_sec_Temp_15"><tt>vector-merge-sort</tt>---vector merge sort</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_16"></a><a href="manual-Z-H-6.html#node_sec_Temp_16"><tt>vector-heap-sort</tt>---vector heap sort</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_17"></a><a href="manual-Z-H-6.html#node_sec_Temp_17"><tt>vector-quick-sort</tt>---vector quick sort</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_18"></a><a href="manual-Z-H-6.html#node_sec_Temp_18"><tt>vector-quick-sort3</tt>---vector quick sort with 3-way comparisons</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_20"></a><a href="manual-Z-H-6.html#node_sec_Temp_20"><tt>vector-insert-sort</tt>---vector insertion sort</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_21"></a><a href="manual-Z-H-6.html#node_sec_Temp_21"><tt>delete-neighbor-duplicates</tt>---list and vector
+delete neighbor duplicates</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_Temp_22"></a><a href="manual-Z-H-6.html#node_sec_Temp_22"><tt>binary-searches</tt>---vector binary search</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.20.3"></a><a href="manual-Z-H-6.html#node_sec_5.20.3">5.20.3&nbsp;&nbsp;Algorithmic properties</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.21"></a><a href="manual-Z-H-6.html#node_sec_5.21">5.21&nbsp;&nbsp;Regular expressions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.21.1"></a><a href="manual-Z-H-6.html#node_sec_5.21.1">5.21.1&nbsp;&nbsp;Character sets</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.21.2"></a><a href="manual-Z-H-6.html#node_sec_5.21.2">5.21.2&nbsp;&nbsp;Anchoring</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.21.3"></a><a href="manual-Z-H-6.html#node_sec_5.21.3">5.21.3&nbsp;&nbsp;Composite expressions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.21.4"></a><a href="manual-Z-H-6.html#node_sec_5.21.4">5.21.4&nbsp;&nbsp;Case sensitivity</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.21.5"></a><a href="manual-Z-H-6.html#node_sec_5.21.5">5.21.5&nbsp;&nbsp;Submatches and matching</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_5.22"></a><a href="manual-Z-H-6.html#node_sec_5.22">5.22&nbsp;&nbsp;SRFIs</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_6"></a><a href="manual-Z-H-7.html#node_chap_6">6&nbsp;&nbsp;Unicode</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.1"></a><a href="manual-Z-H-7.html#node_sec_6.1">6.1&nbsp;&nbsp;Characters and their codes</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.2"></a><a href="manual-Z-H-7.html#node_sec_6.2">6.2&nbsp;&nbsp;Character and string literals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.2.1"></a><a href="manual-Z-H-7.html#node_sec_6.2.1">6.2.1&nbsp;&nbsp;Character literals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.2.2"></a><a href="manual-Z-H-7.html#node_sec_6.2.2">6.2.2&nbsp;&nbsp;String literals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.2.3"></a><a href="manual-Z-H-7.html#node_sec_6.2.3">6.2.3&nbsp;&nbsp;Identifiers and symbol literals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.3"></a><a href="manual-Z-H-7.html#node_sec_6.3">6.3&nbsp;&nbsp;Character classification and case mappings</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.4"></a><a href="manual-Z-H-7.html#node_sec_6.4">6.4&nbsp;&nbsp;SRFI 14</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.5"></a><a href="manual-Z-H-7.html#node_sec_6.5">6.5&nbsp;&nbsp;R6RS</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.6"></a><a href="manual-Z-H-7.html#node_sec_6.6">6.6&nbsp;&nbsp;I/O</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.6.1"></a><a href="manual-Z-H-7.html#node_sec_6.6.1">6.6.1&nbsp;&nbsp;Text codecs</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.6.2"></a><a href="manual-Z-H-7.html#node_sec_6.6.2">6.6.2&nbsp;&nbsp;Text-codec utilities</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.6.3"></a><a href="manual-Z-H-7.html#node_sec_6.6.3">6.6.3&nbsp;&nbsp;Creating text codecs</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_6.7"></a><a href="manual-Z-H-7.html#node_sec_6.7">6.7&nbsp;&nbsp;Default encodings</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_7"></a><a href="manual-Z-H-8.html#node_chap_7">7&nbsp;&nbsp;Threads</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.1"></a><a href="manual-Z-H-8.html#node_sec_7.1">7.1&nbsp;&nbsp;Creating and controlling threads</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.2"></a><a href="manual-Z-H-8.html#node_sec_7.2">7.2&nbsp;&nbsp;Advanced thread handling</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.3"></a><a href="manual-Z-H-8.html#node_sec_7.3">7.3&nbsp;&nbsp;Debugging multithreaded programs</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.4"></a><a href="manual-Z-H-8.html#node_sec_7.4">7.4&nbsp;&nbsp;Optimistic concurrency</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.5"></a><a href="manual-Z-H-8.html#node_sec_7.5">7.5&nbsp;&nbsp;Condition variables</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.6"></a><a href="manual-Z-H-8.html#node_sec_7.6">7.6&nbsp;&nbsp;Mutual exclusion</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.6.1"></a><a href="manual-Z-H-8.html#node_sec_7.6.1">7.6.1&nbsp;&nbsp;Locks</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.6.2"></a><a href="manual-Z-H-8.html#node_sec_7.6.2">7.6.2&nbsp;&nbsp;Placeholders</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.7"></a><a href="manual-Z-H-8.html#node_sec_7.7">7.7&nbsp;&nbsp;Writing custom synchronization abstractions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8"></a><a href="manual-Z-H-8.html#node_sec_7.8">7.8&nbsp;&nbsp;Concurrent ML abstractions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.1"></a><a href="manual-Z-H-8.html#node_sec_7.8.1">7.8.1&nbsp;&nbsp;Basic rendezvous combinators</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.2"></a><a href="manual-Z-H-8.html#node_sec_7.8.2">7.8.2&nbsp;&nbsp;Synchronous channels</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.3"></a><a href="manual-Z-H-8.html#node_sec_7.8.3">7.8.3&nbsp;&nbsp;Synchronous variables</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.3.1"></a><a href="manual-Z-H-8.html#node_sec_7.8.3.1">7.8.3.1&nbsp;&nbsp;Placeholders</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.3.2"></a><a href="manual-Z-H-8.html#node_sec_7.8.3.2">7.8.3.2&nbsp;&nbsp;Jars</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.4"></a><a href="manual-Z-H-8.html#node_sec_7.8.4">7.8.4&nbsp;&nbsp;Timeouts</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_7.8.5"></a><a href="manual-Z-H-8.html#node_sec_7.8.5">7.8.5&nbsp;&nbsp;CML to Scheme correspondence</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_8"></a><a href="manual-Z-H-9.html#node_chap_8">8&nbsp;&nbsp;Mixing Scheme 48 and C</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.1"></a><a href="manual-Z-H-9.html#node_sec_8.1">8.1&nbsp;&nbsp;Available facilities</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.1.1"></a><a href="manual-Z-H-9.html#node_sec_8.1.1">8.1.1&nbsp;&nbsp;Scheme structures</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.1.2"></a><a href="manual-Z-H-9.html#node_sec_8.1.2">8.1.2&nbsp;&nbsp;C naming conventions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.1.3"></a><a href="manual-Z-H-9.html#node_sec_8.1.3">8.1.3&nbsp;&nbsp;Garbage collection and reference objects</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.2"></a><a href="manual-Z-H-9.html#node_sec_8.2">8.2&nbsp;&nbsp;Shared bindings</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.2.1"></a><a href="manual-Z-H-9.html#node_sec_8.2.1">8.2.1&nbsp;&nbsp;Exporting Scheme values to C</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.2.2"></a><a href="manual-Z-H-9.html#node_sec_8.2.2">8.2.2&nbsp;&nbsp;Exporting C values to Scheme</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.2.3"></a><a href="manual-Z-H-9.html#node_sec_8.2.3">8.2.3&nbsp;&nbsp;Complete shared binding interface</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.3"></a><a href="manual-Z-H-9.html#node_sec_8.3">8.3&nbsp;&nbsp;Calling C functions from Scheme</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.4"></a><a href="manual-Z-H-9.html#node_sec_8.4">8.4&nbsp;&nbsp;Dynamic loading</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.5"></a><a href="manual-Z-H-9.html#node_sec_8.5">8.5&nbsp;&nbsp;Accessing Scheme data from C</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.5.1"></a><a href="manual-Z-H-9.html#node_sec_8.5.1">8.5.1&nbsp;&nbsp;Constants</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.5.2"></a><a href="manual-Z-H-9.html#node_sec_8.5.2">8.5.2&nbsp;&nbsp;Converting values</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.5.3"></a><a href="manual-Z-H-9.html#node_sec_8.5.3">8.5.3&nbsp;&nbsp;C versions of Scheme procedures</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.6"></a><a href="manual-Z-H-9.html#node_sec_8.6">8.6&nbsp;&nbsp;Calling Scheme functions from C</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7"></a><a href="manual-Z-H-9.html#node_sec_8.7">8.7&nbsp;&nbsp;Interacting with the Scheme heap</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7.1"></a><a href="manual-Z-H-9.html#node_sec_8.7.1">8.7.1&nbsp;&nbsp;Registering global references</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7.2"></a><a href="manual-Z-H-9.html#node_sec_8.7.2">8.7.2&nbsp;&nbsp;Local buffers</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7.3"></a><a href="manual-Z-H-9.html#node_sec_8.7.3">8.7.3&nbsp;&nbsp;Special treatment for byte vectors</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7.4"></a><a href="manual-Z-H-9.html#node_sec_8.7.4">8.7.4&nbsp;&nbsp;Memory overhead</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7.5"></a><a href="manual-Z-H-9.html#node_sec_8.7.5">8.7.5&nbsp;&nbsp;Keeping C data structures in the Scheme heap</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.7.6"></a><a href="manual-Z-H-9.html#node_sec_8.7.6">8.7.6&nbsp;&nbsp;C code and heap images</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.8"></a><a href="manual-Z-H-9.html#node_sec_8.8">8.8&nbsp;&nbsp;Using Scheme records in C code</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.9"></a><a href="manual-Z-H-9.html#node_sec_8.9">8.9&nbsp;&nbsp;Raising exceptions from external code</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.10"></a><a href="manual-Z-H-9.html#node_sec_8.10">8.10&nbsp;&nbsp;External events</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.10.1"></a><a href="manual-Z-H-9.html#node_sec_8.10.1">8.10.1&nbsp;&nbsp;Collecting external events in external code</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.10.2"></a><a href="manual-Z-H-9.html#node_sec_8.10.2">8.10.2&nbsp;&nbsp;Handling external events in Scheme</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.11"></a><a href="manual-Z-H-9.html#node_sec_8.11">8.11&nbsp;&nbsp;Unsafe functions and macros</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_8.12"></a><a href="manual-Z-H-9.html#node_sec_8.12">8.12&nbsp;&nbsp;Converting external code to the new foreign-function interface</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_9"></a><a href="manual-Z-H-10.html#node_chap_9">9&nbsp;&nbsp;Access to POSIX</a></b><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.1"></a><a href="manual-Z-H-10.html#node_sec_9.1">9.1&nbsp;&nbsp;Process primitives</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.1.1"></a><a href="manual-Z-H-10.html#node_sec_9.1.1">9.1.1&nbsp;&nbsp;Process creation and termination</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.1.2"></a><a href="manual-Z-H-10.html#node_sec_9.1.2">9.1.2&nbsp;&nbsp;<tt>Exec</tt></a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.2"></a><a href="manual-Z-H-10.html#node_sec_9.2">9.2&nbsp;&nbsp;Signals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.2.1"></a><a href="manual-Z-H-10.html#node_sec_9.2.1">9.2.1&nbsp;&nbsp;POSIX signals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.2.2"></a><a href="manual-Z-H-10.html#node_sec_9.2.2">9.2.2&nbsp;&nbsp;Other signals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.2.3"></a><a href="manual-Z-H-10.html#node_sec_9.2.3">9.2.3&nbsp;&nbsp;Sending signals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.2.4"></a><a href="manual-Z-H-10.html#node_sec_9.2.4">9.2.4&nbsp;&nbsp;Receiving signals</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.3"></a><a href="manual-Z-H-10.html#node_sec_9.3">9.3&nbsp;&nbsp;Process environment</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.3.1"></a><a href="manual-Z-H-10.html#node_sec_9.3.1">9.3.1&nbsp;&nbsp;Process identification</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.3.2"></a><a href="manual-Z-H-10.html#node_sec_9.3.2">9.3.2&nbsp;&nbsp;Environment variables</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.4"></a><a href="manual-Z-H-10.html#node_sec_9.4">9.4&nbsp;&nbsp;Users and groups</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.5"></a><a href="manual-Z-H-10.html#node_sec_9.5">9.5&nbsp;&nbsp;OS and machine identification</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6"></a><a href="manual-Z-H-10.html#node_sec_9.6">9.6&nbsp;&nbsp;Files and directories</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6.1"></a><a href="manual-Z-H-10.html#node_sec_9.6.1">9.6.1&nbsp;&nbsp;Directory streams</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6.2"></a><a href="manual-Z-H-10.html#node_sec_9.6.2">9.6.2&nbsp;&nbsp;Working directory</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6.3"></a><a href="manual-Z-H-10.html#node_sec_9.6.3">9.6.3&nbsp;&nbsp;File creation and removal</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6.4"></a><a href="manual-Z-H-10.html#node_sec_9.6.4">9.6.4&nbsp;&nbsp;File information</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6.5"></a><a href="manual-Z-H-10.html#node_sec_9.6.5">9.6.5&nbsp;&nbsp;File modes</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.6.6"></a><a href="manual-Z-H-10.html#node_sec_9.6.6">9.6.6&nbsp;&nbsp;Symbolic links</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.7"></a><a href="manual-Z-H-10.html#node_sec_9.7">9.7&nbsp;&nbsp;Time and Date</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.7.1"></a><a href="manual-Z-H-10.html#node_sec_9.7.1">9.7.1&nbsp;&nbsp;Time</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.7.2"></a><a href="manual-Z-H-10.html#node_sec_9.7.2">9.7.2&nbsp;&nbsp;Date</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.8"></a><a href="manual-Z-H-10.html#node_sec_9.8">9.8&nbsp;&nbsp;I/O</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.9"></a><a href="manual-Z-H-10.html#node_sec_9.9">9.9&nbsp;&nbsp;Regular expressions</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.10"></a><a href="manual-Z-H-10.html#node_sec_9.10">9.10&nbsp;&nbsp;Syslog facility</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.11"></a><a href="manual-Z-H-10.html#node_sec_9.11">9.11&nbsp;&nbsp;Error codes</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.11.1"></a><a href="manual-Z-H-10.html#node_sec_9.11.1">9.11.1&nbsp;&nbsp;POSIX errnos</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; <a name="node_toc_node_sec_9.12"></a><a href="manual-Z-H-10.html#node_sec_9.12">9.12&nbsp;&nbsp;C to Scheme correspondence</a><br>
+</p>
+<p></p>
+
+<p class=noindent><b>
+&nbsp; &nbsp; <a name="node_toc_node_chap_Temp_30"></a><a href="manual-Z-H-11.html#node_chap_Temp_30">Bibliography</a></b><br>
+<a name="node_toc_end"></a></p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual.html">previous</a></span><span>, <a href="manual-Z-H-2.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span class=disable>contents</span><span><span class=disable>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

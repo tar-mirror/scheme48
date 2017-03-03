@@ -1,0 +1,2287 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-8.html">previous</a></span><span>, <a href="manual-Z-H-10.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_8"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_8">Chapter 8</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_8">Mixing Scheme 48 and C</a></h1>
+<p></p>
+<p>
+This chapter describes the foreign-function interface for calling C
+functions from Scheme, calling Scheme functions from C, and allocating
+storage in the Scheme heap.  Scheme&nbsp;48 manages stub functions in C
+that negotiate between the calling conventions of Scheme and C and the
+memory allocation policies of both worlds.  No stub generator is
+available yet, but writing stubs is a straightforward task.</p>
+<p>
+The foreign-function interface is modeled after the Java Native
+Interface (JNI), more information can be found at
+<a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/index.html">Sun&rsquo;s
+JNI Page</a>.</p>
+<p>
+Currently, Scheme&nbsp;48 supports two foreign-function interfaces: The old
+GCPROTECT-style and the new JNI-style interface (this chapter) live
+side by side.  The old interface is deprecated and will go away in a
+future release.  Section&nbsp;<a href="#node_sec_8.12">8.12</a> gives a
+recipe how to convert external code from the old to the new interface.</p>
+<p>
+</p>
+<a name="node_sec_8.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.1">8.1&nbsp;&nbsp;Available facilities</a></h2>
+<p></p>
+<p>
+The following facilities are available for interfacing between
+Scheme&nbsp;48 and C:
+</p>
+<ul>
+<li><p>Scheme code can call C functions.
+</p>
+<li><p>The external interface provides full introspection for all
+Scheme objects.  External code may inspect, modify, and allocate
+Scheme objects arbitrarily.
+</p>
+<li><p>External code may raise exceptions back to Scheme&nbsp;48 to
+signal errors.
+</p>
+<li><p>External code may call back into Scheme.  Scheme&nbsp;48
+correctly unrolls the process stack on non-local exits.
+</p>
+<li><p>External modules may register bindings of names to values with a 
+central registry accessible from
+Scheme.  Conversely, Scheme code can register shared
+bindings for access by C code.
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.1.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.1.1">8.1.1&nbsp;&nbsp;Scheme structures</a></h3>
+<p>The structure <tt>external-calls</tt> has 
+most of the Scheme functions described here.
+The others are in 
+<tt>load-dynamic-externals</tt>, which has the functions for dynamic loading and
+name lookup from
+Section&nbsp;<a href="#node_sec_8.4">8.4</a>,
+and <tt>shared-bindings</tt>, which has the additional shared-binding functions
+described in
+section&nbsp;<a href="#node_sec_8.2.3">8.2.3</a>.</p>
+<p>
+</p>
+<a name="node_sec_8.1.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.1.2">8.1.2&nbsp;&nbsp;C naming conventions</a></h3>
+<p>The names of all of Scheme&nbsp;48&rsquo;s visible C bindings begin with
+&lsquo;<tt>s48_</tt>&rsquo; (for procedures, variables, and macros).  Note that the
+new foreign-function interface does not distinguish between procedures
+and macros.  Whenever a C name is derived from a Scheme identifier, we
+replace &lsquo;<tt>-</tt>&rsquo; with &lsquo;<tt>_</tt>&rsquo; and convert letters to lowercase.
+A final &lsquo;<tt>?</tt>&rsquo;  converted to &lsquo;<tt>_p</tt>&rsquo;, a final &lsquo;<tt>!</tt>&rsquo; is
+dropped.  As a naming convention, all functions and macros of the new
+foreign-function interface end in &lsquo;<tt>_2</tt>&rsquo; (for now) to make them
+distinguishable from the old interface&rsquo;s functions and macros.  Thus
+the C macro for Scheme&rsquo;s <tt>pair?</tt> is <tt>s48_pair_p_2</tt> and
+the one for <tt>set-car!</tt>  is <tt>s48_set_car_2</tt>.  Procedures
+and macros that do not check the types of their arguments have
+&lsquo;<tt>unsafe</tt>&rsquo; in their names.</p>
+<p>
+All of the C functions and macros described have prototypes or
+definitions in the file <tt>c/scheme48.h</tt>.</p>
+<p>
+</p>
+<a name="node_sec_8.1.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.1.3">8.1.3&nbsp;&nbsp;Garbage collection and reference objects</a></h3>
+<p></p>
+<p>
+Scheme&nbsp;48 uses a precise, copying garbage collector.  The garbage
+collector may run whenever an object is allocated in the heap.  The
+collector must be able to locate all references to objects allocated
+in the Scheme&nbsp;48 heap in order to ensure that storage is not reclaimed
+prematurely and to update references to objects moved by the
+collector.  This interface takes care of communicating to the garbage
+collector what objects it uses in most situations.  It relieves the
+programmer from having to think about garbage collector interactions
+in the common case.</p>
+<p>
+This interface does not give external code direct access to Scheme
+objects.  It introduces one level of indirection as external code never
+accepts or returns Scheme values directly.  Instead, external code
+accepts or returns <em>reference objects</em> of type <tt>s48_ref_t</tt>
+that refer to Scheme values (their C type is defined to be
+<tt>s48_value</tt>).  This indirection is only needed as an interface
+to external code, interior pointers in Scheme objects are unaffected.</p>
+<p>
+There are two types of reference objects:
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b>local references</b></dt><dd> A local reference is valid for the duration of
+a function call from Scheme to external code and is automatically
+freed after the external function returns to the virtual machine.<p>
+</p>
+</dd><dt><b>global references</b></dt><dd> A global reference remains valid until
+external code explicitly frees it.
+</dd></dl><p>
+Scheme objects that are passed to external functions are
+passed as local references.  External functions return Scheme objects
+as local references.  External code has to manually manage Scheme
+objects that outlive a function call as global references.  Scheme
+objects outlive a function call if they are assigned to a global
+variable of the external code or stored in long-living external
+objects, see section&nbsp;<a href="#node_sec_8.7.1">8.7.1</a>.</p>
+<p>
+A local reference is valid only within the dynamic context of the
+native method that creates it.  Therefore, a local reference behaves
+exactly like a local variable in the external code: It is live as long
+as external code can access it.  To achieve this, every external
+function in the interface that accepts or returns reference objects
+takes a <em>call object</em> of type <tt>s48_call_t</tt> as its first
+argument.  A call object corresponds to a particular call from Scheme
+to C.  The call object holds all the references that belong to a call
+(like the call&rsquo;s arguments and return value) to external code from
+Scheme.  External code may pass a local reference through multiple
+external functions.  The foreign-function interface automatically
+frees all the local references a call object owns, along with the call
+object itself, when an external call returns to Scheme.</p>
+<p>
+This means that in the common case of Scheme calling an external
+function that does some work on its arguments and returns without
+stashing any Scheme objects in global variables or global data
+structures, the external code does not need to do any bookkeeping,
+since all the reference objects the external code accumulates are
+local references.  Once the call returns, the foreign-function
+interface frees all the local references.</p>
+<p>
+For example, the functions to construct and access pairs are declared
+like this:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_cons_2(s48_call_t call, s48_ref_t car, s48_ref_t cdr);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_car_2(s48_call_t call, s48_ref_t pair);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_cdr_2(s48_call_t call, s48_ref_t pair);</tt>
+</p>
+</ul><p></p>
+<p>
+This foreign-function interface takes a significant burden off the
+programmer as it handles most common cases automatically.  If all the
+Scheme objects are live for the extent of the current external call,
+the programmer does not have to do anything at all.  Since the
+lifetime of the Scheme objects is then identical with the lifetime of
+the according reference objects.  In this case, the systems
+automatically manages both for the programmer.  Using this
+foreign-function interface does not make the code more complex; the
+code stays compact and readable.  The programmer has to get accustomed
+to passing the call argument around.</p>
+<p>
+How to manage Scheme objects that outlive the current call is described
+in section&nbsp;<a href="#node_sec_8.7.1">8.7.1</a>.</p>
+<p>
+Section&nbsp;<a href="#node_sec_8.12">8.12</a> gives a recipe how to
+convert external code from the old GCPROTECT-style interface to the
+new JNI-style interface.</p>
+<p>
+</p>
+<a name="node_sec_8.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.2">8.2&nbsp;&nbsp;Shared bindings</a></h2>
+<p></p>
+<p>
+Shared bindings are the means by which named values are shared between Scheme
+code and C code.
+There are two separate tables of shared bindings, one for values defined in
+Scheme and accessed from C and the other for values going the other way.
+Shared bindings actually bind names to cells, to allow a name to be looked
+up before it has been assigned.
+This is necessary because C initialization code may be run before or after
+the corresponding Scheme code, depending on whether the Scheme code is in
+the resumed image or is run in the current session.</p>
+<p>
+</p>
+<a name="node_sec_8.2.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.2.1">8.2.1&nbsp;&nbsp;Exporting Scheme values to C</a></h3>
+<p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(define-exported-binding<i> name value</i>)&nbsp;--&gt;&nbsp;<i>shared-binding</i></tt><a name="node_idx_750"></a></p>
+</ul><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_get_imported_binding_2(char *name)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_get_imported_binding_local_2(s48_call_t call, char *name)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_shared_binding_ref_2(s48_call_t call, s48_ref_t shared_binding)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent><tt>Define-exported-binding</tt> makes <i>value</i> available to C code
+under <i>name</i>, which must be a <i>string</i>, creating a new
+shared binding if necessary.  The C function
+<tt>s48_get_imported_binding_2</tt> returns a global reference to
+the shared binding defined for <tt>name</tt>, again creating it if
+necessary, <tt>s48_get_imported_binding_local_2</tt> returns a
+local reference to the shared binding (see
+section&nbsp;<a href="#node_sec_8.1.3">8.1.3</a> for details on reference objects).
+The C macro <tt>s48_shared_binding_ref_2</tt> dereferences a shared
+binding, returning its current value.</p>
+<p>
+</p>
+<a name="node_sec_8.2.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.2.2">8.2.2&nbsp;&nbsp;Exporting C values to Scheme</a></h3>
+<p></p>
+<p>
+Since shared bindings are defined during initialization, i.e. outside
+an external call, there is no call object.  Therefore, exporting
+shared bindings from C does not use the new foreign-function
+interfaces specifications.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void s48_define_exported_binding(char *name, s48_value v)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(lookup-imported-binding<i> string</i>)&nbsp;--&gt;&nbsp;<i>shared-binding</i></tt><a name="node_idx_752"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(shared-binding-ref<i> shared-binding</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_754"></a></p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>These are used to define shared bindings from C and to access them
+from Scheme.
+Again, if a name is looked up before it has been defined, a new binding is
+created for it.</p>
+<p>
+The common case of exporting a C function to Scheme can be done using
+the macro <tt>s48_export_function(<i>name</i>)</tt>.
+This expands into
+</p>
+<pre class=verbatim>s48_define_exported_binding(&quot;<i>name</i>&quot;,
+                               s48_enter_pointer(<i>name</i>))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>which boxes the function pointer into a Scheme byte vector and then
+exports it.
+Note that <tt>s48_enter_pointer</tt> allocates space in the Scheme heap
+and might trigger a 
+garbage collection; see Section&nbsp;<a href="#node_sec_8.7">8.7</a>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(import-definition <i>name</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)<a name="node_idx_756"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(import-definition <i>name c-name</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p>
+These macros simplify importing definitions from C to Scheme.
+They expand into</p>
+<p>
+<tt>(define <i>name</i> (lookup-imported-binding <i>c-name</i>))</tt></p>
+<p>
+</p>
+
+<p class=noindent>where <i>c-name</i> is as supplied for the second form.
+For the first form <i>c-name</i> is derived from <i>name</i> by
+replacing &lsquo;<tt>-</tt>&rsquo; with &lsquo;<tt>_</tt>&rsquo; and converting letters to lowercase.
+For example, <tt>(import-definition my-foo)</tt> expands into</p>
+<p>
+<tt>(define my-foo (lookup-imported-binding &quot;my_foo&quot;))</tt></p>
+<p>
+</p>
+<a name="node_sec_8.2.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.2.3">8.2.3&nbsp;&nbsp;Complete shared binding interface</a></h3>
+<p></p>
+<p>
+There are a number of other Scheme functions related to shared bindings;
+these are in the structure <tt>shared-bindings</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(shared-binding?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_758"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(shared-binding-name<i> shared-binding</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_760"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(shared-binding-is-import?<i> shared-binding</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_762"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(shared-binding-set!<i> shared-binding value</i>)</tt><a name="node_idx_764"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(define-imported-binding<i> string value</i>)</tt><a name="node_idx_766"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(lookup-exported-binding<i> string</i>)</tt><a name="node_idx_768"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(undefine-imported-binding<i> string</i>)</tt><a name="node_idx_770"></a>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(undefine-exported-binding<i> string</i>)</tt><a name="node_idx_772"></a>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent><tt>Shared-binding?</tt> is the predicate for shared-bindings.
+<tt>Shared-binding-name</tt> returns the name of a binding.
+<tt>Shared-binding-is-import?</tt> is true if the binding was defined from C.
+<tt>Shared-binding-set!</tt> changes the value of a binding.
+<tt>Define-imported-binding</tt> and <tt>lookup-exported-binding</tt> are
+Scheme versions of <tt>s48_define_exported_binding</tt>
+and <tt>s48_lookup_imported_binding</tt>.
+The two <tt>undefine-</tt> procedures remove bindings from the two tables.
+They do nothing if the name is not found in the table.</p>
+<p>
+The following C macros correspond to the Scheme functions above.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_shared_binding_p(s48_call_t call, x)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_shared_binding_is_import_p(s48_call_t call, s48_ref_t s_b)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_shared_binding_name(s48_call_t call, s48_ref_t s_b)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_shared_binding_set(s48_call_t call, s48_ref_t s_b, s48_ref_t v)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.3">8.3&nbsp;&nbsp;Calling C functions from Scheme</a></h2>
+<p></p>
+<p>
+There are different ways to call C functions from Scheme, depending on
+how the C function was obtained.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(call-imported-binding-2<i> binding arg<sub>0</sub> <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_774"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Each of these applies its first argument, a C function that accepts
+and/or returns objects of type <tt>s48_ref_t</tt> and has its first
+argument of type <tt>s48_call_t</tt>, to the rest of the arguments.
+For <tt>call-imported-binding-2</tt> the function argument must be an
+imported binding.</p>
+<p>
+For all of these, the interface passes the current call object and
+the <i>arg<sub><em>i</em></sub></i> values to the C function and the value returned is
+that returned by C procedure.
+No automatic representation conversion occurs for either arguments or
+return values.
+Up to twelve arguments may be passed.
+There is no method supplied for returning multiple values to
+Scheme from C (or vice versa) (mainly because C does not have multiple return
+values).</p>
+<p>
+Keyboard interrupts that occur during a call to a C function are ignored
+until the function returns to Scheme (this is clearly a
+problem; we are working on a solution).</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(import-lambda-definition-2 <i>name</i> (<i>formal</i> <tt>...</tt>))</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)<a name="node_idx_776"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(import-lambda-definition-2 <i>name</i> (<i>formal</i> <tt>...</tt>) <i>c-name</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p>
+</p>
+
+<p class=noindent>These macros simplify importing functions from C that
+follow the return value and argument conventions of the
+foreign-function interface and use <tt>s48_call_t</tt> and
+<tt>s48_ref_t</tt> as their argument and return types.
+They define <i>name</i> to be a function with the given formals that
+applies those formals to the corresponding C binding.
+<i>C-name</i>, if supplied, should be a string.
+These expand into</p>
+<p>
+</p>
+<pre class=verbatim>(define temp (lookup-imported-binding <i>c-name</i>))
+(define <i>name</i>
+  (lambda (<i>formal</i> <tt>...</tt>)
+    (call-imported-binding-2 temp <i>formal</i> <tt>...</tt>)))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>
+If <i>c-name</i> is not supplied, it is derived from <i>name</i> by converting
+all letters to lowercase and replacing &lsquo;<tt>-</tt>&rsquo; with &lsquo;<tt>_</tt>&rsquo;.</p>
+<p>
+</p>
+<a name="node_sec_8.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.4">8.4&nbsp;&nbsp;Dynamic loading</a></h2>
+<p></p>
+<p>
+External code can be loaded into a running Scheme&nbsp;48---at least on
+most variants of Unix and on Windows.  The required Scheme functions
+are in the structure <tt>load-dynamic-externals</tt>.</p>
+<p>
+To be suitable for dynamic loading, the externals code must reside in
+a shared object.  The shared object must define a function:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void s48_on_load(void)</tt>
+</p>
+</ul><p>
+The <tt>s48_on_load</tt> is run upon loading the shared objects.  It
+typically contains invocations of <tt>S48_EXPORT_FUNCTION</tt> to
+make the functionality defined by the shared object known to
+Scheme&nbsp;48. </p>
+<p>
+The shared object may also define either or both of the following
+functions:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void s48_on_unload(void)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_on_reload(void)</tt>
+</p>
+</ul><p>
+Scheme&nbsp;48 calls <tt>s48_on_unload</tt> just before it unloads the
+shared object.  If <tt>s48_on_reload</tt> is present, Scheme&nbsp;48 calls
+it when it loads the shared object for the second time, or some new
+version thereof.  If it is not present, Scheme&nbsp;48 calls
+<tt>s48_on_load</tt> instead.  (More on that later.)</p>
+<p>
+For Linux, the following commands compile <tt>foo.c</tt> into a file
+<tt>foo.so</tt> that can be loaded dynamically.
+</p>
+<pre class=verbatim>% gcc -c -o foo.o foo.c
+% ld -shared -o foo.so foo.o
+</pre><p>
+The following procedures provide the basic functionality for loading
+shared objects containing dynamic externals:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(load-dynamic-externals<i> string plete?
+rrepeat? rresume?</i>)&nbsp;--&gt;&nbsp;<i>dynamic-externals</i></tt><a name="node_idx_778"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(unload-dynamic-externals<i> string</i>)&nbsp;--&gt;&nbsp;<i> dynamic-externals</i></tt><a name="node_idx_780"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(reload-dynamic-externals<i> dynamic-externals</i>)</tt><a name="node_idx_782"></a></p>
+</ul><p>
+<tt>Load-dynamic-externals</tt> loads the named shared objects.  The
+<i>plete?</i> argument determines whether Scheme&nbsp;48 appends the
+OS-specific suffix (typically <tt>.so</tt> for Unix, and <tt>.dll</tt> for
+Windows) to the name.  The <i>rrepeat?</i>  argument determines how
+<tt>load-dynamic-externals</tt> behaves if it is called again with the
+same argument: If this is true, it reloads the shared object (and
+calls its <tt>s48_on_unload</tt> on unloading if present, and, after
+reloading, <tt>s48_on_reload</tt> if present or <tt>s48_on_load</tt>
+if not), otherwise, it will not do anything.  The <i>rresume?</i>
+argument determines if an image subsequently dumped will try to load
+the shared object again automatically.  (The shared objects will be
+loaded before any record resumers run.)  <tt>Load-dynamic-externals</tt>
+returns a handle identifying the shared object just loaded.</p>
+<p>
+<tt>Unload-dynamic-externals</tt> unloads the shared object associated
+with the handle passed as its argument, previously calling its
+<tt>s48_on_unload</tt> function if present.  Note that this invalidates
+all external bindings associated with the shared object; referring to
+any of them will probably crash the program.</p>
+<p>
+<tt>Reload-dynamic-externals</tt> will reload the shared object named by
+its argument and call its <tt>s48_on_unload</tt> function before
+unloading, and, after reloading, <tt>s48_on_reload</tt> if present or
+<tt>s48_on_load</tt> if not.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(import-dynamic-externals<i> string</i>)&nbsp;--&gt;&nbsp;<i>dynamic-externals</i></tt><a name="node_idx_784"></a></p>
+</ul><p>
+This procedure represents the expected most usage for loading
+dynamic-externals.  It is best explained by its definition:
+</p>
+<pre class=verbatim>(define (import-dynamic-externals name)
+  (load-dynamic-externals name #t #f #t))
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_8.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.5">8.5&nbsp;&nbsp;Accessing Scheme data from C</a></h2>
+<p></p>
+<p>
+The C header file <tt>scheme48.h</tt> provides
+access to Scheme&nbsp;48 data structures.
+The type <tt>s48_ref_t</tt> is used for reference objects that 
+refer to Scheme values.
+When the type of a value is known, such as the integer returned
+by <tt>vector-length</tt> or the boolean returned by <tt>pair?</tt>,
+the corresponding C procedure returns a C value of the appropriate
+type, and not a <tt>s48_ref_t</tt>.
+Predicates return <tt>1</tt> for true and <tt>0</tt> for false.</p>
+<p>
+</p>
+<a name="node_sec_8.5.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.5.1">8.5.1&nbsp;&nbsp;Constants</a></h3>
+<p></p>
+<p>
+The following macros denote Scheme constants:
+</p>
+<ul>
+<li><p><tt>s48_false_2(s48_call_t)</tt> is <code class=verbatim>#f</code>.
+</p>
+<li><p><tt>s48_true_2(s48_call_t)</tt> is <code class=verbatim>#t</code>.
+</p>
+<li><p><tt>s48_null_2(s48_call_t)</tt> is the empty list.
+</p>
+<li><p><tt>s48_unspecific_2(s48_call_t)</tt> is a value used for functions which have no
+meaningful return value
+(in Scheme&nbsp;48 this value returned by the nullary procedure <tt>unspecific</tt>
+in the structure <tt>util</tt>).
+</p>
+<li><p><tt>s48_eof_2(s48_call_t)</tt> is the end-of-file object
+(in Scheme&nbsp;48 this value is returned by the nullary procedure <tt>eof-object</tt>
+in the structure <tt>i/o-internal</tt>).
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.5.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.5.2">8.5.2&nbsp;&nbsp;Converting values</a></h3>
+<p>The following macros and functions convert values between Scheme and C
+representations.
+The &lsquo;extract&rsquo; ones convert from Scheme to C and the &lsquo;enter&rsquo;s go the other
+way.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_extract_boolean_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_extract_char_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>char *    s48_extract_byte_vector_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_extract_long_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_extract_unsigned_long_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>double    s48_extract_double_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_boolean_2(s48_call_t, int)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_char_2(s48_call_t, long)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_byte_vector_2(s48_call_t, char *, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_long_2(s48_call_t, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_long_as_fixnum_2(s48_call_t, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_double_2(s48_call_t, double)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent><tt>s48_extract_boolean_2</tt> is false if its argument is
+<tt>#f</tt> and true otherwise.
+<tt>s48_enter_boolean_2</tt> is <tt>#f</tt> if its argument is zero
+and <tt>#t</tt> otherwise.</p>
+<p>
+The <tt>s48_extract_char_2</tt> function extracts the scalar value from
+a Scheme character as a C <tt>long</tt>.  Conversely,
+<tt>s48_enter_char_2</tt> creates a Scheme character from a scalar
+value.  (Note that ASCII values are also scalar values.)</p>
+<p>
+The <tt>s48_extract_byte_vector_2</tt> function needs to deal with
+the garbage collector to avoid invalidating the returned pointer.
+For more details see section&nbsp;<a href="#node_sec_8.7.3">8.7.3</a>.</p>
+<p>
+The second argument to <tt>s48_enter_byte_vector_2</tt> is the length of
+byte vector.</p>
+<p>
+<tt>s48_enter_long_2()</tt> needs to allocate storage when
+its argument is too large to fit in a Scheme&nbsp;48 fixnum.
+In cases where the number is known to fit within a fixnum (currently 30 
+bits on a 32-bits architecture and 62 bit on a 64-bits architecture 
+including the sign), the following procedures can be used.
+These have the disadvantage of only having a limited range, but
+the advantage of never causing a garbage collection.
+<tt>s48_fixnum_p_2(s48_call_t)</tt> is a macro that true if its argument is a fixnum
+and false otherwise.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_fixnum_p_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_long_as_fixnum_2(s48_call_t, long)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      S48_MAX_FIXNUM_VALUE</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      S48_MIN_FIXNUM_VALUE</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>An error is signaled if the argument to
+<tt>s48_enter_fixnum</tt> is less than <tt>S48_MIN_FIXNUM_VALUE</tt>
+or greater than <tt>S48_MAX_FIXNUM_VALUE</tt> (&minus;2<sup>29</sup> and
+2<sup>29</sup>&minus;1 on a 32-bits architecture and &minus;2<sup>61</sup> and 2<sup>62</sup>&minus;1 on 
+a 64-bits architecture).</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_true_p_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_false_p_2(s48_call_t, s48_ref_t)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent><tt>s48_true_p</tt> is true if its argument is <tt>s48_true</tt>
+and <tt>s48_false_p</tt> is true if its argument is <tt>s48_false</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_latin_1_2(s48_call_t, char*);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_latin_1_n_2(s48_call_t, char*, long);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_latin_1_length_2(s48_call_t, s48_ref_t);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_latin_1_length_n_2(s48_call_t, s48_ref_t, long, long);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_copy_latin_1_to_string_2(s48_call_t, char*, s48_ref_t);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_copy_latin_1_to_string_n_2(s48_call_t, char*, long, s48_ref_t);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_copy_string_to_latin_1_2(s48_call_t, s48_ref_t, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_copy_string_to_latin_1_n_2(s48_call_t, s48_ref_t, long, long, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_utf_8_2(s48_call_t, char*);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_utf_8_n_2(s48_call_t, char*, long);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_utf_8_length_2(s48_call_t, s48_ref_t);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_utf_8_length_n_2(s48_call_t, s48_ref_t, long, long);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_copy_string_to_utf_8_2(s48_call_t, s48_ref_t, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_copy_string_to_utf_8_n_2(s48_call_t, s48_ref_t, long, long, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_utf_16be_2(s48_call_t, char*);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_utf_16be_n_2(s48_call_t, char*, long);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_utf_16be_length_2(s48_call_t, s48_ref_t);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_utf_16be_length_n_2(s48_call_t, s48_ref_t, long, long);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_copy_string_to_utf_16be_2(s48_call_t, s48_ref_t, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_copy_string_to_utf_16be_n_2(s48_call_t, s48_ref_t, long, long, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_utf_16le_2(s48_call_t, char*);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_string_utf_16le_n_2(s48_call_t, char*, long);</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_utf_16le_length_2(s48_call_t, s48_ref_t);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_utf_16le_length_n_2(s48_call_t, s48_ref_t, long, long);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_copy_string_to_utf_16le_2(s48_call_t, s48_ref_t, char*);</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_copy_string_to_utf_16le_n_2(s48_call_t, s48_ref_t, long, long, char*);</tt>
+</p>
+</ul><p>
+The <tt>s48_enter_string_latin_1_2</tt> function creates a Scheme
+string, initializing its contents from its NUL-terminated,
+Latin-1-encoded argument.  The <tt>s48_enter_string_latin_1_n_2</tt>
+function does the same, but allows specifying the length explicitly---no NUL
+terminator is necessary.</p>
+<p>
+The <tt>s48_string_latin_1_length_2</tt> function computes the
+length that the Latin-1 encoding of its argument (a Scheme string)
+would occupy, not including NUL termination.  The
+<tt>s48_string_latin_1_length_2</tt> function does the same, but
+allows specifying a starting index and a count into the input string.</p>
+<p>
+The <tt>s48_copy_latin_1_to_string_2</tt> function copies
+Latin-1-encoded characters from its second NUL-terminated argument to
+the Scheme string that is its third argument.  The
+<tt>s48_copy_latin_1_to_string_n_2</tt> does the same, but allows
+specifying the number of characters explicitly.  The
+<tt>s48_copy_string_to_latin_1_2</tt> function converts the
+characters of the Scheme string specified as the second argument into
+Latin-1 and writes them into the string specified as the third
+argument.  (Note that it does not NUL-terminate the result.)  The
+<tt>s48_copy_string_to_latin_1_n_2</tt> function does the same, but
+allows specifying a starting index and a character count into the
+source string.</p>
+<p>
+The <tt>s48_extract_latin_1_from_string_2</tt> function returns a
+buffer that contains the Latin-1 encoded characters including NUL
+termination of the Scheme string specified.  The buffer that is
+returned is a local buffer managed by the foreign-function interface
+and is automatically freed on the return of the current call.</p>
+<p>
+The <tt>s48_enter_string_utf_8_2</tt> function creates a Scheme
+string, initializing its contents from its NUL-terminated,
+UTF-8-encoded argument.  The <tt>s48_enter_string_utf_8_n_2</tt>
+function does the same, but allows specifying the length
+explicitly---no NUL terminator is necessary.</p>
+<p>
+The <tt>s48_string_utf_8_length_2</tt> function computes the length
+that the UTF-8 encoding of its argument (a Scheme string) would
+occupy, not including NUL termination.  The
+<tt>s48_string_utf_8_length_2</tt> function does the same, but allows
+specifying a starting index and a count into the input string.</p>
+<p>
+The <tt>s48_copy_string_to_utf_8_2</tt> function converts the
+characters of the Scheme string specified as the second argument into
+UTF-8 and writes them into the string specified as the third
+argument.  (Note that it does not NUL-terminate the result.)  The
+<tt>s48_copy_string_to_utf_8_n_2</tt> function does the same, but
+allows specifying a starting index and a character count into the
+source string.  Both return the length of the written encodings in
+bytes.</p>
+<p>
+The <tt>s48_extract_utf_8_from_string_2</tt> function returns a
+buffer that contains the UTF-8 encoded characters including NUL
+termination of the Scheme string specified.  The buffer that is
+returned is a local buffer managed by the foreign-function interface
+and is automatically freed on the return of the current call.</p>
+<p>
+The functions with <tt>utf_16</tt> in their names work analogously to
+their <tt>utf_8</tt> counterparts, but implement the UTF-16 encodings.
+The lengths returned be the <tt>_length</tt> and
+<tt>copy_string_to</tt> functions are in terms of UTF-16 code units.
+The <tt>extract</tt> function returns a local buffer that contains
+UTF-16 code units including NUL termination.</p>
+<p>
+</p>
+<a name="node_sec_8.5.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.5.3">8.5.3&nbsp;&nbsp;C versions of Scheme procedures</a></h3>
+<p>The following macros and procedures are C versions of Scheme procedures.
+The names were derived by replacing &lsquo;<tt>-</tt>&rsquo; with &lsquo;<tt>_</tt>&rsquo;,
+&lsquo;<tt>?</tt>&rsquo; with &lsquo;<tt>_p</tt>&rsquo;, and dropping &lsquo;<tt>!</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_eq_p_2(s48_call_t, s48_ref_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_char_p_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_null_p_2(s48_call_t, s48_ref_t)</tt>
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_pair_p_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_car_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_cdr_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_set_car_2(s48_call_t, s48_ref_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_set_cdr_2(s48_call_t, s48_ref_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_cons_2(s48_call_t, s48_ref_t, s48_ref_t)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_vector_p_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_vector_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_vector_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_vector_set_2(s48_call_t, s48_ref_t, long, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_vector_2(s48_call_t, long, s48_ref_t)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_string_p_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_string_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_string_set_2(s48_call_t, s48_ref_t, long, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_string_2(s48_call_t, long, char)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_symbol_p_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_symbol_to_string_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_byte_vector_p_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_byte_vector_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>char      s48_byte_vector_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_byte_vector_set_2(s48_call_t, s48_ref_t, long, int)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_byte_vector_2(s48_call_t, long, int)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.6">8.6&nbsp;&nbsp;Calling Scheme functions from C</a></h2>
+<p></p>
+<p>
+External code that has been called from Scheme can call back to Scheme
+procedures using the following function.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_call_scheme_2(s48_call_t, s48_ref_t p, long nargs, <tt>...</tt>)</tt>
+</p>
+</ul><p>
+</p>
+
+<p class=noindent>This calls the Scheme procedure <tt>p</tt> on <tt>nargs</tt>
+arguments, which are passed as additional arguments to <tt>s48_call_scheme_2</tt>.
+There may be at most twelve arguments.
+The value returned by the Scheme procedure is returned by the C procedure.
+Invoking any Scheme procedure may potentially cause a garbage collection.</p>
+<p>
+There are some complications that occur when mixing calls from C to Scheme
+with continuations and threads.
+C only supports downward continuations (via <tt>longjmp()</tt>).
+Scheme continuations that capture a portion of the C stack have to follow the
+same restriction.
+For example, suppose Scheme procedure <tt>s0</tt> captures continuation <tt>a</tt>
+and then calls C procedure <tt>c0</tt>, which in turn calls Scheme procedure
+<tt>s1</tt>.
+Procedure <tt>s1</tt> can safely call the continuation <tt>a</tt>, because that
+is a downward use.
+When <tt>a</tt> is called Scheme&nbsp;48 will remove the portion of the C stack used
+by the call to <tt>c0</tt>.
+On the other hand, if <tt>s1</tt> captures a continuation, that continuation
+cannot be used from <tt>s0</tt>, because by the time control returns to
+<tt>s0</tt> the C stack used by <tt>c0</tt> will no longer be valid.
+An attempt to invoke an upward continuation that is closed over a portion
+of the C stack will raise an exception.</p>
+<p>
+In Scheme&nbsp;48 threads are implemented using continuations, so the downward
+restriction applies to them as well.
+An attempt to return from Scheme to C at a time when the appropriate
+C frame is not on top of the C stack will cause the current thread to
+block until the frame is available.
+For example, suppose thread <tt>t0</tt> calls a C procedure which calls back
+to Scheme, at which point control switches to thread <tt>t1</tt>, which also
+calls C and then back to Scheme.
+At this point both <tt>t0</tt> and <tt>t1</tt> have active calls to C on the
+C stack, with <tt>t1</tt>&rsquo;s C frame above <tt>t0</tt>&rsquo;s.
+If thread <tt>t0</tt> attempts to return from Scheme to C it will block,
+as its frame is not accessible.
+Once <tt>t1</tt> has returned to C and from there to Scheme, <tt>t0</tt> will
+be able to resume.
+The return to Scheme is required because context switches can only occur while
+Scheme code is running.
+<tt>T0</tt> will also be able to resume if <tt>t1</tt> uses a continuation to
+throw past its call to C.</p>
+<p>
+</p>
+<a name="node_sec_8.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7">8.7&nbsp;&nbsp;Interacting with the Scheme heap</a></h2>
+<p>
+</p>
+<p>
+Scheme&nbsp;48 uses a copying, precise garbage collector.
+Any procedure that allocates objects within the Scheme&nbsp;48 heap may trigger
+a garbage collection.</p>
+<p>
+Local object references refer to values in the Scheme&nbsp;48 heap and are
+automatically registered with the garbage collector by the interface
+for the duration of a function call from Scheme to C so that the
+values will be retained and the references will be updated if the
+garbage collector moves the object.</p>
+<p>
+Global object references need to be created and freed explicitly for
+Scheme values that need to survive one function call, e.g. that are
+stored in global variables, global data structures or are passed to
+libraries.  See section&nbsp;<a href="#node_sec_8.7.1">8.7.1</a> for details.</p>
+<p>
+Additionally, the interface provides <em>local buffers</em> that are malloc&rsquo;d regions
+of memory valid for the duration of a function call and are freed automatically upon
+return from the external code.  This relieves the programmer from explicitly freeing
+locally allocated memory.  See section&nbsp;<a href="#node_sec_8.7.2">8.7.2</a> for details.</p>
+<p>
+The interface treats byte vectors in a special way, since the garbage
+collector has no facility for updating pointers to the interiors of
+objects, so that such pointers, for example the ones returned by
+<tt>s48_unsafe_extract_byte_vector_2</tt>, will likely become
+invalid when a garbage collection occurs.  The interface provides a
+facility to prevent a garbage collection from invalidating pointers to
+byte vector&rsquo;s memory region, see section&nbsp;<a href="#node_sec_8.7.3">8.7.3</a> for 
+details.</p>
+<p>
+</p>
+<a name="node_sec_8.7.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7.1">8.7.1&nbsp;&nbsp;Registering global references</a></h3>
+<p></p>
+<p>
+When external code needs a reference object to survive the current
+call, the external code needs to do explicit bookkeeping.  Local
+references must not be stored in global variables of the external code
+or passed to other threads, since all local references are freed once
+the call returns, which leads to a dangling pointer in the global
+variable or other thread respectively.  Instead, promote a local
+reference to a global reference and store it in a global variable or
+pass to another thread as global references will survive the current
+call.  Since the foreign-function interface never automatically frees
+global references, the programmer must free them at the right time.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_global_ref(s48_value obj)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_free_global_ref(s48_ref_t ref)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_local_to_global_ref(s48_ref_t ref)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent><tt>s48_make_global_ref</tt> permanently registers the
+Scheme value <i>obj</i> as a global reference with the garbage
+collector.  Basic Scheme values are <tt>_s48_value_true</tt>,
+<tt>_s48_value_false</tt>, <tt>_s48_value_null</tt>,
+<tt>_s48_value_unspecific</tt>, <tt>_s48_value_undefined</tt>, and
+<tt>_s48_value_eof</tt>.</p>
+<p>
+To free a global reference an to unregister it with the
+garbage collector, use <tt>s48_free_global_ref</tt>.  The function
+<tt>s48_local_to_global_ref</tt> promotes a local reference object
+to a global reference object.</p>
+<p>
+For example, to maintain a global list of values, declare a static
+global variable</p>
+<p>
+</p>
+<pre class=verbatim>  s48_ref_t global_list = NULL;
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>and initialize it in the external code&rsquo;s initialization function</p>
+<p>
+</p>
+<pre class=verbatim>  global_list = s48_make_global_ref(_s48_value_null);
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>Note that you need to use a Scheme value (not a reference
+object) as the argument for <tt>s48_make_global_ref</tt>, since there
+is not yet a call object at the time external code gets initialized.
+To add <tt>new_value</tt> to the list, you can use the following
+snippet:</p>
+<p>
+</p>
+<pre class=verbatim>  temp = global_list;
+  global_list =  s48_local_to_global_ref(s48_cons_2(call, new_value, global_list))
+  s48_free_global_ref(temp);
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>You have to remember to always promote reference objects to
+global references when assigning to a global variable (and later, to
+free them manually).  Note that it is more efficient to free the
+previous head of the list when adding a new element to the list.</p>
+<p>
+</p>
+<a name="node_sec_8.7.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7.2">8.7.2&nbsp;&nbsp;Local buffers</a></h3>
+<p></p>
+<p>
+The foreign-function interface supports the programmer with allocating
+memory in external code: The programmer can request chunks of memory,
+called local buffers, that are automatically freed on return from the
+current call.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void *s48_make_local_buf (s48_call_t, size_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_free_local_buf (s48_call_t, void *)</tt>
+</p>
+</ul><p></p>
+<p>
+The function <tt>s48_make_local_buf</tt> returns a block of memory of
+the given size in bytes.  This memory freed by the foreign-function
+interface when the current call returns.  To free the buffer manually,
+use <tt>s48_free_local_buf</tt>.</p>
+<p>
+</p>
+<a name="node_sec_8.7.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7.3">8.7.3&nbsp;&nbsp;Special treatment for byte vectors</a></h3>
+<p></p>
+<p>
+The interface treats byte vectors in a special way, since the garbage
+collector has no facility for updating pointers to the interiors of
+objects, so that such pointers, for example the ones returned by
+<tt>s48_unsafe_extract_byte_vector_2</tt>, will likely become
+invalid when a garbage collection occurs.  The interface provides a
+facility to prevent a garbage collection from invalidating pointers to
+byte vector&rsquo;s memory region.  It does this by copying byte vectors
+that are used in external code from and to the Scheme heap.</p>
+<p>
+These functions create byte vectors:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_byte_vector_2(s48_call_t, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_unmovable_byte_vector_2(s48_call_t, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_byte_vector_2(s48_call_t, const char *, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_unmovable_byte_vector_2(s48_call_t, const char *, long)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+</ul><p></p>
+<p>
+<tt>s48_make_byte_vector_2</tt> creates a byte vector of given size,
+<tt>s48_make_unmovable_byte_vector_2</tt> creates a byte vector in
+that is not moved by the garbage collector (only the Bibop garbage
+collector supports this).  The functions
+<tt>s48_enter_byte_vector_2</tt> and
+<tt>s48_enter_unmovable_byte_vector_2</tt> create and initialize
+byte vectors.</p>
+<p>
+The following functions copy byte vectors from and to the Scheme heap:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void s48_extract_byte_vector_region_2(s48_call_t, s48_ref_t, long, long, char*)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_enter_byte_vector_region_2(s48_call_t, s48_ref_t, long, long, char*)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_copy_from_byte_vector_2(s48_call_t, s48_ref_t, char *)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_copy_to_byte_vector_2(s48_call_t, s48_ref_t, char *)</tt>
+</p>
+</ul><p></p>
+<p>
+<tt>s48_extract_byte_vector_region_2</tt> copies a given section
+from the given byte vector to its last argument,
+<tt>s48_enter_byte_vector_region_2</tt> copies the contents of its
+last argument to its first argument to the given index.
+<tt>s48_copy_from_byte_vector_2</tt> copies the whole byte vector
+to its last argument, <tt>s48_copy_to_byte_vector_2</tt> copies the
+contents of its last argument to the byte vector.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>char *s48_extract_byte_vector_unmanaged_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void  s48_release_byte_vector_2(s48_call_t, s48_ref_t, char*)</tt>
+</p>
+</ul><p></p>
+<p>
+<tt>s48_extract_byte_vector_unmanaged_2</tt> returns a local buffer
+that is valid during the current external call and copies the contents
+of the given byte vector to the returned buffer.  The returned byte
+vector may be a copy of the Scheme byte vector, changes made to the
+returned byte vector will not necessarily be reflected in Scheme until
+<tt>s48_release_byte_vector_2</tt> is called.</p>
+<p>
+The following functions to access byte vectors come with the most
+support from the foreign-function interface.  Byte vectors that are
+accessed via these functions are automatically managed by the
+interface and are copied back to Scheme on return from the current
+call:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>char *s48_extract_byte_vector_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>char *s48_extract_byte_vector_readonly_2(s48_call_t, s48_ref_t)</tt>
+</p>
+</ul><p></p>
+<p>
+<tt>s48_extract_byte_vector_2</tt> extracts a byte vector from
+Scheme by making a copy of the byte vectors contents and returning a
+pointer to that copy.  Changes to the byte vector are automatically
+copied back to the Scheme heap when the function returns, external
+code raises an exception, or external code calls a Scheme function.
+<tt>s48_extract_byte_vector_readonly_2</tt> should be used for byte
+vectors that are not modified by external code, since these byte
+vectors are not copied back to Scheme.</p>
+<p>
+</p>
+<a name="node_sec_8.7.4"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7.4">8.7.4&nbsp;&nbsp;Memory overhead</a></h3>
+<p></p>
+<p>
+Each reference object consumes a certain amount of memory itself, in
+addition to the memory taken by the referred Scheme object itself.
+Even though local references are eventually freed on return of an
+external call, there are some situations where it is desirable to free
+local references explicitly, since waiting until the call returns may
+be too long or never happen, which could keep unneeded objects live:</p>
+<p>
+</p>
+<ul>
+<li><p>External code may create a large number of local references in a
+single external call.  An example is the traversal of a list: Each
+call from external code to the functions that correspond to
+<tt>car</tt> and <tt>cdr</tt> returns a fresh local reference.  To
+avoid the consumption of storage for local references proportional
+to the length of the list, the traversal must free the
+no-longer-needed references as it goes.</p>
+<p>
+For example, this is a straightforward definition of an
+external function that calculates the length of a list:</p>
+<p>
+</p>
+<pre class=verbatim>  s48_ref_t
+  s48_length_2(s48_call_t call, s48_ref_t list)
+  {
+    long i = 0;
+    while (!(s48_null_p_2(call, list)))
+      {
+        list = s48_cdr_2(call, list);
+        ++i;
+      }
+    return s48_unsafe_enter_long_as_fixnum_2(call, i);
+  }
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>In this implementation, each iteration step creates a new
+local reference object via <tt>s48_cdr_2</tt> that is actually only
+needed for the next iteration step.  As a result, this function
+creates new local references for every element of the list.  The
+local references are live during the entire function call.</p>
+<p>
+To avoid consuming storage proportional to the length of the list
+for all those local reference objects, the improved version cleans
+up the unneeded local reference on every iteration step:</p>
+<p>
+</p>
+<pre class=verbatim>  s48_ref_t
+  s48_length_2(s48_call_t call, s48_ref_t list)
+  {
+    s48_ref_t l = s48_copy_local_ref(call, list);
+    long i = 0;
+    while (!(s48_null_p_2(call, l)))
+      {
+        s48_ref_t temp = l;
+        l = s48_cdr_2(call, l);
+        s48_free_local_ref(call, temp);
+        ++i;
+      }
+    return s48_unsafe_enter_long_as_fixnum_2(call, i);
+  }
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>Note that without the call to
+<tt>s48_copy_local_ref</tt> the reference to the head of the list
+would be freed along with all the temporary references.  This would
+render the whole list unusable after the return from <tt>s48_length_2</tt>.</p>
+<p>
+</p>
+<li><p>The external call does not return at all.  If the external
+function enters an infinite event dispatch loop, for example, it is
+crucial that the programmer releases local references manually that
+he created inside the loop so that they do not accumulate
+indefinitely and lead to a memory leak.</p>
+<p>
+</p>
+<li><p>External code may hold a local reference to a large Scheme
+object.  After the external code is done working on this object, it
+performs some additional computation before returning to the caller.
+The local reference to the large object prevents the object from
+being garbage collected until the external function returns, even if
+the object is no longer in use for the remainder of the computation.
+It is more space-efficient if the programmer frees the local
+reference when the external function does not need it any longer and
+will not return for quite some time.</p>
+<p>
+</p>
+<li><p>There are common situations where local references are created
+solely to be passed to another function and afterwards never used
+again.  In this case, the called function can free the local
+references of the arguments.</p>
+<p>
+</p>
+<li><p>To improve memory usage while making subcalls from external
+calls, the foreign-function interface provides functionality to
+create a new (sub-)call object and clean the local references that
+are created during that subcall:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_call_t s48_make_subcall(s48_call_t call)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_free_subcall(s48_call_t subcall)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_finish_subcall(s48_call_t call, s48_call_t subcall, s48_ref_t ref)</tt>
+</p>
+</ul><p></p>
+<p>
+<tt>s48_make_subcall</tt> returns a new call object that represents a
+subcall of the current call and can be passed as the call argument
+to any subcalls of the current call.  Upon return of a subcall,
+<tt>s48_free_subcall</tt> frees the subcall and all the local
+references associated with it.  The function s48_finish_subcall
+also frees the subcall and all the local references associated with
+it, but copies its third argument to the current call, so that it
+survives the subcall.</p>
+<p>
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.7.5"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7.5">8.7.5&nbsp;&nbsp;Keeping C data structures in the Scheme heap</a></h3>
+<p></p>
+<p>
+C data structures can be kept in the Scheme heap by embedding them
+inside byte vectors.
+The following macros can be used to create and access embedded C objects.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_value_2(s48_call_t, type)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_sized_value_2(s48_call_t, size)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>type      s48_extract_value_2(s48_call_t, s48_ref_t, type)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_value_size_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>type *    s48_extract_value_pointer_2(s48_call_t, s48_ref_t, type)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_set_value_2(s48_call_t, s48_ref_t, type, value)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>
+<tt>s48_make_value_2</tt> makes a byte vector large enough to hold an object
+whose type is <i>type</i>.
+<tt>s48_make_sized_value_2</tt> makes a byte vector large enough to hold an object
+of <i>size</i> bytes.
+<tt>s48_extract_value_2</tt> returns the contents of a byte vector cast to
+<i>type</i>, <tt>s48_value_size_2</tt> returns its size,
+and <tt>s48_extract_value_pointer_2</tt> returns a pointer to the
+contents of the byte vector.
+The value returned by <tt>s48_extract_value_pointer_2</tt> is valid only until
+the next garbage collection.
+<tt>s48_set_value_2</tt> stores <tt>value</tt> into the byte vector.</p>
+<p>
+Pointers to C data structures can be stored in the Scheme heap:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_enter_pointer_2(s48_call_t, void *)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void *    s48_extract_pointer_2(s48_call_t, s48_ref_t)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>The function <tt>s48_enter_pointer_2</tt> makes a byte
+vector large enough to hold the pointer value and stores the pointer
+value in the byte vector.  The function
+<tt>s48_extract_pointer_2</tt> extracts the pointer value from the
+scheme heap.</p>
+<p>
+</p>
+<a name="node_sec_8.7.6"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.7.6">8.7.6&nbsp;&nbsp;C code and heap images</a></h3>
+<p></p>
+<p>
+Scheme&nbsp;48 uses dumped heap images to restore a previous system state.
+The Scheme&nbsp;48 heap is written into a file in a machine-independent and
+operating-system-independent format.
+The procedures described above may be used to create objects in the
+Scheme heap that contain information specific to the current
+machine, operating system, or process.
+A heap image containing such objects may not work correctly
+when resumed.</p>
+<p>
+To address this problem, a record type may be given a &lsquo;resumer&rsquo;
+procedure.
+On startup, the resumer procedure for a type is applied to each record of
+that type in the image being restarted.
+This procedure can update the record in a manner appropriate to
+the machine, operating system, or process used to resume the
+image.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(define-record-resumer<i> record-type procedure</i>)</tt><a name="node_idx_786"></a></p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent><tt>Define-record-resumer</tt> defines <i>procedure</i>,
+which should accept one argument, to be the resumer for
+<i>record-type</i>.
+The order in which resumer procedures are called is not specified.</p>
+<p>
+The <i>procedure</i> argument to <tt>define-record-resumer</tt> may
+be <tt>#f</tt>, in which case records of the given type are
+not written out in heap images.
+When writing a heap image any reference to such a record is replaced by
+the value of the record&rsquo;s first field, and an exception is raised
+after the image is written.</p>
+<p>
+</p>
+<a name="node_sec_8.8"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.8">8.8&nbsp;&nbsp;Using Scheme records in C code</a></h2>
+<p>External modules can create records and access their slots
+positionally.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_make_record_2(s48_call_t, s48_ref_t)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(may GC)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_record_p_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_record_type_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_record_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_record_set_2(s48_call_t, s48_ref_t, long, s48_ref_t)</tt> 
+</p>
+</ul><p>
+The argument to <tt>s48_make_record_2</tt> should be a shared binding
+whose value is a record type.
+In C the fields of Scheme records are only accessible via offsets,
+with the first field having offset zero, the second offset one, and
+so forth.
+If the order of the fields is changed in the Scheme definition of the
+record type the C code must be updated as well.</p>
+<p>
+For example, given the following record-type definition
+</p>
+<pre class=verbatim>(define-record-type thing :thing
+  (make-thing a b)
+  thing?
+  (a thing-a)
+  (b thing-b))
+</pre><p>
+the identifier <tt>:thing</tt> is bound to the record type and can
+be exported to C:
+</p>
+<pre class=verbatim>(define-exported-binding &quot;thing-record-type&quot; :thing)
+</pre><p>
+<tt>Thing</tt> records can then be made in C:
+</p>
+<pre class=verbatim>static s48_ref_t
+  thing_record_type_binding = NULL;
+
+void initialize_things(void)
+{
+  thing_record_type_binding =
+     s48_get_imported_binding_2(&quot;thing-record-type&quot;);
+}
+
+s48_ref_t make_thing(s48_call_t call, s48_ref_t a, s48_ref_t b)
+{
+  s48_ref_t thing;
+  thing = s48_make_record_2(call, thing_record_type_binding);
+  s48_record_set_2(call, thing, 0, a);
+  s48_record_set_2(call, thing, 1, b);
+  return thing;
+}
+</pre><p>
+Note that the interface takes care of protecting all local references 
+against the possibility of a garbage collection occurring during
+the call to <tt>s48_make_record_2()</tt>; also note that the record
+type binding is a global reference that is live until explicitly
+freed.</p>
+<p>
+</p>
+<a name="node_sec_8.9"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.9">8.9&nbsp;&nbsp;Raising exceptions from external code</a></h2>
+<p></p>
+<p>
+The following macros explicitly raise certain errors, immediately
+returning to Scheme&nbsp;48.
+Raising an exception performs all
+necessary clean-up actions to properly return to Scheme&nbsp;48, including
+adjusting the stack of protected variables.</p>
+<p>
+The following procedures are available for raising particular
+types of exceptions.
+These never return.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_assertion_violation_2(s48_call_t, const char* who, const char* message, long count, ...)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_error_2(s48_call_t, const char* who, const char* message, long count, ...)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_os_error_2(s48_call_t, const char* who, const char* message, long count, ...)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_out_of_memory_error_2(s48_call_t, )</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>An assertion violation signaled via
+<tt>s48_assertion_violation_2</tt> typically means that an invalid
+argument (or invalid number of arguments) has been passed.  An error
+signaled via <tt>s48_error_2</tt> means that an environmental error
+(like an I/O error) has occurred.  In both cases, <tt>who</tt> indicates
+the location of the error, typically the name of the function it
+occurred in.  It may be <tt>NULL</tt>, in which the system guesses a
+name.  The <tt>message</tt> argument is an error message encoded in
+UTF-8.  Additional arguments may be passed that become part of the
+condition object that will be raised on the Scheme side: <tt>count</tt>
+indicates their number, and the arguments (which must be of type
+<tt>s48_ref_t</tt>) follow.</p>
+<p>
+The <tt>s48_os_error_2</tt> function is like <tt>s48_error_2</tt>, except
+that the error message is inferred from an OS error code (as in
+<tt>strerror</tt>).  The <tt>s48_out_of_memory_error_2</tt> function
+signals that the system has run out of memory.</p>
+<p>
+The following macros raise assertion violations if their argument does
+not have the required type.  <tt>s48_check_boolean_2</tt> raises an
+error if its argument is neither <tt>#t</tt> or <tt>#f</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_boolean_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_symbol_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_pair_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_string_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_integer_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_channel_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_byte_vector_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_record_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void s48_check_shared_binding_2(s48_call_t, s48_ref_t)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.10"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.10">8.10&nbsp;&nbsp;External events</a></h2>
+<p>External code can push the occurrence of external events into the main
+Scheme&nbsp;48 event loop and Scheme code can wait and act on external
+events.</p>
+<p>
+On the Scheme side, the external events functionality consists of the
+following functions from the structure <tt>primitives</tt>:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(new-external-event-uid<i> shared-binding-or-#f</i>)&nbsp;--&gt;&nbsp;<i> uid</i></tt><a name="node_idx_788"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(unregister-external-event-uid!<i> uid</i>)</tt><a name="node_idx_790"></a></p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>And the following functions from the structure
+<tt>external-events</tt>:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(register-condvar-for-external-event!<i> uid condvar</i>)</tt><a name="node_idx_792"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(wait-for-external-event<i> condvar</i>)</tt><a name="node_idx_794"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(new-external-event<i></i>)&nbsp;--&gt;&nbsp;<i> uid condvar</i></tt><a name="node_idx_796"></a></p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>The function <tt>new-external-event-uid</tt> returns a fresh
+event identifier on every call.  When called with a shared binding
+instead of <tt>#f</tt>, <tt>new-external-event-uid</tt> returns a named
+event identifier for permanent use.  The function
+<tt>unregister-external-event-uid</tt> unregisters the given event
+identifier.</p>
+<p>
+External events use condition variables to synchronize the occurrence
+of events, see section&nbsp;<a href="manual-Z-H-8.html#node_sec_7.5">7.5</a> for more
+information on condition variables.  The function
+<tt>register-condvar-for-external-event</tt> registers a condition
+variable with an event identifier.  For convenience, the function
+<tt>new-external-event</tt> combines <tt>new-external-event-uid</tt> and
+<tt>register-condvar-for-external-event</tt> and returns a fresh event
+identifier and the corresponding condition variable.</p>
+<p>
+The function <tt>wait-for-external-event</tt> blocks the caller (on the
+condition variable) until the Scheme main event loop receives an event
+notification (by <tt>s48_note_external_event</tt>) of the event
+identifier that is registered with the given condition variable (with
+<tt>register-condvar-for-external-event</tt>).  There is no guarantee
+that the caller of <tt>wait-for-external-event</tt> is unblocked on
+every event notification, therefore the caller has to be prepared to
+handle multiple external events that have occurred and external code
+has to be prepared to store multiple external events.</p>
+<p>
+The following prototype is the interface on the external side:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>void s48_note_external_event(long)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>External code has to collect external events and can use
+<tt>s48_note_external_event</tt> to signal the occurrence of an
+external event to the main event loop.  The argument to
+<tt>s48_note_external_event</tt> is an event identifier that was
+previously registered on the Scheme side.  Thus, external code has to
+obtain the event identifier from the Scheme side, either by passing
+the event identifier as an argument to the external function that
+calls <tt>s48_note_external_event</tt> or by exporting the Scheme
+value to C (see section&nbsp;<a href="#node_sec_8.2.1">8.2.1</a>).</p>
+<p>
+Since the main event loop does not guarantee that every call to
+<tt>s48_note_external_event</tt> causes the just occurred event to
+get handled immediately, external code has to make sure that it can
+collect multiple external events (i.e. keep them in an appropriate
+data structure).  It is safe for external code to call
+<tt>s48_note_external_event</tt> on every collected external event,
+though, even if older events have not been handled yet.</p>
+<p>
+</p>
+<a name="node_sec_8.10.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.10.1">8.10.1&nbsp;&nbsp;Collecting external events in external code</a></h3>
+<p>External code has to be able to collect multiple events that have
+occurred.  Therefore, external code has to create the needed data
+structures to store the information that is associated with the
+occurred event.  Usually, external code collects the events in a
+thread.  An separate thread does not have an call argument, though, so
+it cannot create Scheme data structures.  It must use C data
+structures to collect the events, for example it can create a linked
+list of events.</p>
+<p>
+Since the events are later handled on the Scheme side, the information
+associated with the event needs to be visible on the Scheme side, too.
+Therefore, external code exports a function to Scheme that returns all
+current events as Scheme objects (the function that returns the events
+knows about the current call and thus can create Scheme objects).
+Scheme and external code might need to share Scheme record types that
+represent the event information.  Typically, the function that returns
+the events converts the C event list into a Scheme event list by
+preserving the original order in which the events arrived.  Note that
+the external list data structure that holds all events needs to be
+mutex locked on each access to preserve thread-safe manipulation of
+the data structure (the Scheme thread that processes events and the
+external thread that collects events may access the data structures at
+the same time).</p>
+<p>
+</p>
+<a name="node_sec_8.10.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.10.2">8.10.2&nbsp;&nbsp;Handling external events in Scheme</a></h3>
+<p>If the sole occurrence of an event does not suffice for the program,
+the Scheme side has to pull the information that is associated with an
+event from the C side.  Then, the Scheme side can handle the event
+data.  For example, a typical event loop on the Scheme side that waits
+on external events of an permanent event type that an long-running
+external thread produces may look like this:</p>
+<p>
+</p>
+<pre class=verbatim>(define *external-event-uid* 
+  (new-external-event-uid (lookup-imported-binding &quot;my-event&quot;)))
+
+(spawn-external-thread *external-event-uid*)
+
+(let loop ()
+  (let ((condvar (make-condvar)))
+    (register-condvar-for-external-event! *external-event-uid* condvar)
+    (wait-for-external-event condvar)
+    (process-external-events! (get-external-events))
+    (loop)))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>In the above example, the variable
+<tt>*external-event-uid*</tt> is defined as a permanent event
+identifier.  On every pass through the loop, a fresh condition
+variable is registered with the event identifier, then
+<tt>wait-for-external-event</tt> blocks on the condition variable until
+external code signals the occurrence of a matching event.  Note that
+<tt>process-external-events!</tt> and <tt>get-external-events</tt> need to
+be defined by the user.  The user-written function
+<tt>get-external-events</tt> returns all the events that the external
+code has collected since the last time <tt>get-external-events</tt> was
+called; the user-written function <tt>process-external-events!</tt>
+handles the events on the Scheme side.</p>
+<p>
+When the Scheme side only waits for one single event, there is no need
+for an event loop and an permanent event identifier.  Then,
+<tt>new-external-event</tt> is more convenient to use:</p>
+<p>
+</p>
+<pre class=verbatim>(call-with-values
+  (lambda () (new-external-event))
+  (lambda (uid condvar)
+    (spawn-external-thread uid)
+    (wait-for-external-event condvar)
+    (unregister-external-event-uid! uid)
+    ...))
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>Here, <tt>new-external-event</tt> returns a fresh event
+identifier and a fresh condition variable.  The event identifier is
+passed to <tt>spawn-external-thread</tt> and the condition variable is
+used to wait for the occurrence of the external event.</p>
+<p>
+External code uses <tt>s48_note_external_event</tt> to push the fact
+that an external event occurred into the main event loop, then the
+Scheme code needs to pull the actual event data from external code (in
+this example with <tt>get-external-events</tt>).  The user-written
+function <tt>spawn-external-thread</tt> runs the external code that
+informs the Scheme side about the occurrence of external events.  The
+event identifier is passed as an argument.  The external-event-related
+parts of the implementation of <tt>spawn-external-thread</tt> in
+external code could look like this:</p>
+<p>
+</p>
+<pre class=verbatim>s48_ref_t
+spawn_external_thread(s48_call_t call, s48_ref_t sch_event_uid) {
+  ...
+  s48_note_external_event(s48_extract_long_2(call, sch_event_uid));
+  ...
+}
+</pre><p></p>
+<p>
+</p>
+
+<p class=noindent>The event identifier is extracted from its Scheme
+representation and used to inform the Scheme side about an occurrence
+of this specific event type.</p>
+<p>
+</p>
+<a name="node_sec_8.11"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.11">8.11&nbsp;&nbsp;Unsafe functions and macros</a></h2>
+<p>All of the C procedures and macros described above check that their
+arguments have the appropriate types and that indexes are in range.
+The following procedures and macros are identical to those described
+above, except that they do not perform type and range checks.
+They are provided for the purpose of writing more efficient code;
+their general use is not recommended.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_extract_char_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_enter_char_2(s48_call_t, long)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_extract_integer_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_extract_double_2(s48_call_t, s48_ref_t)</tt>
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_extract_fixnum_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_enter_fixnum_2(s48_call_t, long)</tt>
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_car_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_cdr_2(s48_call_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_set_car_2(s48_call_t, s48_ref_t, s48_ref_t)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_set_cdr_2(s48_call_t, s48_ref_t, s48_ref_t)</tt>
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_vector_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_vector_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_vector_set_2(s48_call_t, s48_ref_t, long, s48_ref_t)</tt> 
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_string_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>char      s48_unsafe_string_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_string_set_2(s48_call_t, s48_ref_t, long, char)</tt> 
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_symbol_to_string_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>char *    s48_unsafe_extract_byte_vector_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>long      s48_unsafe_byte_vector_length_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>char      s48_unsafe_byte_vector_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_byte_vector_set_2(s48_call_t, s48_ref_t, long, int)</tt> 
+</p>
+</ul><p></p>
+<p>
+Additionally to not performing type checks, the pointer returned by
+<tt>s48_unsafe_extract_byte_vector_2</tt> will likely become
+invalid when a garbage collection occurs.  See
+section<a href="#node_sec_8.7.3">8.7.3</a> on how the interface deals with byte
+vectors in a proper way.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_shared_binding_ref_2(s48_call_t, s48_ref_t s_b)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_unsafe_shared_binding_p_2(s48_call_t, x)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>int       s48_unsafe_shared_binding_is_import_p_2(s48_call_t, s48_ref_t s_b)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_shared_binding_name_2(s48_call_t, s48_ref_t s_b)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_shared_binding_set_2(s48_call_t, s48_ref_t s_b, s48_ref_t value)</tt>
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_record_type_2(s48_call_t, s48_ref_t)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>s48_ref_t s48_unsafe_record_ref_2(s48_call_t, s48_ref_t, long)</tt> 
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_record_set_2(s48_call_t, s48_ref_t, long, s48_ref_t)</tt> 
+</p>
+</ul><p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>type      s48_unsafe_extract_value_2(s48_call_t, s48_ref_t, type)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>type *    s48_unsafe_extract_value_pointer_2(s48_call_t, s48_ref_t, type)</tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>void      s48_unsafe_set_value_2(s48_call_t, s48_ref_t, type, value)</tt>
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_8.12"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_8.12">8.12&nbsp;&nbsp;Converting external code to the new foreign-function interface</a></h2>
+<p></p>
+<p>
+It is straightforward to convert external code from the old
+foreign-function interface to the new foreign-function interface:</p>
+<p>
+</p>
+<ul>
+<li><p>Converting functions:
+</p>
+<ul>
+<li><p>Add <tt>s48_call call</tt> as a first argument to every
+function prototype that returns or accepts a <tt>s48_value</tt>.</p>
+<p>
+</p>
+<li><p>Replace every <tt>s48_value</tt> type in the function prototype
+and the body with <tt>s48_ref_t</tt>.</p>
+<p>
+</p>
+<li><p>Add <tt>call</tt> as the first argument to every function call
+that returns or accepts a Scheme object.</p>
+<p>
+</p>
+<li><p>Remove all the <tt>GCPROTECT</tt>-related code (i.e.
+<tt>GCPROTECT</tt> and <tt>UNPROTECT</tt>).
+</p>
+</ul><p></p>
+<p>
+</p>
+<li><p>Converting global (static) variables:
+</p>
+<ul>
+<li><p>Replace <tt>s48_value</tt> type of the global variable with
+<tt>s48_ref_t</tt>, initialize these variables with <tt>NULL</tt>.</p>
+<p>
+</p>
+<li><p>Set a real Scheme object in the initialization function of
+your code with one of these alternatives:
+</p>
+<ul>
+<li><p>Use <tt>s48_make_global_ref</tt> to convert a
+<tt>s48_value</tt> to a global reference.  For details and an
+example see section&nbsp;<a href="#node_sec_8.7.1">8.7.1</a>.</p>
+<p>
+</p>
+<li><p>Use <tt>s48_local_to_global_ref</tt> to convert a local
+reference object to a global one.</p>
+<p>
+</p>
+<li><p>If your global variable is supposed to hold a shared binding
+(e.g. an record type binding), you can use
+<tt>s48_get_imported_binding_2</tt> that returns a global
+reference.
+</p>
+</ul><p></p>
+<p>
+</p>
+<li><p>Replace <tt>S48_GC_PROTECT_GLOBAL</tt> with
+<tt>s48_local_to_global_ref</tt> to convert a local reference
+object to a global one.</p>
+<p>
+</p>
+<li><p>Use <tt>s48_free_global_ref</tt> to cleanup global references
+when appropriate.
+</p>
+</ul><p>
+</p>
+</ul><p></p>
+<p>
+</p>
+
+<p class=noindent>If you add <code class=verbatim>#define NO_OLD_FFI 1</code> just above
+<code class=verbatim>#include &lt;scheme48.h&gt;</code> in your source code file, it will hide all
+the macros and prototype definitions of the old foreign-function
+interface.  That way you can make sure that you are only using the new
+interface and the C compiler will remind you if you don&rsquo;t.</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-8.html">previous</a></span><span>, <a href="manual-Z-H-10.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

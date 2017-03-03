@@ -1,0 +1,1010 @@
+% Part of Scheme 48 1.9.  See file COPYING for notices and license.
+
+% Authors:
+% Richard Kelsey, Jonathan Rees, Robert Ransom, Mike Sperber, Marcel
+% Turino
+
+\chapter{Command processor}
+\label{chapter:command-processor}
+
+This chapter details Scheme~48's command processor, which incorporates
+ both a read-eval-print loop and an interactive debugger.
+At the \code{>} prompt, you can type either a Scheme form
+ (expression or definition) or a command beginning with a comma.
+In
+inspection mode (see section~\ref{inspector})
+ the prompt changes to \code{:} and commands
+ no longer need to be preceded by a comma; input beginning with
+ a letter or digit is assumed to be a command, not an expression.
+In inspection mode the command processor prints out a
+ menu of selectable components for the current object of interest.
+
+\section{Current focus value and {\tt \#\#}}
+
+The command processor keeps track of a current {\em focus value}.
+This value is normally the last value returned by a command.
+If a command returns multiple values the focus object is a list of the
+ values.
+The focus value is not changed if a command returns no values or 
+ a distinguished `unspecific' value.
+Examples of forms that return this unspecific value are definitions,
+ uses of \code{set!}, and \code{(if \#f 0)}.
+It prints as \code{\#\{Unspecific\}}.
+
+The reader used by the command processor reads \code{\#\#} as a special
+ expression that evaluates to the current focus object.
+\begin{example}
+> (list 'a 'b)
+'(a b)
+> (car ##)
+'a
+> (symbol->string ##)
+"a"
+> (if #f 0)
+#\{Unspecific\}
+> ##
+"a"
+> 
+\end{example}
+
+\section{Command levels}
+
+If an error, keyboard interrupt, or other breakpoint occurs, or the
+ \code{,push} command is used, the command
+ processor invokes a recursive copy of itself, preserving the dynamic state of
+ the program when the breakpoint occurred.
+The recursive invocation creates a new {\em command level}.
+The command levels form a stack with the current level at the top.
+The command prompt indicates the number of stopped levels below the
+ current one: \code{>} or \code{:} for the
+ base level and \code{\cvar{n}>} or \code{\cvar{n}:} for all other levels,
+ where \cvar{n} is the command-level nesting depth.
+The \code{levels} setting
+ described below can be used to disable the automatic pushing of new levels.
+
+The command processor's evaluation package and the value of the
+current focus value are local to each command level.
+They are preserved when a new level is pushed and restored when
+ it is discarded.
+The settings of all other settings are shared by all command levels.
+
+\begin{description}
+\item $\langle{}$eof$\rangle{}$\\
+    Discards the current command level and resumes running the level down.
+    $\langle{}$eof$\rangle{}$ is usually
+    control-\code{D} at a Unix shell or control-\code{C} control-\code{D} using
+    the Emacs \code{cmuscheme48} library.
+
+\item \code{,pop}\\
+ The same as $\langle{}$eof$\rangle{}$.
+
+\item \code{,proceed [\cvar{exp} \ldots}]\\
+ Proceed after an interrupt or error, resuming the next command
+ level down, delivering the values of \cvar{exp~\ldots} to the continuation.
+ Interrupt continuations discard any returned values.
+ \code{,Pop} and \code{,proceed} have the same effect after an interrupt
+ but behave differently after errors.
+ \code{,Proceed} restarts the erroneous computation from the point where the
+ error occurred (although not all errors are proceedable) while
+ \code{,pop} (and $\langle{}$eof$\rangle{}$) discards it and prompts for
+ a new command.
+
+\item \code{,push}\\
+ Pushes a new command level on above the current one.
+ This is useful if the \code{levels} setting has been used
+ to disable the automatic pushing of new levels for errors and interrupts.
+
+\item \code{,reset [\cvar{number}]}\\
+  Pops down to a given level and restarts that level.
+  \cvar{Number} defaults to zero, \code{,reset} restarts the command
+  processor, discarding all existing levels.
+
+\end{description}
+
+Whenever moving to an existing level, either by sending
+ an $\langle{}$eof$\rangle{}$
+ or by using \code{,reset} or the other commands listed above,
+ the command processor runs all of the \code{dynamic-wind} ``after'' thunks
+ belonging to stopped computations on the discarded level(s).
+
+\section{Logistical commands}
+\begin{description}
+\item \code{,load \cvar{filename \ldots}}\\
+    Loads the named Scheme source file(s).
+    Easier to type than \code{(load "\cvar{filename}")} because you don't have to
+    shift to type the parentheses or quote marks.  
+    (However, it is still possible to specify a filename as a Scheme
+    string literal, with quote marks---you'll need this for filenames
+    containing whitespace.)
+    Also, it works in
+    any package, unlike \code{(load "\cvar{filename}")}, which will work only
+    in packages in which the variable \code{load} is defined appropriately.
+
+\item \code{,exit [\cvar{exp}]}\\
+    Exits back out to shell (or executive or whatever invoked Scheme~48
+    in the first place).
+    \cvar{Exp} should evaluate to an integer.  The
+    integer is returned to the calling program.
+    The default value of \cvar{exp} is zero, which, on Unix,
+    is generally interpreted as success.
+\end{description}
+
+\section{Module commands}
+\label{module-command-guide}
+
+There are many commands related to modules.
+Only the most commonly used module commands are described here;
+ documentation for the
+ rest can be found in section~\ref{module-commands}.
+There is also
+a brief description of modules, structures, and packages in section~\ref{module-guide} below.
+
+\begin{description}
+\item \code{,open \cvar{structure \ldots}}\\
+Makes the bindings in the \cvar{structure}s visible in the current package.
+The packages associated with the \cvar{structure}s will be loaded if
+ this has not already been done (the \code{ask-before-loading} setting
+ can be used to disable the automatic loading of packages).
+
+\item \code{,config [\cvar{command}]}\\
+Executes \cvar{command} in the \code{config} package, which includes
+ the module configuration language.
+For example, use
+\begin{example}
+,config ,load \cvar{filename}
+\end{example}
+to load a file containing module definitions.
+If no \cvar{command} is given, the \code{config} package becomes the
+ execution package for future commands.
+
+\item \code{,user [\cvar{command}]} \\
+    This is similar to the {\tt ,config}.  It
+    moves to or executes a command in the user package (which is the
+    default package when the \hack{} command processor starts).
+
+\end{description}
+
+\section{Debugging commands}
+\label{debug-commands}
+
+\begin{description}
+\item \code{,preview}\\
+    Somewhat like a backtrace, but because of tail recursion you see
+    less than you might in debuggers for some other languages.
+    The stack to display is chosen as follows:
+\begin{enumerate}
+    \item If the current focus object is a continuation or a thread,
+       then that continuation or thread's stack is displayed.
+    \item Otherwise, if the current command level was initiated because of
+       a breakpoint in the next level down, then the stack at that
+       breakpoint is displayed.
+    \item Otherwise, there is no stack to display and a message is printed
+       to that effect.
+\end{enumerate}
+    One line is printed out for each continuation on the chosen stack,
+    going from top to bottom.
+
+\item \code{,run \cvar{exp}}\\
+    Evaluate \cvar{exp}, printing the result(s) and making them
+    (or a list of them, if \cvar{exp} returns multiple results)
+    the new focus object.
+    The \code{,run} command is useful in inspection mode (see
+    section~\ref{inspector} below) and when writing
+    command programs (see section~\ref{command-programs} below).
+
+\item \code{,trace \cvar{name} \ldots}\\
+    Start tracing calls to the named procedure or procedures.
+    With no arguments, displays all procedures currently traced.
+    This affects the binding of \cvar{name}, not the behavior of the
+    procedure that is its current value.  \cvar{Name} is redefined
+    to be a procedure that prints a message,
+    calls the original value of \cvar{name}, prints another
+    message, and finally passes along the value(s) returned by the
+    original procedure.
+
+\item \code{,untrace \cvar{name} \ldots}\\
+    Stop tracing calls to the named procedure or procedures.
+    With no argument, stop tracing all calls to all procedures.
+
+\item \code{,condition}\\
+    The \code{,condition} command displays the condition object
+    describing the error or interrupt that initiated the current
+    command level.  The condition object becomes the current focus
+    value.  This is particularly useful in conjunction with
+    the inspector.  For example, if a procedure is passed the wrong number of
+    arguments, do \code{,condition} followed by
+     \code{,inspect} to inspect the
+    procedure and its arguments.
+
+\item \code{,bound?\ \cvar{name}}\\
+    Display the binding of \cvar{name}, if there is one, and otherwise
+    prints `\code{Not bound}'.
+ 
+\item \code{,expand \cvar{form}}
+    Show macro expansion of \cvar{form}, if any, fully expanding all 
+    macros in \cvar{form}.
+
+\item \code{,where \cvar{procedure}}\\
+    Display name of file containing \cvar{procedure}'s source code.
+\end{description}
+
+
+\section{Profiling commands}
+\label{profiling-commands}
+
+After loading the \code{profile-commands} structure via
+%
+\begin{example}
+,load-package profile-commands  
+\end{example}
+%
+Scheme~48 provides a basic profiler, with support for flat and call-graph profiles.
+In addition to call- and runtimes the heap memory usage is estimated as well.
+By adding the byte-code optimizer \code{profiler-instrumentation} to the definition
+of a structure via a clause
+%
+\begin{example}
+  (optimize profiler-instrumentation)
+\end{example}
+%
+in the structure definition, code will by instrumented with calls to the profiler. The call-times to
+instrumented code can then be measured exactly.
+Without instrumentation, the profiler is solely based on sampling and therefore has only
+limited accuracy.
+Any evaluation can be profiled with the following command:
+
+\begin{description}
+
+\item \code{,profile \cvar{command}}\\
+    Evaluate \cvar{command} under the profiler, printing the profiling result and making the
+    return value(s) of \cvar{command} the new focus object.
+
+\end{description}
+
+The output of the profiler is explained on the basis of the following piece of senseless code:
+
+\begin{example}
+(define (c x)
+  (if (= x 0)
+      0
+      (+ 1 (c (- x 1)))))
+
+(define (b x)
+  (let ((y (- x 1)))
+    (if (> y 0)
+        (begin
+          (c y)
+          (a y)
+          (+ 1 (a y)))
+        0)))
+
+(define (a x)
+  (let ((y (- x 1)))
+    (if (> y 0)
+        (begin
+          (c y)
+          (b y)
+          (+ 1 (b y)))
+        0)))
+
+(define (main x)
+  (+ 1 (a x)))
+\end{example}
+
+The profiler produces the following output:
+
+\begin{example}
+> ,profile (main 21)
+
+** Samples:        60 (approx. one per 40ms)
+** Interrupt time: 50ms
+** Real run time:  2430ms
+** Total memory:   22k
+** GC runs:        0
+
+** Flat result (times in ms): 
+
+   time  cumu  self   mem  calls  ms/call  name
+ 61.66%  1498  1498    2k  37+51       17  c in "x.scm"
+  25.0%  2430   608   10k    436        6  b in "x.scm"
+ 13.33%  2430   324   10k    442        5  a in "x.scm"
+   0.0%  2430     0    0k      1     2430  main in "x.scm"
+
+** Tree result (times in ms): 
+
+i    time self child  mem    calls  name
+0  100.0%    0  2430   0k        0  <profiler> [0]
+             0  2430   0k      1/1     main in "x.scm" [1]
+=========================================================
+                           441/442     b in "x.scm" <cycle 0> [3]
+           324   891  10k    1/442     main in "x.scm" [1]
+1  100.0%  324   891  10k      442  a in "x.scm" <cycle 0> [2]
+           891     0   1k    22/37     c in "x.scm" [4]
+                           436/436     b in "x.scm" <cycle 0> [3]
+=========================================================
+                           436/436     a in "x.scm" <cycle 0> [2]
+2  100.0%  608   608  10k      436  b in "x.scm" <cycle 0> [3]
+           608     0   1k    15/37     c in "x.scm" [4]
+                           441/442     a in "x.scm" <cycle 0> [2]
+=========================================================
+             0  2430   0k      1/1     <profiler> [0]
+3  100.0%    0  2430   0k        1  main in "x.scm" [1]
+           324   891  10k    1/442     a in "x.scm" <cycle 0> [2]
+=========================================================
+           608     0   1k    15/37     b in "x.scm" <cycle 0> [3]
+           891     0   1k    22/37     a in "x.scm" <cycle 0> [2]
+4  61.66% 1498     0   2k    37+51  c in "x.scm" [4]
+=========================================================
+           932  1498  20k      1/1     main in "x.scm" [1]
+0  100.0%  932  1498  20k    1+877  <cycle 0 as a whole>
+           324   891  10k      441     a in "x.scm" <cycle 0> [2]
+           608   608  10k      436     b in "x.scm" <cycle 0> [3]
+             0     0   2k    37/37     c in "x.scm" [4]
+
+\end{example}
+
+The formatting of the output is based on the output of
+GNU gprof \footnote{part of the GNU Binary Utilities: http://www.gnu.org/software/binutils/}.
+
+First, general information about the profiling is shown:
+\begin{itemize}
+	\item \code{samples}: total number of samples taken and the
+		average time between two samples
+	\item \code{interrupt time}: theoretical interrupt time, the time between
+		two samples
+	\item \code{real run time}: the total run time of the evaluation, simple measurement
+		from the beginning to the end of the evaluation
+	\item \code{total memory}: the total amount of memory used by the program, here in kilobytes
+	\item \code{GC runs}: the number of times the garbage collector was running while evaluating
+\end{itemize}
+
+The flat profile gives overall statistics for each procedure in the program:
+\begin{itemize}
+\item \code{time}:
+	percentage of time the procedure has in the program (based on ``\code{self}'')
+\item \code{cumu}:
+	total cumulative time the procedure was running
+\item \code{self}:
+	total time the procedure was running itself (without children)
+\item \code{mem}:
+	approximated memory usage of the procedure
+\item \code{calls}:
+	the number of non-recursive calls to the procedure. Recursive calls are displayed after an
+	optionally appended "+" to former number (see procedure \code{c} in example output above).
+\item \code{ms/call}:
+	estimate of the time per call (with children), based on non-recursive calls and ``\code{cumu}''.
+\item \code{name}:
+	the name of the procedure and the file it is defined in
+\end{itemize}
+
+The tree result displays profiling information depending on the caller of a particular procedure.
+As in gprof output, for each procedure there is an \textit{entry}. Entries are separated by lines of \code{=}s.
+Each entry displays the callers (indented), the procedure itself and the procedure called (indented).
+The meaning of the fields depends on the type of the entry, for example:
+
+\begin{example}
+ i    time self  child  mem    calls   name
+            324    891  10k    1/442      main [1]
+ 1  100.0%  324    891  10k      442   a <cycle 0> [2]
+            891      0   1k    22/37      c [4]
+\end{example}
+
+Every procedure has a unique index number \code{i} (here ``1''), based on the position in the
+call-graph. It is used to quickly find the corresponding entry. The number is appended to
+the procedure name (in brackets).
+The meaning of the ``cycle'' suffix is explained below.
+
+Callers (here \code{main}):
+\begin{itemize}
+	\item \code{self}:
+		time spent directly in \code{a} when called by \code{main}
+	\item \code{child}:
+		time spent in children of \code{a} when called by \code{main}
+	\item \code{mem}:
+		memory usage of \code{a} when called by \code{main}
+	\item \code{calls}:
+		two numbers:
+		number of calls to \code{a} from \code{main}
+		and
+		total number of non-recursive calls to \code{a}
+\end{itemize}
+
+Primary line (here \code{a}):
+\begin{itemize}
+	\item \code{time}:
+		total percentage of time \code{a} was running
+	\item \code{self}:
+		total time spent directly in \code{a}
+	\item \code{child}:
+		total time spent in children of \code{a}
+	\item \code{mem}:
+		total memory usage of \code{a}
+	\item \code{calls}:
+		the total number of non-recursive calls to \code{a}. Recursive calls are
+		displayed after an optional \code{+}.
+\end{itemize}
+
+Called (here \code{c}):
+\begin{itemize}
+	\item \code{self}:
+		time spent directly in \code{c} when called by \code{a}
+	\item \code{child}:
+		time spent in children of \code{c} when called by \code{a}
+	\item \code{mem}:
+		memory usage of \code{c} when called by \code{a}
+	\item \code{calls}:
+		two numbers:
+		number of calls to \code{c} from \code{a}
+		and
+		total number of non-recursive calls to \code{c}
+\end{itemize}
+
+A special treatment is needed for mutual-recursive procedures. In the example,
+\code{a} calls \code{b} and \code{b} calls \code{a}. This is called a \textit{cycle}.
+If \code{a} would call another procedure \code{d} and \code{d} would call \code{a}, all three
+procedures form a cycle.
+
+Cycles have a separate entry in the call graph.
+This entry consists of the callers into the cycle, the primary line of the cycle,
+the member procedures of the cycle and the external procedures called by the cycle:
+
+\begin{example}
+            932   1498  20k      1/1      main [1]
+ 0  100.0%  932   1498  20k    1+877   <cycle 0 as a whole>
+            324    891  10k      441      a <cycle 0> [2]
+            608    608  10k      436      b <cycle 0> [3]
+              0      0   2k    37/37      c [4]
+\end{example}
+
+Callers (here \code{main}):
+\begin{itemize}
+	\item the meaning of the fields are the same
+	as above. The member procedures of the cycle are seen as a whole.
+\end{itemize}
+
+Primary line:
+\begin{itemize}
+	\item \code{time}:
+		total percentage of time any procedure of the cycle was running
+	\item \code{self}:
+		total time spent directly in a procedure of the cycle
+	\item \code{child}:
+		total time spent in external children of \code{a}
+	\item \code{mem}:
+		sum of memory usage of all cycle member procedures
+	\item \code{calls}:
+		the total number of external calls to the \code{cycle} and the total number
+		of calls in the cycle internally
+\end{itemize}
+
+Member procedures:
+\begin{itemize}
+	\item the meaning of the fields are the same as above, except\ldots
+	\item \code{calls}: the number of calls to the member procedure from within the cycle
+\end{itemize}
+
+External procedures (here \code{c}):
+\begin{itemize}
+	\item the meaning of the fields are the same as with the member procedures, except\ldots
+	\item \code{calls}: the number of calls to the external procedure from the cycle
+		and
+		the total number of non-recursive calls to the external procedure
+\end{itemize}
+
+
+In the current implementation, there are some issues that need to be considered:
+in the default configuration, samples are taken every 50 milliseconds. Procedures with a by-call
+run time shorter than the interrupt time are likely to be profiled inaccurately or may not be seen
+at all, if they have not been instrumented.
+
+The default interrupt time can be set with the \code{profiler-interrupt-time} command processor setting,
+see \ref{settings}. For example,
+%
+\begin{example}
+,set profiler-interrupt-time 200
+\end{example}
+%
+sets the
+default profiler sampling interrupt time to 200ms.
+
+Because the interrupt is shared with the thread system, profiling may cause performance issues
+with multi-threaded programs. Also, programs with deep recursion (resulting in large
+continuations) can cause the profiler to use a significant percentage of the total run time.
+
+By default, call times are measured by the sampling process. When code had been instrumented,
+call times of those procedures will be measured exactly. When only instrumented code should be
+considered in the output of the profiler, the command processor setting
+\code{profiler-measure-noninstr} can be set to \code{off}.
+
+Scheme~48 optimizes tail calls. Thus, the profiler cannot ``see''
+tail calls and in some situations,
+the output of the profiler may show that procedures directly call their ``grandchildren''.
+
+
+\subsection{How the profiler works}
+
+The profiler is based on taking samples of the current stack of continuations, the {\it call-stack}.
+Therefore it schedules the alarm interrupt at a regular interval specified by the
+\code{profiler-interrupt-time} command processor setting. Because the thread system uses the
+alarm interrupt as well, the profiler interrupt handler
+calls the handler of the thread system after processing the sample.
+
+The profiler interrupt handler first captures the current continuation and follows the continuation-stack
+down to the continuation of the \code{profile-thunk} procedure, which called the thunk to be profiled.
+Each continuation with the corresponding code template is stored in a stack of \code{stackentry} records.
+
+This \code{*cur-stack*} is compared from bottom to top with the \code{*last-stack*},
+the stack captured while the prior sampling interrupt.
+The statistics gathered are stored in \code{profinfo} records.
+
+For each stack-entry in the \code{*cur-stack*}, several possibilities exist in
+conjunction to the entry at the same depth in the \code{*last-stack*}:
+\begin{itemize}
+	\item there is no such entry: the continuation must be the result of a new call
+	\item both entries are the same continuation: nothing changed, the procedure is still running
+	\item entries are not the same continuation:
+		the following entries up in the stack must have changed. If the templates of the current
+		entries are the same, the continuation counts as the still same call to the procedure (but at another
+		expression in the procedure). A such situation only counts as a new call if the continuation
+		object has changed, but the continuation program-counter, arguments and the template stayed the same.
+\end{itemize}
+As we ascend in the call-stack, changes in the lower levels indicate that all entries above have to be new calls.
+This way, the profiler gathers information about how often a template is called by another template.
+
+Additionally, every time a procedure is seen, we record this ``occurrence''. If the procedure is a the top of
+the stack, it is currently running. Based on these numbers, the average interrupt time and the number of calls,
+we can estimate the self and child times.
+
+While running, the profiler collects information about heap memory usage as well.
+After comparing the current with the last stack, the profiler knows which procedures finished, which procedures are new
+and which procedure called the new procedures. This information is used to distribute the difference in
+heap memory usage between the prior and the current sample.
+The profiler uses the \code{memory-status} primitive for retrieving available heap space and the number of
+garbage collector runs (\code{gc-count}).
+Difference in used memory between two samples is distributed by the following principles:
+\begin{itemize}
+	\item if \code{gc-count} increased, distribution cannot be done
+	\item if the same continuation is still at top, credit its template with all used memory between the two samplings
+	\item if there are stackentry-templates gone or new, distribute the used memory {\it equally} between them:
+		\begin{itemize}
+			\item gone templates could have used some memory before ``returning''
+			\item new  templates could have used some memory while running
+			\item the caller of new templates could have used some memory between the calling of gone and new procedures
+		\end{itemize}
+\end{itemize}
+
+The byte-code optimizer \code{profiler-instrumentation} adds a call to the ``profile-count'' procedure of the
+profiler structure. This procedure is responsible for the exact call-times measurement.
+
+After collection of the data, procedures are numbered and cycles are detected by ascending in the
+call tree. Time is being propagated from top to bottom, remembering self and child times. Most
+of the time, cycles are being considered as one procedure.
+
+
+\section{Settings}
+\label{settings}
+
+There are a number of settings that control the behavior of the
+ command processor; most of them are booleans.
+They can be set using the \code{,set} and \code{,unset} commands.
+
+\begin{description}
+\item \code{,set \cvar{setting} [on | off | literal | ?]}\\
+    This sets the value of setting \cvar{setting}.
+    For a boolean setting, the second argument must be \code{on} or
+    \code{off}; it then defaults to \code{on}.
+    Otherwise, the value must be a literal, typically a positive number.
+    If the second argument is \code{?} the value of \cvar{setting} is
+    is displayed and not changed.
+    Doing \code{,set ?} will display a list of the setting and
+    their current values.
+
+\item \code{,unset \cvar{setting}}\\
+    \code{,unset \cvar{setting}} is the same as
+    \code{,set \cvar{setting} off}.
+\end{description}
+
+The settings are as follows:
+\begin{description}
+\item \code{batch} (boolean)\\
+    In `batch mode' any error or interrupt that comes up will cause
+    Scheme~48 to exit immediately with a non-zero exit status.  Also,
+    the command processor doesn't print prompts.  Batch mode is
+    off by default.
+
+% JAR says: disable levels by default??
+
+\item \code{levels} (boolean)\\
+    Enables or disables the automatic pushing of a new command level when
+    an error, interrupt, or other breakpoint occurs.
+    When enabled (the default), breakpoints push a new command level,
+    and $\langle{}$eof$\rangle{}$ (see above)
+    or \code{,reset} is required to return to top level.  The effects of
+    pushed command levels include:
+\begin{itemize}
+\item a longer prompt
+\item retention of the continuation in effect at the point of error
+\item confusion among some newcomers
+\end{itemize}
+    With \code{levels} disabled one must issue a
+    \code{,push} command immediately
+    following an error in order to retain the error continuation for
+    debugging purposes; otherwise the continuation is lost as soon as
+    the focus object changes.  If you don't know anything about the
+    available debugging tools, then \code{levels} might as well be disabled.
+
+\item \code{break-on-warnings} (boolean)\\
+    Enter a new command level when a warning is produced, just as
+    when an error occurs.  Normally warnings only result in a displayed
+    message and the program does not stop executing.
+
+\item \code{ask-before-loading} (boolean)\\
+    If on, the system will ask before loading modules that are arguments
+    to the \code{,open} command.  \code{Ask-before-loading} is off by
+    default.
+\begin{example}
+> ,set ask-before-loading
+will ask before loading modules
+> ,open random
+Load structure random (y/n)? y
+>
+\end{example}
+
+\item \code{load-noisily} (boolean)\\
+    When on, the system will print out the names of modules and files
+    as they are loaded.  \code{Load-noisily} is off by default.
+\begin{example}
+> ,set load-noisily
+will notify when loading modules and files
+> ,open random
+[random /usr/local/lib/scheme48/big/random.scm]
+> 
+\end{example}
+
+\item \code{inline-values} (boolean)\\
+This controls whether or not the compiler is allowed to substitute
+ variables' values in-line.
+When \code{inline-values} mode is on,
+some Scheme procedures will be substituted in-line; when it is off,
+none will.
+Section~\ref{section:performance}
+has more information.
+
+\item \code{inspector-menu-limit} (positive integer)\\
+This controls how many items the displayed portion of the inspector
+menu contains at most.  (See Section~\ref{inspector}.)
+
+\item \code{inspector-writing-depth} (positive integer)\\
+This controls the maximum depth to which the inspector
+prints values.  (See Section~\ref{inspector}.)
+
+\item \code{inspector-writing-length} (positive integer)\\
+This controls the maximum length to which the inspector
+prints values.  (See Section~\ref{inspector}.)
+
+\item \code{condition-writing-depth} (positive integer)\\
+This controls the maximum depth to which conditions
+are printed.
+
+\item \code{condition-writing-length} (positive integer)\\
+This controls the maximum length to which conditions
+are printed.
+
+\item \code{profiler-interrupt-time} (positive integer)\\
+This controls the time between two profiler sampling interrupts
+(in milliseconds, see section \ref{profiling-commands}).
+
+\item \code{profiler-measure-noninstr} (boolean)\\
+When this flag is enabled, call-times will be measured by the sampling process.
+When it is disabled, call-times will only be measured when the procedure has been
+instrumented (see section \ref{profiling-commands}).
+
+\item \code{trace-writing-length} (positive integer)\\
+This controls the maximum length to which tracing
+prints procedure calls.
+\end{description}
+
+\section{Inspection mode}
+\label{inspector}
+
+There is a data inspector available via the \code{,inspect} and
+ \code{,debug} commands.
+The inspector is particularly useful with procedures, continuations,
+ and records.
+The command processor can be taken out of inspection mode by
+ using the \code{q} command.
+When in inspection mode, input that begins with
+  a letter or digit is read as a command, not as an expression.
+To see the value of a variable or number, do \code{(begin \cvar{exp})}
+  or use the \code{,run \cvar{exp}} command.
+
+In inspection mode the command processor prints out a
+ menu of selectable components for the current focus object.
+To inspect a particular component, just type the corresponding number in
+ the menu.
+That component becomes the new focus object.
+For example:
+\begin{example}
+> ,inspect '(a (b c) d)
+(a (b c) d)
+
+[0] a
+[1] (b c)
+[2] d
+: 1
+(b c)
+
+[0] b
+[1] c
+: 
+\end{example}
+
+When a new focus object is selected the previous one is pushed onto a
+ stack.
+You can pop the stack, reverting to the previous object, with
+ the \code{u} command, or use the \code{stack} command to move to
+ an earlier object.
+
+%\begin{description}
+%\item \code{stack}\\
+%    Prints the current stack out as a menu.
+%    Selecting an item pops all higher values off of the stack and
+%    makes that item the current focus value.
+%\end{description}
+%
+
+Commands useful when in inspection mode:
+\begin{itemize}
+\item\code{u} (up) pop object stack
+\item\code{m} (more) print more of a long menu
+\item\code{(\ldots)} evaluate a form and select result
+\item\code{q} quit
+\item\code{template} select a closure or continuation's template
+ (Templates are the static components of procedures; these are found
+  inside of procedures and continuations, and contain the quoted
+  constants and top-level variables referred to by byte-compiled code.)
+\item\code{d} (down) move to the next continuation
+ (current object must be a continuation)
+\item\code{menu} print the selection menu for the focus object
+\end{itemize}
+
+Multiple selection commands (\code{u}, \code{d}, and menu indexes)
+ may be put on a single line.
+
+%\code{\#\#} is always the object currently being inspected.
+%After a \code{q}
+%command,
+%or an error in the inspector, \code{\#\#} is the last object that was being
+%inspected.
+
+All ordinary commands are available when in inspection mode.
+Similarly, the inspection commands can be used when not in inspection
+ mode.
+For example:
+\begin{example}
+> (list 'a '(b c) 'd)
+'(a (b c) d)
+> ,1
+'(b c)
+> ,menu
+[0] b
+[1] c
+> 
+\end{example}
+
+If the current command level was initiated because of
+ a breakpoint in the next level down, then 
+ \code{,debug} will invoke the inspector on the
+ continuation at the point of the error.
+The \code{u} and \code{d} (up and down)
+commands then make the inspected-value stack look like a conventional stack
+debugger, with continuations playing the role of stack frames.  \code{D} goes
+to older or deeper continuations (frames), and \code{u} goes back up to more
+recent ones.
+
+\section{Command programs}
+\label{command-programs}
+
+The \code{exec} package contains procedures that are used
+ to execute the command processor's commands.
+A command \code{,\cvar{foo}} is executed by applying the value of
+ the identifier \cvar{foo} in the \code{exec} package to
+ the (suitably parsed) command arguments.
+
+\begin{description}
+\item \code{,exec [\cvar{command}]}\\
+   Evaluate \cvar{command} in the \code{exec} package.
+   For example, use
+\begin{example}
+,exec ,load \cvar{filename}
+\end{example}
+to load a file containing commands.
+If no \cvar{command} is given, the \code{exec} package becomes the
+ execution package for future commands.
+\end{description}
+
+The required argument types are as follows:
+\begin{itemize}
+\item filenames should be strings
+\item other names and identifiers should be symbols
+\item expressions should be s-expressions
+\item commands (as for \code{,config} and \code{,exec} itself)
+ should be lists of the form
+ \code{(\cvar{command-name} \cvar{argument} \ldots)}
+ where \cvar{command-name} is a symbol.
+\end{itemize}
+
+For example, the following two commands are equivalent:
+\begin{example}
+,config ,load my-file.scm
+
+,exec (config '(load "my-file.scm"))
+\end{example}
+
+The file \code{scheme/vm/load-vm.scm} in the source directory contains an
+ example of an \code{exec} program.
+
+\section{Building images}
+
+\begin{description}
+\item \code{,dump \cvar{filename} [\cvar{identification}]}\\
+    Writes the current heap out to a file, which can then be run using the
+    virtual machine.  The new image file includes the command processor.
+    If present, \cvar{identification}
+    should be a string (written with double quotes); this string will
+    be part of the greeting message as the image starts up.
+
+\item \code{,build \cvar{exp} \cvar{filename} [\cvar{option \ldots}]}\\
+    Like \code{,dump}, except that the image file contains the value of
+    \cvar{exp}, which should be a procedure of one argument, instead of
+    the command processor.  When
+    \cvar{filename} is resumed, that procedure will be invoked on the VM's
+    \code{-a} arguments, which are passed as a list of OS strings (see
+    section~\ref{os-strings}.  The
+    procedure should return an integer, which is
+    returned to the program that invoked the VM.  The command
+    processor and debugging system are not included in the image
+    (unless you go to some effort to preserve them, such as retaining
+    a continuation).
+    
+    If \code{no-warnings} appears as an \cvar{option} after the file
+    name, no warnings about undefined external bindings
+    (see Section~\ref{sec:shared-bindings}) will be printed upon
+    resuming the image.  This is useful when the definitions of
+    external bindings appear in shared objects that are only loaded
+    after the resumption of the image.
+
+    Doing \code{,flush} before building an image will reduce the amount
+    of debugging information in the image, making for a smaller
+    image file, but if an error occurs, the error message may be less
+    helpful.  Doing \code{,flush source maps} before loading any programs
+    used in the image will make it still smaller.
+    See section~\ref{resource-commands}
+    for more information.
+
+\end{description}
+    
+\section{Resource query and control}
+\label{resource-commands}
+
+\begin{description}
+\item \code{,time \cvar{exp}}\\
+    Measure execution time.
+
+\item \code{,collect}\\
+    Invoke the garbage collector.  Ordinarily this happens
+    automatically, but the command tells how much space is available
+    before and after the collection.
+
+\item \code{,keep \cvar{kind}}
+\item \code{,flush \cvar{kind}}\\
+    These control the amount of debugging information retained after
+    compiling procedures.  This information can consume a fair amount
+    of space.  \cvar{kind} is one of the following:
+\begin{itemize}
+\item \code{maps} - environment maps (local variable names, for inspector)
+\item \code{source} - source code for continuations (displayed by inspector)
+\item \code{names} - procedure names (as displayed by \code{write} and in error
+       messages)
+\item \code{files}  - source file names
+\end{itemize}
+    These commands refer to future compilations only, not to procedures
+    that already exist.  To have any effect, they must be done before
+    programs are loaded.  The default is to keep all four types.
+% JAR says: ,keep tabulate  - puts debug data in a table that can be
+% independently  flushed (how? -RK) or even written out and re-read later!
+% (how? -RK)
+
+\item \code{,flush}\\
+    The flush command with no argument deletes the database of names
+    of initial procedures.  Doing \code{,flush} before a \code{,build} or
+    \code{,dump}
+    will make the resulting image significantly smaller, but will
+    compromise the information content of many error
+    messages.
+\end{description}
+
+\section{Threads}
+\label{command-threads}
+
+Each command level has its own set of threads.  These threads are suspended
+ when a new level is entered and resumed when the owning level again becomes
+ the current level.
+A thread that raises an error is not resumed unless
+ explicitly restarted using the \code{,proceed} command.
+In addition to any threads spawned by the user, each level has a thread
+ that runs the command processor on that level.
+A new command-processor thread is started if the current one
+ dies or is terminated.
+When a command level is abandoned for a lower level, or when
+ a level is restarted using \code{,reset}, all of the threads on that
+ level are terminated and any \code{dynamic-wind} ``after'' thunks are run.
+
+The following commands are useful when debugging multithreaded programs:
+\begin{description}
+\item \code{,resume [\cvar{number}]}\\
+  Pops out to a given level and resumes running all threads at that level.
+  \cvar{Number} defaults to zero.
+
+\item \code{,threads}\\
+    Invokes the inspector on a list of the threads running at the
+    next lower command level.
+
+\item \code{,exit-when-done [\cvar{exp}]}\\
+    Waits until all user threads have completed and then
+    exits back out to shell (or executive or whatever invoked Scheme~48
+    in the first place).
+    \cvar{Exp} should evaluate to an integer which is then
+    returned to the calling program.
+% JAR says: interaction with ,build ?
+
+%\item \code{,spawn \cvar{exp} [\cvar{name}]}\\
+%    Starts a new thread running \cvar{exp} on next command level down.
+%    The optional \cvar{name} is used for printing and debugging.
+%
+%\item \code{,suspend [\cvar{exp}]}
+%\item \code{,continue [\cvar{exp}]}
+%\item \code{,kill [\cvar{exp}]}\\
+%    Suspend, unsuspend, and terminate a thread, respectively.
+%    Suspended threads are not run until unsuspended, terminated
+%    threads are never run again.
+%    \cvar{Exp} should evaluate to a thread.
+%    If \cvar{exp} is not present, the current focus object is used.
+%
+
+% example of ,threads ,suspend ...
+\end{description}
+
+\section{Quite obscure}
+
+\begin{description}
+\item \code{,go \cvar{exp}}\\
+    This is like \code{,exit \cvar{exp}} except that the evaluation of \cvar{exp}
+    is tail-recursive with respect to the command processor.  This
+    means that the command processor itself can probably be GC'ed,
+    should a garbage collection occur in the execution of \cvar{exp}.
+    If an error occurs Scheme~48 will exit with a non-zero value.
+
+\item \code{,translate \cvar{from} \cvar{to}}\\
+    For \code{load} and the \code{,load} command
+     (but not for \code{open-\{in|out\}put-file}), file
+    names beginning with the string \cvar{from} will be changed so that the
+    initial \cvar{from} is replaced by the string \cvar{to}.  E.g.
+\begin{example}
+\code{,translate /usr/gjc/ /zu/gjc/}
+\end{example}
+    will cause \code{(load "/usr/gjc/foo.scm")} to have the same effect as
+    \code{(load "/zu/gjc/foo.scm")}.
+% JAR says: Useful with the module system!  "virtual directories"
+
+\item \code{,from-file \cvar{filename} \cvar{form} \ldots\ ,end}\\
+    This is used by the \code{cmuscheme48} Emacs library to indicate the file
+    from which the \cvar{form}s came.  \cvar{Filename} is then used by the
+    command processor to determine the package in which the \cvar{form}s
+    are to be evaluated.
+\end{description}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 

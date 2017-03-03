@@ -1,0 +1,37 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scheme48", "scheme48.vcxproj", "{FF056A47-5095-4837-B381-60104984AD5F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srfi-27", "srfi-27.vcxproj", "{D0283225-314B-4140-8940-2EE6137874CB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ffi-test", "ffi-test.vcxproj", "{EB565705-1E66-40C9-894D-D152C3920212}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "r6rs", "r6rs.vcxproj", "{CBEC7C76-63A6-410E-A55C-82A7E389EA7B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF056A47-5095-4837-B381-60104984AD5F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FF056A47-5095-4837-B381-60104984AD5F}.Debug|Win32.Build.0 = Debug|Win32
+		{FF056A47-5095-4837-B381-60104984AD5F}.Release|Win32.ActiveCfg = Release|Win32
+		{FF056A47-5095-4837-B381-60104984AD5F}.Release|Win32.Build.0 = Release|Win32
+		{D0283225-314B-4140-8940-2EE6137874CB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D0283225-314B-4140-8940-2EE6137874CB}.Debug|Win32.Build.0 = Debug|Win32
+		{D0283225-314B-4140-8940-2EE6137874CB}.Release|Win32.ActiveCfg = Release|Win32
+		{D0283225-314B-4140-8940-2EE6137874CB}.Release|Win32.Build.0 = Release|Win32
+		{EB565705-1E66-40C9-894D-D152C3920212}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EB565705-1E66-40C9-894D-D152C3920212}.Debug|Win32.Build.0 = Debug|Win32
+		{EB565705-1E66-40C9-894D-D152C3920212}.Release|Win32.ActiveCfg = Release|Win32
+		{EB565705-1E66-40C9-894D-D152C3920212}.Release|Win32.Build.0 = Release|Win32
+		{CBEC7C76-63A6-410E-A55C-82A7E389EA7B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CBEC7C76-63A6-410E-A55C-82A7E389EA7B}.Debug|Win32.Build.0 = Debug|Win32
+		{CBEC7C76-63A6-410E-A55C-82A7E389EA7B}.Release|Win32.ActiveCfg = Release|Win32
+		{CBEC7C76-63A6-410E-A55C-82A7E389EA7B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

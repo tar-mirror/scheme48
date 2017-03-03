@@ -1,0 +1,75 @@
+This collection of files constitutes the Scheme 48 1.9 distribution.
+
+It is distributed under the following terms:
+
+    Copyright © 1986-2001 Richard Kelsey and Jonathan Rees.
+    Copyright © 2001-2007 Michael Sperber and Martin Gasbichler.
+    Copyright © 2007-2012 Michael Sperber and Marcus Crestani.
+    All rights reserved.
+    
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+       notices, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+       notices, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+    3. The name of the authors may not be used to endorse or promote products
+       derived from this software without specific prior written permission.
+    
+    THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+    OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+    IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+    NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+    THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Scheme 48 1.9 derives from Scheme 48 0.58, which was developed by
+Richard Kelsey and Jonathan Rees and incorporates PreScheme 0.5 by
+Richard Kelsey.
+
+The distribution includes a number of contributions by permission:
+
+- This distribution includes a bignum arithmetic implementation (files
+  c/bignum.c, c/bignum.h, c/bignumint.h) obtained from MIT Scheme.
+  See the file contents for license information.
+
+- This distribution contains code for printing floating-point numbers
+  by Robert G. Burger, in file c/free.c.  See the file contents for
+  license information.
+
+- This distribution includes files 'configure', 'aclocal.m4',
+  'config.sub', 'sysdep.h.in' which are output of the 'autoconf' program.  
+  The Free Software Foundation gives unlimited permission to copy,
+  distribute and modify 'autoconf' output.
+
+- This distribution includes file 'mkinstalldirs' by Noah Friedman, in
+  the public domain.
+
+- File INSTALL includes text taken from the 'autoconf' distribution
+  from the Free Software Foundation.  See the file contents for
+  license information.
+
+- File install-sh is part of X11R6 from the X Consortium.  See the file
+  contents for license information.
+
+- This distribution includes code from SRFI reference implementations
+  in directory scheme/srfi and in file c/srfi-27.c, all under the
+  public domain or available under open-source licenses; see the 
+  individual files from this directory for license information.
+
+- This distribution includes code for sorting in directory scheme/sort
+  by Olin Shivers, under the public domain.
+
+- This distribution includes code for processing Unicode text 
+  contributed by Basis Technology Corporation, otherwise distributed
+  under the license above.
+
+- This distributes includes code from the tex2page distribution by
+  Dorai Sitaram.  See the files doc/src/css.t2p and doc/src/manual.t2p
+  for license information.

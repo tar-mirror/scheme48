@@ -1,0 +1,1676 @@
+% Part of Scheme 48 1.9.  See file COPYING for notices and license.
+
+% Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Robert Ransom,
+% Roderic Morris
+
+\chapter{Access to POSIX}
+
+This chapter describes Scheme~48's interface to the POSIX C calls
+ \cite{POSIX}.
+Scheme versions of most of the functions in POSIX are provided.
+Both the interface and implementation are new and are likely to
+ change in future releases.
+Section~\ref{function-correspondence} lists which Scheme functions
+ call which C functions.
+
+Scheme~48's POSIX interface will likely change significantly in the
+ future.
+The implementation is new and may have significant bugs.
+
+The POSIX bindings are available in several structures:
+
+\begin{center}
+\begin{tabular}{ll}
+ \code{posix-processes} & fork, exec, and friends \\
+ \code{posix-process-data} & information about processes \\
+ \code{posix-files} & files and directories \\
+ \code{posix-i/o} & operations on ports \\
+ \code{posix-time} & time functions \\
+ \code{posix-users} & users and groups \\
+ \code{posix-regexps} & regular expression matching \\
+ \code{posix-syslog} & POSIX logging facility \\
+ \code{posix-errnos} & POSIX error codes\\
+ \code{posix} & all of the above
+\end{tabular}
+\end{center}
+
+Scheme~48's POSIX interface differs from
+ Scsh's \cite{Shivers:Scsh-manual,Shivers:Scsh96} in several ways.
+The interface here lacks Scsh's high-level constructs and utilities,
+ such as the process notation, \code{awk} procedure, and parsing
+ utilities.
+Scheme~48 uses distinct types for some values that Scsh leaves
+ as symbols or unboxed integers; these include file types, file modes,
+ and user and group ids.
+Many of the names and other interface details are different, as well.
+
+\section{Process primitives}
+
+The procedures described in this section control the creation of processes
+ and the execution of programs.
+They are in the structures \code{posix-process} and \code{posix}.
+
+\subsection{Process creation and termination}
+\label{processes}
+
+\begin{protos}
+\proto{fork}{}{process-id or {\tt \#f}}
+\protonoresult{fork-and-forget}{ thunk}
+% Handler versions?
+\end{protos}
+\noindent
+\code{Fork} creates a new child process and returns the child's process-id in
+ the parent and \code{\#f} in the child.
+\code{Fork-and-forget} calls \cvar{thunk} in a new process; no process-id
+ is returned.
+\code{Fork-and-forget} uses an intermediate process to avoid creating
+ a zombie process.
+
+\begin{protos}
+\proto{process-id?}{ x}{boolean}
+\proto{process-id=?}{ process-id0 process-id1}{boolean}
+\proto{process-id->integer}{ process-id}{integer}
+\proto{integer->process-id}{ integer}{process-id}
+\end{protos}
+\noindent
+%A \cvar{process-id} is a  around the actual integer id.
+\code{Process-id?} is a predicate for process-ids,
+\code{process-id=?} compares two to see if they are the same,
+ and \code{process-id-uid} returns the actual Unix id.
+\code{Process-id->integer} and \code{integer->process-id}
+ convert process ids to and from integers.
+
+\begin{protos}
+\proto{process-id-exit-status}{ process-id}{integer or {\tt \#f}}
+\proto{process-id-terminating-signal}{ process-id}{signal or {\tt \#f}}
+\protonoresult{wait-for-child-process}{ process-id}
+\end{protos}
+\noindent
+If a process terminates normally
+ \code{process-id-exit-status} will return its exit status.
+If the process is still running or was terminated by a signal then
+ \code{process-id-exit-status} will return \code{\#f}.
+Similarly, if a child process was terminated by a signal
+ \code{process-id-terminating-signal} will return that signal and
+ will return \code{\#f} if the process is still running or terminated
+ normally.
+\code{Wait-for-child-process} blocks until the child process terminates.
+Scheme~48 may reap child processes before the user requests their
+ exit status, but it does not always do so.
+
+\begin{protos}
+\protonoresult{exit}{ status}
+\end{protos}
+\noindent
+Terminates the current process with the integer \cvar{status}
+ as its exit status.
+
+\subsection{{\tt Exec}}
+
+\begin{protos}
+\protonoresult{exec}{ program-name arg0 \ldots}
+\protonoresult{exec-with-environment}{ program-name env arg0 \ldots}
+\protonoresult{exec-file}{ filename arg0 \ldots}
+\protonoresult{exec-file-with-environment}{ filename env arg0 \ldots}
+\protonoresult{exec-with-alias}{ name lookup? maybe-env arguments}
+\end{protos}
+\noindent
+All of these replace the current program with a new one.
+They differ in how the new program is found, what its environment is,
+ and what arguments it is passed.
+\code{Exec} and \code{exec-with-environment}
+ look up the new program in the search path,
+ while \code{exec-file} and \code{exec-file-with-environment}
+ execute a particular file.
+The environment is either inherited from the current process
+ (\code{exec} and \code{exec-file}) or given as an argument
+ (\code{\ldots{}-with-environment}).
+\cvar{Program-name} and \cvar{filename} and any \cvar{arg$_i$} should
+be \var{os-string-thing} arguments (see section~\ref{os-strings}.
+ \cvar{Env} should be a list of \var{os-string-thing} arguments of the form
+ \code{"\cvar{name}=\cvar{value}"}.
+The first four procedures add their first argument, \cvar{program-name} or
+ \cvar{filename}, before the \cvar{arg0 \ldots} arguments.
+
+\code{Exec-with-alias} is an omnibus procedure that subsumes the other
+ four.
+\cvar{Name} is looked up in the search path if \cvar{lookup?} is true
+ and is used as a filename otherwise.
+\cvar{Maybe-env} is either a list of \var{os-string-thing}s for the environment of the
+ new program or \code{\#f} in which case the new program inherits its
+ environment from the current one.
+\cvar{Arguments} should be a list of \var{os-string-thing}s; unlike with the other four
+ procedures, \cvar{name} is not added to this list (hence \code{-with-alias}).
+
+\section{Signals}
+
+There are two varieties of signals available, {\em named} and {\em anonymous}.
+A named signal is one for which we have a symbolic name, such as \code{kill}
+ or \code{pipe}.
+Anonymous signals, for which we only have the current operating system's
+ signal number, have no meaning in other operating systems.
+Named signals preserve their meaning in image files.
+Not all named signals are available from all OS's and
+ there may be multiple names for a single OS signal number.
+
+\begin{protos}
+\syntaxproto{signal}{ \cvar{signal-name}}{signal}
+\proto{name->signal}{ symbol}{signal or {\tt \#f}}
+\proto{integer->signal}{ integer}{signal}
+\proto{signal?}{ x}{boolean}
+\proto{signal-name}{ signal}{symbol or {\tt \#f}}
+\proto{signal-os-number}{ signal}{integer}
+\proto{signal=?}{ signal0 signal1}{boolean}
+\end{protos}
+\noindent
+The syntax \code{signal} returns a (named) signal associated with
+\cvar{signal-name}.
+\code{Name->signal} returns a (named) signal or \code{\#f} if the
+ the signal \cvar{name} is not supported by the operating system.
+The signal returned by \code{integer->signal} is a named signal if
+ \cvar{integer} corresponds to a named signal in the current operating
+ system; otherwise it returns an anonymous signal.
+\code{Signal-name} returns a symbol if \cvar{signal} is named and
+ \code{\#f} if it is anonymous.
+\code{Signal=?} returns \code{\#t} if \cvar{signal0} and \cvar{signal1}
+ have the same operating system number and \code{\#f} if they do not.
+
+\subsection{POSIX signals}
+The following lists the names of the POSIX signals.
+\begin{center}
+\begin{tabular}{ll}
+\code{abrt} & abort - abnormal termination (as by abort()) \\
+\code{alrm} & alarm - timeout signal (as by alarm()) \\
+\code{fpe } & floating point exception \\
+\code{hup } & hangup - hangup on controlling terminal or death of
+  controlling process \\
+\code{ill } & illegal instruction \\
+\code{int } & interrupt - interaction attention \\
+\code{kill} & kill - termination signal, cannot be caught or ignored \\
+\code{pipe} & pipe - write on a pipe with no readers \\
+\code{quit} & quit - interaction termination \\
+\code{segv} & segmentation violation - invalid memory reference \\
+\code{term} & termination - termination signal \\
+\code{usr1} & user1 - for use by applications \\
+\code{usr2} & user2 - for use by applications \\
+\code{chld} & child - child process stopped or terminated \\
+\code{cont} & continue - continue if stopped \\
+\code{stop} & stop - cannot be caught or ignored \\
+\code{tstp} & interactive stop \\
+\code{ttin} & read from control terminal attempted by background process \\
+\code{ttou} & write to control terminal attempted by background process \\
+\code{bus } & bus error - access to undefined portion of memory \\
+\end{tabular}
+\end{center}
+
+\subsection{Other signals}
+The following lists the names of the non-POSIX signals that the system is
+ currently aware of.
+\begin{center}
+\texonly
+\setlongtables
+\begin{longtable}{ll}
+\endtexonly
+\htmlonly\begin{tabular}{ll}\endhtmlonly
+\code{trap  } & trace or breakpoint trap \\
+\code{iot   } & IOT trap - a synonym for ABRT \\
+\code{emt   } & \\
+\code{sys   } & bad argument to routine (SVID) \\
+\code{stkflt} & stack fault on coprocessor \\
+\code{urg   } & urgent condition on socket      (4.2 BSD) \\
+\code{io    } & I/O now possible                (4.2 BSD) \\
+\code{poll  } & A synonym for SIGIO             (System V) \\
+\code{cld   } & A synonym for SIGCHLD \\
+\code{xcpu  } & CPU time limit exceeded (4.2 BSD) \\
+\code{xfsz  } & File size limit exceeded        (4.2 BSD) \\
+\code{vtalrm} & Virtual alarm clock             (4.2 BSD) \\
+\code{prof  } & Profile alarm clock \\
+\code{pwr   } & Power failure                   (System V) \\
+\code{info  } & A synonym for SIGPWR \\
+\code{lost  } & File lock lost \\
+\code{winch } & Window resize signal            (4.3 BSD, Sun) \\
+\code{unused} & Unused signal \\
+\texonly\end{longtable}\endtexonly
+\htmlonly\end{tabular}\endhtmlonly
+\end{center}
+
+\subsection{Sending signals}
+
+\begin{protos}
+\protonoresult{signal-process}{ process-id signal}
+\end{protos}
+\noindent
+Send \cvar{signal} to the process corresponding to \cvar{process-id}.
+
+\subsection{Receiving signals}
+
+Signals received by the Scheme process can be obtained via one or more
+ signal-queues.
+Each signal queue has a list of monitored signals and a queue of
+ received signals that have yet to be read from the signal-queue.
+When the Scheme process receives a signal that signal is added to the
+ received-signal queues of all signal-queues which are currently monitoring
+ that particular signal.
+
+\begin{protos}
+\proto{make-signal-queue}{ signals}{signal-queue}
+\proto{signal-queue?}{ x}{boolean}
+\proto{signal-queue-monitored-signals}{ signal-queue}{list of signals}
+\protonoindex{dequeue-signal!}{ signal-queue}{signal}\mainschindex{dequeue-signal"!}
+\protonoindex{maybe-dequeue-signal!}{ signal-queue}{signal or {\tt \#f}}\mainschindex{maybe-dequeue-signal"!}
+\end{protos}
+\noindent
+\code{Make-signal-queue} returns a new signal-queue that will monitor
+ the signals in the list \cvar{signals}.
+\code{Signal-queue?} is a predicate for signal queues.
+\code{Signal-queue-monitored-signals} returns a list of the signals
+ currently monitored by \cvar{signal-queue}.
+\code{Dequeue-signal!} and \code{maybe-dequeue-signal} both return
+ the next received-but-unread signal from \cvar{signal-queue}.
+If \cvar{signal-queue}'s queue of signals is empty \code{dequeue-signal!}
+ blocks until an appropriate signal is received.
+\code{Maybe-dequeue-signal!} does not block; it returns \code{\#f} instead.
+
+There is a bug in the current system that causes an erroneous deadlock
+ error if threads are blocked waiting for signals and no other threads
+ are available to run.
+A work around is to create a thread that sleeps for a long time, which
+ prevents any deadlock errors (including real ones):
+\begin{example}
+> ,open threads
+> (spawn (lambda ()
+           ; Sleep for a year
+           (sleep (* 1000 60 60 24 365))))
+\end{example}
+
+\begin{protos}
+\protonoresultnoindex{add-signal-queue-signal!}{ signal-queue signal}\mainschindex{add-signal-queue-signal"!}
+\protonoresultnoindex{remove-signal-queue-signal!}{ signal-queue signal}\mainschindex{remove-signal-queue-signal"!}
+\end{protos}
+\noindent
+These two procedures can be used to add or remove signals from a
+ signal-queue's list of monitored signals.
+When a signal is removed from a signal-queue's list of monitored signals
+ any occurances of the signal are removed from that signal-queue's pending
+ signals.
+In other words, \code{dequeue-signal!} and \code{maybe-dequeue-signal!}
+ will only return signals that are currently on the signal-queue's list
+ of signals.
+
+\section{Process environment}
+
+These are in structures \code{posix-process-data} and \code{posix}.
+
+\subsection{Process identification}
+
+\begin{protos}
+\proto{get-process-id}{}{ process-id}
+\proto{get-parent-process-id}{}{ process-id}
+\end{protos}
+\noindent
+These return the process ids of the current process and its parent.
+See section~\ref{processes} for operations on process ids.
+
+\begin{protos}
+\proto{get-user-id}{}{ user-id}
+\proto{get-effective-user-id}{}{ user-id}
+\protonoresultnoindex{set-user-id!}{ user-id}\mainschindex{set-user-id"!}
+\protonoresultnoindex{set-effective-user-id!}{ user-id}\mainschindex{set-effective-user-id"!}
+\end{protos}
+
+\begin{protos}
+\proto{get-group-id}{}{ group-id}
+\proto{get-effective-group-id}{}{ group-id}
+\protonoresultnoindex{set-group-id!}{ group-id}\mainschindex{set-group-id"!}
+\protonoresultnoindex{set-effective-group-id!}{ group-id}\mainschindex{set-effective-group-id"!}
+\end{protos}
+\noindent
+Every process has both the original and effective user id and group id.
+The effective values may be set, but the original ones can only be set
+if the process has appropriate privelages.
+
+\begin{protos}
+\proto{get-groups}{}{ group-ids}
+\proto{get-login-name}{}{ os-string}
+\end{protos}
+\noindent
+\code{Get-groups} returns a list of the supplementary groups of the
+ current process.
+\code{Get-login-name} returns a user name for the current process.
+
+% 4.5 Get Process Times
+
+% 4.6 Environment Variables
+
+\subsection{Environment variables}
+
+\begin{protos}
+\proto{lookup-environment-variable}{ os-string-thing}{os-string or {\tt \#f}}
+\protonoresultnoindex{set-environment-variable!}{ name value}
+\mainschindex{set-environment-variable"!}
+\proto{environment-alist}{}{alist}
+\end{protos}
+\noindent
+\code{Lookup-environment-variable} looks up its argument in the
+ environment list and returns the corresponding value or \code{\#f}
+ if there is none.
+\code{Set-environment-variable!} sets the value of \code{name} in the
+environment list to \code{value}. If \code{name} is not already an environment
+variable, it's created. If it already exists, its value is overwritten with
+\code{value}. Both arguments must be os-string-things.
+\code{Environment-alist} returns the entire environment as a list of
+ \code{(\cvar{name-os-string} . \cvar{value-os-string})} pairs.
+
+\section{Users and groups}
+
+\cvar{User-id}\/s and \cvar{group-id}\/s are boxed integers representing
+ Unix users and groups.
+The procedures in this section are in structures \code{posix-users} and
+ \code{posix}.
+
+\begin{protos}
+\proto{user-id?}{ x}{boolean}
+\proto{user-id=?}{ user-id0 user-id1}{boolean}
+\proto{user-id->integer}{ user-id}{integer}
+\proto{integer->user-id}{ integer}{user-id}
+\end{protos}
+
+\begin{protos}
+\proto{group-id?}{ x}{boolean}
+\proto{group-id=?}{ group-id0 group-id1}{boolean}
+\proto{group-id->integer}{ group-id}{integer}
+\proto{integer->group-id}{ integer}{group-id}
+\end{protos}
+\noindent
+User-ids and group-ids have their own
+ own predicates and comparison, boxing, and unboxing functions.
+
+\begin{protos}
+\proto{user-id->user-info}{ user-id}{user-info}
+\proto{name->user-info}{ os-string}{user-info}
+\end{protos}
+\noindent
+These return the user info for a user identified by user-id or name.
+
+\begin{protos}
+\proto{user-info?}{ x}{ boolean}
+\proto{user-info-name}{ user-info}{ os-string}
+\proto{user-info-id}{ user-info}{ user-id}
+\proto{user-info-group}{ user-info}{ group-id}
+\proto{user-info-home-directory}{ user-info}{ os-string}
+\proto{user-info-shell}{ user-info}{ os-string}
+\end{protos}
+\noindent
+A \code{user-info} contains information about a user.
+Available are the user's name, id, group, home directory, and shell.
+
+\begin{protos}
+\proto{group-id->group-info}{ group-id}{group-info}
+\proto{name->group-info}{ os-string}{group-info}
+\end{protos}
+\noindent
+These return the group info for a group identified by group-id or name.
+
+\begin{protos}
+\proto{group-info?}{ x}{ boolean}
+\proto{group-info-name}{ group-info}{ os-string}
+\proto{group-info-id}{ group-info}{ group-id}
+\proto{group-info-members}{ group-info}{ user-ids}
+\end{protos}
+\noindent
+A \code{group-info} contains information about a group.
+Available are the group's name, id, and a list of members.
+
+\section{OS and machine identification}
+
+These procedures return strings that are supposed to identify the current
+ OS and machine.
+The POSIX standard does not indicate the format of the strings.
+The procedures are in structures \code{posix-platform-names} and \code{posix}.
+
+\begin{protos}
+\proto{os-name}{}{string}
+\proto{os-node-name}{}{string}
+\proto{os-release-name}{}{string}
+\proto{os-version-name}{}{string}
+\proto{machine-name}{}{string}
+\end{protos}
+
+% 4.8 Configurable System Variables
+
+\section{Files and directories}
+
+These procedures are in structures \code{posix-files} and \code{posix}.
+
+\subsection{Directory streams}
+
+Directory streams are like input ports, with each read operation
+ returning the next name in the directory.
+
+\begin{protos}
+\proto{open-directory-stream}{ name}{directory}
+\proto{directory-stream?}{ x}{boolean}
+\proto{read-directory-stream}{ directory}{name or {\tt \#f}}
+\protonoresult{close-directory-stream}{ directory}
+\end{protos}
+\noindent
+\code{Open-directory-stream} opens a new directory stream.
+\code{Directory-stream?} is a predicate that recognizes directory streams.
+\code{Read-directory-stream} returns the next name in the directory or
+ \code{\#f} if all names have been read.
+\code{Close-directory-stream} closes a directory stream.
+
+\begin{protos}
+\proto{list-directory}{ name}{list of os-strings}
+\end{protos}
+\noindent
+This is the obvious utility; it returns a list of the names in directory
+ \cvar{name}.
+
+% 5.2 Working Directory
+\subsection{Working directory}
+
+\begin{protos}
+\proto{working-directory}{}{os-string}
+\protonoresultnoindex{set-working-directory!}{ os-string-thing}\mainschindex{set-working-directory"!}
+\end{protos}
+\noindent
+These return and set the working directory.
+
+% 5.3 File Creation
+\subsection{File creation and removal}
+
+\begin{protos}
+\proto{open-file}{ path file-options}{port}
+\proto{open-file}{ path file-options file-mode}{port}
+\end{protos}
+\noindent
+\code{Open-file} opens a port to the file named by \cvar{path}, which
+must be a \var{os-string-thing} argument.
+The \cvar{file-options} argument determines various aspects of the
+ returned port.
+The optional \cvar{file-mode} argument is used only if the file to be opened
+ does not already exist.
+The returned port is an input port if \cvar{file-options} includes
+ \code{read-only}; otherwise it returns an output port.
+\code{Dup-switching-mode} can be used to open an input port for
+ output ports opened with the \code{read/write} option.
+
+\begin{protos}
+\syntaxproto{file-options}{ \cvar{file-option-name} \ldots}{file-options}
+\proto{file-options-on?}{ file-options file-options}{boolean}
+\proto{file-options-union}{ file-options file-options}{file-options}
+\end{protos}
+\noindent
+The syntax \code{file-options} returns a file-option with the
+ indicated options set.
+\code{File-options-on?} returns true if its first argument includes all of
+ the options listed in the second argument.  \code{File-options-union}
+returns a file-options argument containing exactly all of the options
+listed in either argument.
+The following file options may be used with \code{open-file}.
+
+\begin{center}
+\begin{tabular}{llp{2.8in}}
+ & \code{create} & create file if it does not already exist; a file-mode argument
+ is required with this option \\
+ & \code{exclusive} & an error will be raised if this option and \code{create}
+ are both set and the file already exists \\
+ & \code{no-controlling-tty} & if \cvar{path} is a terminal device this option
+ causes the terminal to not become the controlling terminal of the process\\
+ & \code{truncate} & file is truncated \\
+ & \code{append} & writes are appended to existing contents \\
+ & \code{nonblocking} & read and write operations do not block \\
+ & \code{read-only} & port may not be written \\
+ & \code{read-write} & file descriptor may be read or written \\
+ & \code{write-only} & port may not be read
+\end{tabular}
+\end{center}
+\noindent Only one of the last three options may be used.  If
+\code{read-write} is specified, an output port is returned.
+
+For example
+\begin{example}
+(open-file "some-file.txt"
+           (file-options create write-only)
+           (file-mode read owner-write))
+\end{example}
+ returns an output port that writes to a newly-created file that can be
+ read by anyone and written only by the owner.
+Once the file exists,
+\begin{example}
+(open-file "some-file.txt"
+           (file-options append write-only))
+\end{example}
+will open an output port that appends to the file.
+
+The \code{append} and \code{nonblocking} options and the read/write nature of
+ the port can be read using \code{i/o-flags}.
+The \code{append} and \code{nonblocking} options can be set
+ using \code{set-i/o-flags!}.
+
+To keep port operations from blocking the Scheme~48 process, output
+ ports are set to be nonblocking at the time of creation (input ports
+ are managed using \code{select()}).
+You can use \code{set-i/o-flags!} to make an output port blocking, for
+ example just before a fork, but care should be exercised.
+The Scheme~48 runtime code may get confused if an I/O operation blocks.
+
+\begin{protos}
+\protonoresultnoindex{set-file-creation-mask!}{ file-mode}\mainschindex{set-file-creation-mask"!}
+\end{protos}
+\noindent
+Sets the file creation mask to be \cvar{file-mode}.
+Bits set in \cvar{file-mode} are cleared in the modes of any files or
+ directories created by the current process.
+
+\begin{protos}
+\protonoresult{link}{ existing new}
+\end{protos}
+\noindent
+Both \var{existing} and \var{new} must be \var{os-string-thing} arguments.
+\code{Link} makes path \cvar{new} be a new link to the file
+ pointed to by path \cvar{existing}.
+The two paths must be in the same file system.
+
+% 5.4 Special File Creation
+
+\begin{protos}
+\protonoresult{make-directory}{ path file-mode}
+\protonoresult{make-fifo}{ path file-mode}
+\end{protos}
+\noindent
+These two procedures make new directories and fifo files.  In both
+cases, \var{path} must be a \var{os-string-thing} argument.
+
+% 5.5 File Removal
+
+\begin{protos}
+\protonoresult{unlink}{ path}
+\protonoresult{remove-directory}{ path}
+\protonoresult{rename}{ old-path new-path}
+\end{protos}
+\noindent
+\var{Path}, \var{old-path} and \var{new-path} must all be
+\var{os-string-thing} arguments.
+\code{Unlink} removes the link indicated by \cvar{path}.
+\code{Remove-directory} removes the indicated (empty) directory.
+\code{Rename} moves the file pointed to by \cvar{old-path} to the
+ location pointed to by \cvar{new-path} (the two paths must be in
+ the same file system).
+Any other links to the file remain unchanged.
+
+% 5.6.3 (out of POSIX order)
+
+\begin{protos}
+\proto{accessible?}{ path access-mode . more-modes}{boolean}
+\syntaxproto{access-mode}{ \cvar{mode-name}}{access-mode}
+\end{protos}
+\noindent
+\code{Accessible?} returns true if \cvar{path} (which must be a
+\var{os-string-thing} argument) is a file that
+ can be accessed in the listed mode.
+If more than one mode is specified \code{accessible?} returns true
+ if all of the specified modes are permitted.
+The \cvar{mode-name}\/s are: \code{read}, \code{write}, \code{execute},
+ \code{exists}.
+
+% 5.6 File Characteristics
+\subsection{File information}
+
+\begin{protos}
+\proto{get-file-info}{ path}{file-info}
+\proto{get-file/link-info}{ name}{file-info}
+\proto{get-port-info}{ fd-port}{file-info}
+\end{protos}
+\noindent
+\code{Get-file-info} and \code{get-file/link-info} both return
+ a file info record for the file named by \var{path}, which must be a
+ \var{os-string-thing} argument.
+\code{Get-file-info} follows symbolic links while \code{get-file/link-info}
+ does not.
+\code{Get-port-info} returns a file info record for the file
+ which \cvar{port} reads from or writes to.
+An error is raised if \cvar{fd-port} does not read from or write to a
+ file descriptor.
+
+\begin{protos}
+\proto{file-info?}{ x}{boolean}
+\proto{file-info-name}{ file-info}{os-string}
+\end{protos}
+\noindent
+\code{File-info?} is a predicate for file-info records.
+\code{File-info-name} is the name which was used to get \code{file-info},
+ either as passed to \code{get-file-info} or \code{get-file/link-info},
+ or used to open the port passed to \code{get-port-info}.
+
+\begin{protos}
+\proto{file-info-type}{ file-info}{file-type}
+\proto{file-type?}{ x}{boolean}
+\proto{file-type-name}{ file-type}{symbol}
+\syntaxproto{file-type}{ \cvar{type}}{file-type}
+\end{protos}
+\noindent
+%I need to add the rest - the procedure version of file-type, enum-case(?).
+\code{File-info-type} returns the type of the file, as a file-type object
+File types may be compared using \code{eq?}.
+The valid file types are:
+
+\begin{center}
+\begin{tabular}{l}
+ \code{regular} \\
+ \code{directory} \\
+ \code{character-device} \\
+ \code{block-device} \\
+ \code{fifo} \\
+ \code{symbolic-link} \\
+ \code{socket} \\
+ \code{other}
+\end{tabular}
+\end{center}
+
+\noindent
+\code{Symbolic-link} and \code{socket} are not required by POSIX.
+
+\begin{protos}
+\proto{file-info-device}{ file-info}{integer}
+\proto{file-info-inode}{ file-info}{integer}
+\end{protos}
+\noindent
+The device and inode numbers uniquely determine a file.
+
+\begin{protos}
+\proto{file-info-link-count}{ file-info}{integer}
+\proto{file-info-size}{ file-info}{integer}
+\end{protos}
+\noindent
+These return the number of links to a file and the file size in bytes.
+The size is only meaningful for regular files.
+
+\begin{protos}
+\proto{file-info-owner}{ file-info}{user-id}
+\proto{file-info-group}{ file-info}{group-id}
+\proto{file-info-mode}{ file-info}{file-mode}
+\end{protos}
+\noindent
+These return the owner, group, and access mode of a file.
+
+\begin{protos}
+\proto{file-info-last-access}{ file-info}{time}
+\proto{file-info-last-modification}{ file-info}{time}
+\proto{file-info-last-status-change}{ file-info}{time}
+\end{protos}
+\noindent
+These return the time the file was last read, modified, or had its
+ status modified.
+
+% Modes
+\subsection{File modes}
+
+A file mode is a boxed integer representing a file protection mask.
+
+\begin{protos}
+\syntaxproto{file-mode}{ permission-name \ldots}{file-mode}
+\proto{file-mode?}{ x}{boolean}
+\proto{file-mode+}{ file-mode \ldots}{file-mode}
+\proto{file-mode-}{ file-mode0 file-mode1}{file-mode}
+\end{protos}
+\noindent
+\code{File-mode} is syntax for creating file modes.
+The mode-names are listed below.
+\code{File-mode?} is a predicate for file modes.
+\code{File-mode+} returns a mode that contains all of permissions of
+ its arguments.
+\code{File-mode-} returns a mode that has all of the permissions of
+ \cvar{file-mode0} that are not in \cvar{file-mode1}.
+
+\begin{protos}
+\proto{file-mode=?}{ file-mode0 file-mode1}{boolean}
+\proto{file-mode<=?}{ file-mode0 file-mode1}{boolean}
+\proto{file-mode>=?}{ file-mode0 file-mode1}{boolean}
+\end{protos}
+\noindent
+\code{File-mode=?} returns true if the two modes are exactly the same.
+\code{File-mode<=?} returns true if \cvar{file-mode0} has a subset
+ of the permissions of \cvar{file-mode1}.
+\code{File-mode>=?} is \code{file-mode<=?} with the arguments reversed.
+
+\begin{protos}
+\proto{file-mode->integer}{ file-mode}{integer}
+\proto{integer->file-mode}{ integer}{file-mode}
+\end{protos}
+\noindent
+\code{Integer->file-mode} and \code{file-mode->integer} translate file modes
+ to and from the classic Unix file mode masks.
+These may not be the masks used by the underlying OS.
+
+\begin{center}
+\begin{tabular}{lll}
+Permission name & Bit mask \\
+\code{set-uid} & \code{\#o4000} & set user id when executing \\
+\code{set-gid} & \code{\#o2000} & set group id when executing \\
+\code{owner-read} & \code{\#o0400} & read by owner \\
+\code{owner-write} & \code{\#o0200} & write by owner \\
+\code{owner-exec} & \code{\#o0100} & execute (or search) by owner \\
+\code{group-read} & \code{\#o0040} & read by group \\
+\code{group-write} & \code{\#o0020} & write by group \\
+\code{group-exec} & \code{\#o0010} & execute (or search) by group \\
+\code{other-read} & \code{\#o0004} & read by others \\
+\code{other-write} & \code{\#o0002} & write by others \\
+\code{other-exec} & \code{\#o0001} & execute (or search) by others \\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lll}
+\multicolumn{3}{l}{Names for sets of permissions} \\
+\code{owner} & \code{\#o0700} & read, write, and execute by owner \\
+\code{group} & \code{\#o0070} & read, write, and execute by group \\
+\code{other} & \code{\#o0007} & read, write, and execute by others \\
+\code{read} & \code{\#o0444} & read by anyone \\
+\code{write} & \code{\#o0222} & write by anyone \\
+\code{exec} & \code{\#o0111} & execute by anyone \\
+\code{all} & \code{\#o0777} & anything by anyone
+\end{tabular}
+\end{center}
+
+\subsection{Symbolic links}
+
+\begin{protos}
+\protonoresult{create-symbolic-link}{ path1 path2}
+\end{protos}
+%
+This creates a symbolic link at \var{path2} that contains \var{path1}.
+\var{Path1} and \var{path2} must be \var{os-string-thing} arguments.
+
+\begin{protos}
+\proto{read-symbolic-link}{ path}{ os-string}
+\end{protos}
+%
+This returns contents of the symbolic link at \var{path}.
+\var{Path} must be an \var{os-string-thing} argument.
+
+%----------------
+% Time - seconds since the epoch.
+\section{Time and Date}
+
+These procedures are in structures \code{posix-time} and \code{posix}.
+
+\subsection{Time}
+
+\begin{protos}
+\proto{make-time}{ integer}{time}
+\proto{current-time}{}{time}
+\proto{time?}{ x}{boolean}
+\proto{time-seconds}{ time}{integer}
+\end{protos}
+\noindent
+A \code{time} record contains an integer that represents time as
+ the number of second since the Unix epoch (00:00:00 GMT, January 1, 1970).
+\code{Make-time} and \code{current-time} return \code{time}\/s, with
+ \code{make-time}'s using its argument while \code{current-time}'s has
+ the current time.
+\code{Time?} is a predicate that recognizes \code{time}\/s and
+ \code{time-seconds} returns the number of seconds \cvar{time} represents.
+
+\begin{protos}
+\proto{time=?}{ time time}{boolean}
+\proto{time<?}{ time time}{boolean}
+\proto{time<=?}{ time time}{boolean}
+\proto{time>?}{ time time}{boolean}
+\proto{time>=?}{ time time}{boolean}
+\end{protos}
+\noindent
+These perform various comparison operations on the \code{time}\/s.
+
+\begin{protos}
+\proto{time->string}{ time}{string}
+\end{protos}
+\noindent
+\code{Time->string} returns a string representation of \cvar{time} in the
+locale's version of the following form.
+\begin{example}
+"Wed Jun 30 21:49:08 1993
+"
+\end{example}
+
+\subsection{Date}
+
+A date is a time specification relative to a specific but implicit
+time zone, broken out into the familar
+year-month-day-hour-minute-second format.
+
+\begin{protos}
+\proto{make-date}{ second minute hour month-day month year week-day year-day dst}{date}
+\proto{date?}{ x}{boolean}
+\proto{date-second}{ date}{second}
+\proto{date-minute}{ date}{minute}
+\proto{date-hour}{ date}{hour}
+\proto{date-month-day}{ date}{month-day}
+\proto{date-month}{ date}{month}
+\proto{date-year}{ date}{year}
+\proto{date-week-day}{ date}{week-day}
+\proto{date-year-day}{ date}{year-day}
+\proto{date-date-dst}{ date}{dst}
+\end{protos}
+%
+These are the constructor, predicate and corresponding accessors for
+date objects.  The meaning of the various field types are as follows:
+
+\begin{center}
+  \begin{tabular}{lll}
+    \cvar{seconds} & seconds & (0--60) \\
+    \cvar{minutes} & minutes & (0--59) \\
+    \cvar{hour} & hours & (0--23) \\
+    \cvar{month-day} & day of month & (1--31) \\
+    \cvar{mon}     & month of year & (0--11) \\
+    \cvar{year}    & year & since 1900\\
+    \cvar{week-day}    & day of week & (Sunday = 0) \\
+    \cvar{year-day}    & day of year & (0--365) \\
+    \cvar{dst}   & is summer time in effect? & \code{\#t}, \code{\#f} or unspecific
+  \end{tabular}
+\end{center}
+
+\begin{protos}
+\proto{date->string}{ date}{string}
+\end{protos}
+%
+returns a string representation of \cvar{date} in the
+locale's version of the following form:
+\begin{example}
+"Wed Jun 30 21:49:08 1993
+"
+\end{example}
+
+\begin{protos}
+\proto{time->utc-date}{ time}{date}
+\proto{time->local-date}{ time}{date}
+\end{protos}
+%
+These convert a time object into a date object; the first does this
+relative to the UTC time zone, the second relative to the current
+timezone setting.
+
+\begin{protos}
+\proto{date->time}{ date}{time}
+\end{protos}
+%
+This converts a date object into a time object relative to the current
+timezone setting.
+
+\begin{protos}
+\proto{format-date}{ string date}{string}
+\end{protos}
+%
+This formats a date into a string, according to the format
+specification in the first argument.  The format specification is
+according to the specification of the C \code{strftime} function:
+
+\noindent
+\begin{longtable}{lp{0.9\textwidth}}
+\code{\%a} & is replaced by the locale's abbreviated weekday name.\\
+\code{\%A} & is replaced by the locale's full weekday name.\\
+\code{\%b} & is replaced by the locale's abbreviated month name.\\
+\code{\%B} & is replaced by the locale's full month name.\\
+\code{\%c} & is replaced by the locale's appropriate date and time representation.\\
+\code{\%C} & is replaced by the year divided by 100 and truncated to an integer, as a decimal
+number (00--99).\\
+\code{\%d} & is replaced by the day of the month as a decimal number (01--31).\\
+\code{\%D} & is equivalent to ``\verb|%m/%d/%y|''.\\
+\code{\%e} & is replaced by the day of the month as a decimal number (1--31); a single digit
+is preceded by a space.\\
+\code{\%F} & is equivalent to ``\verb|%Y-%m-%d|'' (the ISO 8601 date format).\\
+\code{\%g} & is replaced by the last 2 digits of the week-based year (see below) as a decimal
+number (00--99).\\
+\code{\%G} & is replaced by the week-based year (see below) as a decimal number (e.g.,
+1997).\\
+\code{\%h} & is equivalent to ``\verb|%b|''.\\
+\code{\%H} & is replaced by the hour (24-hour clock) as a decimal number (00--23).\\
+\code{\%I} & is replaced by the hour (12-hour clock) as a decimal number (01--12).\\
+\code{\%j} & is replaced by the day of the year as a decimal number (001--366).\\
+\code{\%m} & is replaced by the month as a decimal number (01--12).\\
+\code{\%M} & is replaced by the minute as a decimal number (00--59).\\
+\code{\%n} & is replaced by a new-line character.\\
+\code{\%p} & is replaced by the locale's equivalent of the AM/PM designations associated
+with a 12-hour clock.\\
+\code{\%r} & is replaced by the locale's 12-hour clock time.\\
+\code{\%R} & is equivalent to ``\verb|%H:%M|''.\\
+\code{\%S} & is replaced by the second as a decimal number (00--60).\\
+\code{\%t} & is replaced by a horizontal-tab character.\\
+\code{\%T} & is equivalent to ``\verb|%H:%M:%S|'' (the ISO 8601 time format).\\
+\code{\%u} & is replaced by the ISO 8601 weekday as a decimal number (1--7), where
+Monday is 1.\\
+\code{\%U} & is replaced by the week number of the year (the first Sunday as the first day of
+week 1) as a decimal number (00--53).\\
+\code{\%V} & is replaced by the ISO 8601 week number (see below) as a decimal number
+(01--53).\\
+\code{\%w} & is replaced by the weekday as a decimal number (0--6), where Sunday is 0.\\
+\code{\%W} & is replaced by the week number of the year (the first Monday as the first day of
+week 1) as a decimal number (00--53).\\
+\code{\%x} & is replaced by the locale's appropriate date representation.\\
+\code{\%X} & is replaced by the locale's appropriate time representation.\\
+\code{\%y} & is replaced by the last 2 digits of the year as a decimal number (00--99).\\
+\code{\%Y} & is replaced by the year as a decimal number (e.g., 1997).\\
+\code{\%z} & is replaced by the offset from UTC in the ISO 8601 format ``\verb|-0430|'' (meaning
+4 hours 30 minutes behind UTC, west of Greenwich), or by no characters if no
+time zone is determinable.\\
+\code{\%Z} & is replaced by the locale's time zone name or abbreviation, or by no characters if
+no time zone is determinable.\\
+\code{\%\%} & is replaced by \verb|%|.
+\end{longtable}
+
+\section{I/O}
+
+These procedures are in structures \code{posix-i/o} and \code{posix}.
+
+% Rest of 5.6
+
+% int chmod(char *path, mode_t mode)
+% int fchmod(int fd, mode_t mode)
+
+% int chown(char *path, uid_t owner, gid_t group)
+% int utime(char *path, struct utimbuf * times)
+
+% int ftruncate(int fd, off_t length)
+
+%----------------
+% 5.7 Configurable Pathname Variables
+%
+% long pathconf(char *path, int name)
+% long fpathconf(int fd, int name)
+
+%----------------
+% 6.1 Pipes
+
+\begin{protos}
+\proto{open-pipe}{}{input-port + output-port}
+\end{protos}
+\noindent
+\code{Open-pipe} creates a new pipe and returns the two ends as an
+ input port and an output port.
+
+% 6.2 File descriptor manipulation.
+
+A {\em file descriptor} port (or \cvar{fd-port})
+ is a port that reads to or writes from an OS file descriptor.
+Fd-ports are returned by \code{open-input-file}, \code{open-output-file},
+ \code{open-file}, \code{open-pipe}, and other procedures.
+% Richard says: add an example of a non-fd port once the extended ports
+% are described in the manual.
+
+\begin{protos}
+\proto{fd-port?}{ port}{boolean}
+\proto{port->fd}{ port}{integer or {\tt \#f}}
+\end{protos}
+\noindent
+\code{Fd-port?} returns true if its argument is an fd-port.
+\code{Port->fd} returns the file descriptor associated with
+ or \code{\#f} if \cvar{port} is not an fd-port.
+
+\begin{protos}
+\protonoresult{remap-file-descriptors}{ fd-spec \ldots}
+\end{protos}
+\noindent
+\code{Remap-file-descriptors} reassigns file descriptors to ports.
+The \cvar{fd-specs} indicate which port is to be mapped to each
+ file descriptor: the first gets file descriptor \code{0}, the second gets
+ \code{1}, and so forth.
+A \cvar{fd-spec} is either a port that reads from or writes to
+ a file descriptor,
+ or \code{\#f}, with \code{\#f} indicating that the corresponding file
+ descriptor is not used.
+Any open ports not listed are marked `close-on-exec'.
+The same port may be moved to multiple new file descriptors.
+
+For example,
+\begin{example}
+(remap-file-descriptors (current-output-port)
+                        \#f
+                        (current-input-port))
+\end{example}
+moves the current output port to file descriptor \code{0} and the
+current input port to file descriptor \code{2}.
+
+\begin{protos}
+\proto{dup}{ fd-port}{fd-port}
+\proto{dup-switching-mode}{ fd-port}{fd-port}
+\proto{dup2}{ fd-port file-descriptor}{fd-port}
+\end{protos}
+\noindent
+These change \cvar{fd-port}'s file descriptor and return a new port
+ that uses \cvar{ports}'s old file descriptor.
+\code{Dup} uses the lowest unused file descriptor and \code{dup2} uses the
+ one provided.
+\code{Dup-switching-mode} is the same as \code{dup} except that the returned
+ port is an input port if the argument was an output port and vice
+ versa.
+If any existing port uses the file descriptor passed to \code{dup2}, that
+ port is closed.
+
+\begin{protos}
+\protonoresult{close-all-but}{ port \ldots}
+\end{protos}
+\noindent
+\code{Close-all-but} closes all file descriptors whose associated ports
+ are not passed to it as arguments.
+
+% 6.3 File Descriptor Reassignment
+%
+% int close(int fd)     % Use close-{input|output}-{port|channel}
+%
+% 6.4 Input and Output
+%
+% read() and write()    ; Already available in various forms.
+
+% 6.5 Control Operations on Files
+
+%; fcntl(fd, F_DUPFD, target_fd)            ; Use DUP instead.
+%
+%; Descriptor flags
+%; fcntl(fd, F_GETFD)
+%; fcntl(fd, F_SETFD, flags)
+%;
+%; The only POSIX flag is FD_CLOEXEC, so that's all we do.
+
+\begin{protos}
+\proto{close-on-exec?}{ port}{boolean}
+\protonoresultnoindex{set-close-on-exec?!}{ port boolean}\mainschindex{set-close-on-exec?"!}
+\end{protos}
+\noindent
+\code{Close-on-exec?} returns true if \code{port} will be closed
+ when a new program is exec'ed.
+\code{Set-close-on-exec?!} sets \code{port}'s close-on-exec flag.
+
+%; Status flags
+%; fcntl(fd, F_GETFL)
+%; fcntl(fd, F_SETFL, flags)
+
+\begin{protos}
+\proto{i/o-flags}{ port}{file-options}
+\protonoresultnoindex{set-i/o-flags!}{ port file-options}\mainschindex{set-i/o-flags"!}
+\end{protos}
+\noindent
+These two procedures read and write various options for \code{port}.
+The options that can be read are \code{append}, \code{nonblocking},
+ \code{read-only}, \code{write-only}, and \code{read/write}.
+Only the \code{append} and \code{nonblocking} can be written.
+
+% off_t lseek(int fd, off_t offset, int whence)
+
+%\subsection{Terminals}
+
+\begin{protos}
+\proto{port-is-a-terminal?}{ port}{boolean}
+\proto{port-terminal-name}{ port}{string}
+\end{protos}
+\noindent
+\code{Port-is-a-terminal?} returns true if \cvar{port} has an underlying
+ file descriptor that is associated with a terminal.
+For such ports \code{port-terminal-name} returns the name of the
+ terminal, for all others it returns \code{\#f}.
+
+% 6. File Synchronization
+%
+% int fsync(int fd)              % optional
+% int fdatasync(int fd)          % optional
+%
+% 7. Asynchronous Input and Output
+%
+% All optional
+
+\section{Regular expressions}
+% Regexps - where is the C interface defined? (In part 2, the shell book)
+
+The procedures in this section provide access to POSIX regular expression
+ matching.
+The regular expression syntax and semantics are far too complex to
+ be described here.
+Due to limitations in the underlying facility, only Latin-1 strings
+are guaranteed to work here---on some platforms, only ASCII may
+function correctly.
+Moreover, because the C interface uses zero bytes for marking the ends of strings,
+ patterns and strings that contain zero bytes will not work
+ correctly.
+
+These procedures are in structures \code{posix-regexps} and \code{posix}.
+
+An abstract data type for creating POSIX regular expressions is
+ described in section~\ref{regexp-adt}.
+
+\begin{protos}
+\proto{make-regexp}{ string . regexp-options}{regexp}
+\syntaxproto{regexp-option}{ \cvar{option-name}}{regexp-option}
+\end{protos}
+\noindent
+\code{Make-regexp} makes a new regular expression, using \cvar{string}
+ as the pattern.
+The possible option names are:
+
+\begin{center}
+\begin{tabular}{ll}
+\code{extended} & use the extended patterns \\
+\code{ignore-case} & ignore case when matching \\
+\code{submatches} & report submatches \\
+\code{newline} & treat newlines specially
+\end{tabular}
+\end{center}
+
+The regular expression is not compiled until it matched against a string,
+ so any errors in the pattern string will not be reported until that
+ point.
+
+\begin{protos}
+\proto{regexp?}{ x}{boolean}
+\end{protos}
+\noindent
+This is a predicate for regular expressions.
+
+\begin{protos}
+\protonoresult{regexp-match}{ regexp string start submatches? starts-line? ends-line?}
+\protoresult{boolean or list of matches}
+\proto{match?}{ x}{boolean}
+\proto{match-start}{ match}{integer}
+\proto{match-end}{ match}{integer}
+\end{protos}
+\noindent
+\code{Regexp-match} matches the regular expression against the characters
+ in \cvar{string}, starting at position \cvar{start}.
+If the string does not match the regular expression, \code{regexp-match}
+ returns \code{\#f}.
+If the string does match, then a list of match records is returned
+ if \cvar{submatches?} is true, or \code{\#t} is returned if it is not.
+Each match record contains the index of the character at the beginning
+ of the match and one more than the index of the character at the end.
+The first match record gives the location of the substring that matched
+ \cvar{regexp}.
+If the pattern in \cvar{regexp} contained submatches, then the results
+ of these are returned in order, with a match records reporting submatches
+ that succeeded and \code{\#f} in place of those that did not.
+
+\cvar{Starts-line?} should be true if \cvar{string} starts at the beginning
+ of a line and \cvar{ends-line?} should be true if it ends one.
+
+\section{Syslog facility}
+\label{syslog-facility}
+
+The procedures in this section provide access to the POSIX syslog
+facility.  The functionality is in a structure called
+\code{posix-syslog}.  The Scheme~48 interface to the
+syslog facility differs significantly from that of the Unix library
+functionality in order to support multiple simultaneous connections to
+the syslog facility.
+
+Log messages carry a variety of parameters beside the text of the
+message itself, namely a set of options controlling the output format
+and destination, the facility identifying the class of programs the
+message is coming from, an identifier specifying the concrete program,
+and the level identifying the importance of the message.  Moreover, a
+log mask can prevent messages at certain levels to be actually sent to
+the syslog daemon.
+
+\subsection*{Log options}
+
+A log option specifies details of the I/O behavior of the syslog
+facility.  A syslog option is an element of a finite type (see
+Section~\ref{sec:finite-types}) constructed by the
+\code{syslog-option} macro.  The syslog facility works with sets of
+options which are represented as enum sets (see
+Section~\ref{sets-finite-types}).
+
+\begin{protos}
+\syntaxproto{syslog-option}{ \cvar{option-name}}{option}
+\proto{syslog-option?}{ x}{boolean}
+\proto{make-syslog-options}{ list}{options}
+\syntaxproto{syslog-options}{ \cvar{option-name} \ldots}{options}
+\proto{syslog-options?}{ x}{boolean}
+\end{protos}
+\noindent
+\code{Syslog-option} constructs a log option from the name of an
+option.  (The possible names are listed below.)  \code{Syslog-option?}
+is a predicate for log options.  Options are comparable using
+\code{eq?}.  \code{Make-syslog-options} constructs a set of options
+from a list of options.  \code{Syslog-options} is a macro which
+expands into an expression returning a set of options from names.
+\code{Syslog-options?} is a predicate for sets of options.
+
+Here is a list of possible names of syslog options:
+
+\begin{description}
+\item[\code{console}]
+  If syslog cannot pass the message to syslogd it will attempt to
+  write the message to the console.
+
+\item[\code{delay}]
+  Delay opening the connection to syslogd immediately until the first
+  message is logged.
+
+\item[\code{no-delay}]
+  Open the connection to syslogd immediately.  Normally
+  the open is delayed until the first message is logged.
+  Useful for programs that need to manage the order in which
+  file descriptors are allocated.
+
+  \noindent\textbf{NOTA BENE:}
+  The \code{delay} and \code{no-delay} options are included for
+  completeness, but do not have the expected effect in the present
+  Scheme interface: Because the Scheme interface has to multiplex
+  multiple simultaneous connections to the syslog facility over a
+  single one, open and close operations on that facility happen at
+  unpredictable times.
+
+\item[\code{log-pid}]
+  Log the process id with each message: useful for identifying
+  instantiations of daemons.
+
+\item[\code{no-wait}]
+  Do not wait for child processes.
+\end{description}
+
+\subsection*{Log facilities}
+
+A log facility identifies the originator of a log message from a
+finite set known to the system.  Each originator is identified by a
+name:
+
+\begin{protos}
+\syntaxproto{syslog-facility}{ \cvar{facility-name}}{facility}
+\proto{syslog-facility?}{ x}{boolean}
+\end{protos}
+\noindent
+\code{Syslog-facility} is macro that expands into an expression
+returning a facility for a given name.  \code{Syslog-facility?} is a
+predicate for facilities.  Facilities are comparable via \code{eq?}.
+
+Here is a list of possible names of syslog facilities:
+
+\begin{description}
+\item[\code{authorization}]
+  The authorization system: login, su, getty, etc.
+
+\item[\code{cron}]
+  The cron daemon.
+
+\item[\code{daemon}]
+  System daemons, such as routed, that are not provided for explicitly
+  by other facilities.
+
+\item[\code{kernel}]
+  Messages generated by the kernel.
+
+\item[\code{lpr}]
+  The line printer spooling system: lpr, lpc, lpd, etc.
+
+\item[\code{mail}]
+  The mail system.
+
+\item[\code{news}]
+  The network news system.
+
+\item[\code{user}]
+  Messages generated by random user processes.
+
+\item[\code{uucp}]
+  The uucp system.
+
+\item[\code{local0} \code{local1} \code{local2} \code{local3} \code{local4} \code{local5} \code{local6} \code{local7}]
+  Reserved for local use.
+\end{description}
+
+\subsection*{Log levels}
+
+A log level identifies the importance of a message from a fixed set
+of possible levels.
+
+\begin{protos}
+\syntaxproto{syslog-level}{ \cvar{level-name}}{level}
+\proto{syslog-level?}{ x}{boolean}
+\end{protos}
+\noindent
+\code{Syslog-level} is macro that expands into an expression returning
+a facility for a given name.  \code{Syslog-level?} is a predicate for
+facilities.  Levels are comparable via \code{eq?}.
+
+Here is a list of possible names of syslog levels:
+
+\begin{description}
+\item[\code{emergency}]
+  A panic condition.  This is normally broadcast to all users.
+
+\item[\code{alert}]
+  A condition that should be corrected immediately, such as a
+  corrupted system database.
+
+\item[\code{critical}]
+  Critical conditions, e.g., hard device errors.
+
+\item[\code{error}]
+  Errors.
+
+\item[\code{warning}]
+  Warning messages.
+
+\item[\code{notice}]
+  Conditions that are not error conditions, but should possibly be
+  handled specially.
+
+\item[\code{info}]
+  Informational messages.
+
+\item[\code{debug}]
+  Messages that contain information normally of use only when
+  debugging a program.
+\end{description}
+
+\subsection*{Log masks}
+
+A log masks can mask out log messages at a set of levels.  A log
+mask is an enum set of log levels.
+
+\begin{protos}
+\proto{make-syslog-mask}{ list}{mask}
+\syntaxproto{syslog-mask}{ \cvar{level-name} \ldots}{mask}
+\constproto{syslog-mask-all}{ mask}
+\proto{syslog-mask-upto}{ level}{mask}
+\proto{syslog-mask?}{ x}{boolean}
+\end{protos}
+\noindent
+\code{Make-syslog-mask} constructs a mask from a list of levels.
+\code{Syslog-mask} is a macro which constructs a mask from names of
+levels.  \code{Syslog-mask-all} is a predefined log mask containing
+all levels.  \code{Syslog-mask-upto} returns a mask consisting of all
+levels up to and including a certain level, starting with
+\code{emergency}.
+
+\subsection*{Logging}
+
+Scheme~48 dynamically maintains implicit connections to the syslog
+facility specifying a current identifier, current options, a current
+facility and a current log mask.  Every thread
+maintains it own implicit connection to syslog.  Note that the
+connection is not implicitly preserved across a \code{spawn}.
+
+\begin{protos}
+\proto{with-syslog-destination}{ string options facility mask thunk}{value}
+\end{protos}
+\noindent
+\code{With-syslog-destination} dynamically binds parameters of the
+implicit connection to the syslog facility and runs \var{thunk}
+within those parameter bindings, returning what \var{thunk}
+returns.  Each of the parameters may be \code{\#f} in which case the
+previous values will be used.
+
+\begin{protos}
+\protonoresult{syslog}{ level message}
+\protonoresult{syslog}{ level message string}
+\protonoresult{syslog}{ level message string options}
+\protonoresult{syslog}{ level message string options syslog-facility}
+\protonoresult{syslog}{ level message channel}
+\end{protos}
+\noindent
+\code{Syslog} actually logs a message.  Each of the parameters of the
+implicit connection (except for the log mask) can be explicitly
+specified as well for the current call to \code{syslog}, overriding
+the parameters of the channel.  The parameters revert to their
+original values after the call.
+
+The final form specifies the destination of the log message as a
+channel; see the next section.
+
+\subsection*{Syslog channels}
+%
+These procedures allow direct manipulation of syslog channels, the
+objects that represent connections to the syslog facility.  Note that
+it is not necessary to explicitly open a syslog channel to do logging.
+
+\begin{protos}
+\proto{open-syslog-channel}{string options facility mask}{channel}
+\protonoresult{close-syslog-channel}{channel}
+\proto{with-syslog-destination}{ channel thunk}{value}
+\end{protos}
+\noindent
+\code{Open-syslog-channel} and \code{close-syslog-channel} create and
+destroy a connection to the syslog facility, respectively.  The
+specified form of calling \code{syslog} logs to the specified channel.
+
+\code{With-syslog-channel} dynamically binds parameters of the
+implicit connection to the syslog facility to those specified in
+\cvar{channel} and runs \var{thunk} within those parameter bindings,
+returning what \var{thunk} returns.
+
+\section{Error codes}
+
+POSIX functions report the nature of an error via \textit{system error
+  numbers}---OS-specific integers that encode a variety of different
+error situations.  At the Scheme level, error numbers are represented
+as \textit{errnos}, objects that specify a name for the error
+sitation.  Errnos are definted in the structures \code{posix-errnos}
+and \code{posix}.
+
+Currently, the system reports such error situations by raising
+exceptions with condition type \code{\&os-error}.  The
+\code{\&os-error} condition type has a field \code{code} that contains
+the system error number.
+
+There are two varieties of errnos available, {\em named} and {\em anonymous}.
+A named errno is one for which we have a symbolic name, such as \code{fault}
+ or \code{intr}.
+Anonymous errnos, for which we only have the current operating system's
+ errno number, have no meaning in other operating systems.
+Named errnos preserve their meaning in image files.
+Not all named errnos are available from all OS's and
+ there may be multiple names for a single OS errno number.
+
+\begin{protos}
+\syntaxproto{errno}{ \cvar{errno-name}}{errno}
+\proto{name->errno}{ symbol}{errno or {\tt \#f}}
+\proto{integer->errno}{ integer}{errno}
+\proto{errno?}{ x}{boolean}
+\proto{errno-name}{ errno}{symbol or {\tt \#f}}
+\proto{errno-os-number}{ errno}{integer}
+\proto{errno=?}{ errno0 errno1}{boolean}
+\end{protos}
+\noindent
+The syntax \code{errno} returns a (named) errno associated with
+\cvar{errno-name}.
+\code{Name->errno} returns a (named) errno or \code{\#f} if the
+ the errno \cvar{name} is not supported by the operating system.
+The errno returned by \code{integer->errno} is a named errno if
+ \cvar{integer} corresponds to a named errno in the current operating
+ system; otherwise it returns an anonymous errno.
+\code{Errno-name} returns a symbol if \cvar{errno} is named and
+ \code{\#f} if it is anonymous.
+\code{Errno=?} returns \code{\#t} if \cvar{errno0} and \cvar{errno1}
+ have the same operating system number and \code{\#f} if they do not.
+
+\subsection{POSIX errnos}
+The following lists the names of the POSIX errnos.
+\begin{center}
+\begin{longtable}{@{\ttfamily}lp{0.6\textwidth}}
+   toobig			     & Argument list too long.\\
+   acces				& Permission denied.\\
+   addrinuse				& Address in use.\\
+   addrnotavail			& Address not available.\\
+   afnosupport		       & Address family not supported.\\
+   again & Resource unavailable, try again.\\
+   already			     & Connection already in progress.\\
+   badf				& Bad file descriptor.\\
+   badmsg				& Bad message.\\
+   busy				& Device or resource busy.\\
+   canceled				& Operation canceled.\\
+   child				& No child processes.\\
+   connaborted			& Connection aborted.\\
+   connrefused			& Connection refused.\\
+   connreset				& Connection reset.\\
+   deadlk			      & Resource deadlock would occur.\\
+   destaddrreq		       & Destination address required.\\
+   dom	     & Mathematics argument out of domain of function.\\
+   dquot				& Reserved.\\
+   exist				& File exists.\\
+   fault				& Bad address.\\
+   fbig				& File too large.\\
+   hostunreach			& Host is unreachable.\\
+   idrm				& Identifier removed.\\
+   ilseq				& Illegal byte sequence.\\
+   inprogress				& Operation in progress.\\
+   intr				& Interrupted function.\\
+   inval				& Invalid argument.\\
+   io					& I/O error.\\
+   isconn				& Socket is connected.\\
+   isdir				& Is a directory.\\
+   loop			  & Too many levels of symbolic links.\\
+   mfile				& Too many open files.\\
+   mlink				& Too many links.\\
+   msgsize				& Message too large.\\
+   multihop				& Reserved.\\
+   nametoolong			& Filename too long.\\
+   netdown				& Network is down.\\
+   netreset			      & Connection aborted by network.\\
+   netunreach				& Network unreachable.\\
+   nfile			      & Too many files open in system.\\
+   nobufs				& No buffer space available.\\
+   nodata & No message is available on the STREAM head read queue. \\
+   nodev				& No such device.\\
+   noent				& No such file or directory.\\
+   noexec			       & Executable file format error.\\
+   nolck				& No locks available.\\
+   nolink				& Reserved.\\
+   nomem				& Not enough space.\\
+   nomsg			     & No message of the desired type.\\
+   noprotoopt				& Protocol not available.\\
+   nospc				& No space left on device.\\
+   nosr				& No STREAM resources. \\
+   nostr				&  Not a STREAM. \\
+   nosys				& Function not supported.\\
+   notconn				& The socket is not connected.\\
+   notdir				& Not a directory.\\
+   notempty				& Directory not empty.\\
+   notsock				& Not a socket.\\
+   notsup				& Not supported.\\
+   notty			& Inappropriate I/O control operation.\\
+   nxio				& No such device or address.\\
+   opnotsupp			  & Operation not supported on socket.\\
+   overflow		  & Value too large to be stored in data type.\\
+   perm				& Operation not permitted.\\
+   pipe				& Broken pipe.\\
+   proto				& Protocol error.\\
+   protonosupport			& Protocol not supported.\\
+   prototype			     & Protocol wrong type for socket.\\
+   range				& Result too large.\\
+   rofs				& Read-only file system.\\
+   spipe				& Invalid seek.\\
+   srch				& No such process.\\
+   stale				& Reserved.\\
+   time			     & Stream ioctl() timeout. \\
+   timedout				& Connection timed out.\\
+   txtbsy				& Text file busy.\\
+   wouldblock	& Operation would block.\\
+   xdev				& Cross-device link.\\
+\end{longtable}
+\end{center}
+
+\section{C to Scheme correspondence}
+\label{function-correspondence}
+
+The following table lists the Scheme procedures that correspond to
+ particular C procedures.
+Not all of the Scheme procedures listed are part of the POSIX interface.
+
+\texonly\setlongtables
+\begin{longtable}{ll}\endtexonly
+\htmlonly\begin{tabular}{ll}\endhtmlonly
+C procedure & Scheme procedure(s) \\
+\endfirsthead
+ C procedure & Scheme procedure(s) \\
+\endhead
+\code{access}&\code{accessible?}\\
+\code{asctime}&\code{date->string}\\
+\code{chdir}&\code{set-working-directory!}\\
+\code{close}&\code{close-input-port, close-output-port,}\\
+ &\code{\ \ close-channel, close-socket}\\
+\code{closedir}&\code{close-directory-stream}\\
+\code{creat}&\code{open-file}\\
+\code{ctime}&\code{time->string}\\
+\code{dup}&\code{dup, dup-switching-mode}\\
+\code{dup2}&\code{dup2}\\
+\code{exec[l|v][e|p|$\epsilon$]}
+ &\code{exec, exec-with-environment,} \\
+ &\code{\ \ exec-file, exec-file-with-environment,} \\
+ &\code{\ \ exec-with-alias}\\
+\code{\_exit}&\code{exit}\\
+\code{fcntl}&\code{io-flags, set-io-flags!,}\\
+ &\code{\ \ close-on-exec, set-close-on-exec!}\\
+\code{fork}&\code{fork, fork-and-forget}\\
+\code{fstat}&\code{get-port-info}\\
+\code{getcwd}&\code{working-directory}\\
+\code{getegid}&\code{get-effective-group-id}\\
+\code{getenv}&\code{lookup-environment-variable,} \\
+ &\code{\ \ environment-alist}\\
+\code{geteuid}&\code{get-effective-user-id}\\
+\code{getgid}&\code{get-group-id}\\
+\code{getgroups}&\code{get-groups}\\
+\code{getlogin}&\code{get-login-name}\\
+\code{getpid}&\code{get-process-id}\\
+\code{getppid}&\code{get-parent-process-id}\\
+\code{getuid}&\code{get-user-id}\\
+\code{gmtime}&\code{time->local-date}\\
+\code{isatty}&\code{port-is-a-terminal?}\\
+\code{link}&\code{link}\\
+\code{localtime}&\code{time->utc-date}\\
+\code{lstat}&\code{get-file/link-info}\\
+\code{mkdir}&\code{make-directory}\\
+\code{mkfifo}&\code{make-fifo}\\
+\code{mktime}&\code{date->time}\\
+\code{open}&\code{open-file}\\
+\code{opendir}&\code{open-directory-stream}\\
+\code{pipe}&\code{open-pipe}\\
+\code{read}&\code{read-char, read-block}\\
+\code{readdir}&\code{read-directory-stream}\\
+\code{readlink}&\code{read-symbolic-link}\\
+\code{rename}&\code{rename}\\
+\code{rmdir}&\code{remove-directory}\\
+\code{setgid}&\code{set-group-id!}\\
+\code{setegid}&\code{set-effective-group-id!}\\
+\code{setuid}&\code{set-user-id!}\\
+\code{seteuid}&\code{set-effective-user-id!}\\
+\code{stat}&\code{get-file-info}\\
+\code{strftime}&\code{format-date}\\
+\code{symlink}&\code{create-symbolic-link}\\
+\code{syslog}&\code{syslog}\\
+\code{time}&\code{current-time}\\
+\code{ttyname}&\code{port-terminal-name}\\
+\code{umask}&\code{set-file-creation-mask!}\\
+\code{uname}&\code{os-name, os-node-name,} \\
+ &\code{\ \ os-release-name, os-version-name,} \\
+ &\code{\ \ machine-name}\\
+\code{unlink}&\code{unlink}\\
+\code{waitpid}&\code{wait-for-child-process}\\
+\code{write}&\code{write-char, write-block}\\
+% The ones that aren't there yet.
+%wait \\
+%kill \\
+%sigemptyset, sigfillset, sigaddset, digdelset, sigismember \\
+%sigaction \\
+%sigsuspend \\
+%alarm \\
+%pause \\
+%sleep \\
+%getpgrp \\
+%setsid \\
+%times \\
+%ctermid \\
+%sysconf \\
+%rewinddir \\
+%chmod \\
+%chown \\
+%utime \\
+%ftruncate \\
+%pathconf, fpathconf \\
+%lseek \\
+%fsync \\
+\texonly\end{longtable}\endtexonly
+\htmlonly\end{tabular}\endhtmlonly
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End:

@@ -1,0 +1,328 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-2.html">previous</a></span><span>, <a href="manual-Z-H-4.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_2"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_2">Chapter 2</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_2">User&rsquo;s guide</a></h1>
+<p>This chapter details Scheme&nbsp;48&rsquo;s user interface: its command-line arguments,
+command processor, debugger, and so forth.</p>
+<p>
+</p>
+<a name="node_sec_2.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.1">2.1&nbsp;&nbsp;Command line arguments</a></h2>
+<p>A few command line arguments are processed by Scheme&nbsp;48 as
+it starts up.</p>
+<p>
+<tt>scheme48</tt>
+[<tt>-i</tt> <i>image</i>]
+[<tt>-h</tt> <i>heapsize</i>]
+[<tt>-a</tt> <i>argument <tt>...</tt></i>]</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b><tt>-i</tt> <i>image</i></b></dt><dd>
+specifies a heap image file to resume.  This defaults to a heap
+image that runs a Scheme command processor.  Heap images are
+created by the <tt>,dump</tt> and <tt>,build commands</tt>, for which see below.<p>
+</p>
+</dd><dt><b><tt>-h</tt> <i>heapsize</i></b></dt><dd>
+specifies how much space should be reserved for allocation.
+<i>Heapsize</i> is in words (where one word = 4 bytes), and covers both
+semispaces, only one of which is in use at any given time (except
+during garbage collection).  Cons cells are currently 3 words, so
+if you want to make sure you can allocate a million cons cells,
+you should specify <tt>-h 6000000</tt> (actually somewhat more than this,
+to account for the initial heap image and breathing room).
+The default heap size is 3000000 words.  The system will use a
+larger heap if the specified (or default) size is less than
+the size of the image being resumed.
+<p>
+</p>
+<p>
+</p>
+</dd><dt><b><tt>-a</tt> <i>argument <tt>...</tt></i></b></dt><dd>
+is only useful with images built using <tt>,build</tt>.
+The arguments are passed as a list of OS strings (see section
+<a href="manual-Z-H-6.html#node_sec_5.15">5.15</a>) to the procedure specified
+in the <tt>,build</tt> command. For example:
+<pre class=verbatim>&gt; ,open os-strings
+&gt; (define (f xs)
+    (write (map os-string-&gt;string xs))
+    (newline)
+    0)                                        ;must return an integer
+&gt; ,build f foo.image
+&gt; ,exit
+% scheme48vm -i foo.image -a mumble &quot;foo x&quot; -h 5000000
+(&quot;mumble&quot; &quot;foo x&quot; &quot;-h&quot; &quot;5000000&quot;)
+%
+</pre><p></p>
+<p>
+</p>
+</dd><dt><b><tt>-I</tt> <i>image</i> <i>argument <tt>...</tt></i></b></dt><dd>
+is equivalent to <tt>-i <i>image</i> -a <i>argument <tt>...</tt></i></tt>.
+On most Unix-like systems, a heap image can be made executable with the
+following Bourne shell commands:
+<pre class=verbatim>% (echo '#!<i>/s48/install/prefix</i>/lib/scheme48-1.9.2/scheme48vm -I'
+   cat <i>original.image</i>) &gt;<i>new.image</i>
+% chmod +x <i>new.image</i>
+</pre><p>
+</p>
+</dd></dl><p></p>
+<p>
+The usual definition of the <tt>s48</tt> or <tt>scheme48</tt> command is actually a
+shell script that starts up the Scheme&nbsp;48 virtual machine with a
+<tt>-i <i>imagefile</i></tt>
+specifying the development environment heap image and a
+<tt>-o <i>vm-executable</i></tt> specifying the location of the virtual-machine
+executable (the executable is needed for loading external code on some
+versions of Unix; see section&nbsp;<a href="manual-Z-H-9.html#node_sec_8.4">8.4</a> for more information).
+The file <tt>go</tt> in the Scheme&nbsp;48 installation source directory is an example
+of such a shell script.</p>
+<p>
+</p>
+<a name="node_sec_2.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.2">2.2&nbsp;&nbsp;Command processor</a></h2>
+<p>When you invoke the default heap image, a command processor starts
+running.
+The command processor acts as both a read-eval-print loop, reading
+expressions, evaluating them, and printing the results, and as
+an interactive debugger and data inspector.
+See Chapter&nbsp;<a href="manual-Z-H-4.html#node_chap_3">3</a> for
+a description of the command processor.</p>
+<p>
+</p>
+<a name="node_sec_2.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.3">2.3&nbsp;&nbsp;Editing</a></h2>
+<p>We recommend running Scheme&nbsp;48 under GNU Emacs or XEmacs using the
+<tt>cmuscheme48</tt> command package.
+This is in the Scheme&nbsp;48 distribution&rsquo;s <tt>emacs/</tt> subdirectory and
+is included in XEmacs&rsquo;s <tt>scheme</tt> package.
+It is a variant of the <tt>cmuscheme</tt> library, which
+comes to us courtesy of Olin Shivers, formerly of CMU.
+You might want to put the following in your Emacs init file (<tt>.emacs</tt>):
+</p>
+<pre class=verbatim>(setq scheme-program-name &quot;scheme48&quot;)
+(autoload 'run-scheme
+          &quot;cmuscheme48&quot;
+          &quot;Run an inferior Scheme process.&quot;
+          t)
+</pre><p>
+The Emacs function <tt>run-scheme</tt> can then be used to start a process
+running the program <tt>scheme48</tt> in a new buffer.
+To make the <tt>autoload</tt> and <tt>(require <tt>...</tt>)</tt> forms work, you will
+also need
+to put the directory containing <tt>cmuscheme</tt> and related files in your
+emacs load-path:
+</p>
+<pre class=verbatim>(setq load-path
+  (append load-path '(&quot;<i>scheme-48-directory</i>/emacs&quot;)))
+</pre><p>
+Further documentation can be found in the files <tt>emacs/cmuscheme48.el</tt> and
+<tt>emacs/comint.el</tt>.</p>
+<p>
+</p>
+<a name="node_sec_2.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.4">2.4&nbsp;&nbsp;Performance</a></h2>
+<p></p>
+<p>
+If you want to generally have your code run faster than it normally
+would, enter <tt>inline-values</tt> mode before loading anything.  Otherwise
+calls to primitives (like <tt>+</tt> and <tt>cons</tt>) and in-line procedures
+(like <tt>not</tt> and <tt>cadr</tt>) won&rsquo;t be open-coded, and programs will run
+more slowly.</p>
+<p>
+The system doesn&rsquo;t start in <tt>inline-values</tt> mode by default because the
+Scheme report permits redefinitions of built-in procedures.  With
+this mode set, such redefinitions don&rsquo;t work according to the report,
+because previously compiled calls may have in-lined the old
+definition, leaving no opportunity to call the new definition.</p>
+<p>
+<tt>Inline-values</tt> mode is controlled by the <tt>inline-values</tt> switch.
+<tt>,set inline-values</tt> and <tt>,unset inline-values</tt> turn it on and off.</p>
+<p>
+</p>
+<a name="node_sec_2.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.5">2.5&nbsp;&nbsp;Disassembler</a></h2>
+<p>The <tt>,dis</tt> command prints out the disassembled byte codes of a procedure.
+</p>
+<pre class=verbatim>&gt; ,dis cons
+cons
+  0 (protocol 2)
+  2 (pop)
+  3 (make-stored-object 2 pair)
+  6 (return)
+&gt; 
+</pre><p>
+The current byte codes are listed in the file <tt>scheme/vm/interp/arch.scm</tt>.
+A somewhat out-of-date description of them can be found in
+[<a href="manual-Z-H-11.html#node_bib_5">5</a>].</p>
+<p>
+The command argument is optional; if unsupplied it defaults to the
+current focus object (<tt>##</tt>).</p>
+<p>
+The disassembler can also be invoked on continuations and templates.</p>
+<p>
+</p>
+<a name="node_sec_2.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.6">2.6&nbsp;&nbsp;Module system</a></h2>
+<p></p>
+<p>
+This section gives a brief description of modules and related entities.
+For detailed information, including a description of the module
+configuration language, see 
+chapter <a href="manual-Z-H-5.html#node_chap_4">4</a>.</p>
+<p>
+</p>
+<p>
+A <em>module</em> is an isolated namespace, with visibility of bindings
+controlled by module descriptions written in a special
+configuration language.
+A module may be instantiated as a <em>package</em>, which is an environment
+in which code can be evaluated.
+Most modules are instantiated only once and so have a unique package.
+A <em>structure</em> is a subset of the bindings in a package.
+Only by being included in a structure can a binding be
+made visible in other packages.
+A structure has two parts, the package whose bindings are being exported
+and the set of names that are to be exported.
+This set of names is called an <em>interface</em>.
+A module then has three parts:
+</p>
+<ul>
+<li><p>a set of structures whose bindings are to be visible within the module
+</p>
+<li><p>the source code to be evaluated within the module
+</p>
+<li><p>a set of exported interfaces
+</p>
+</ul><p>
+Instantiating a module produces a package and a set of structures, one for
+each of the exported interfaces.</p>
+<p>
+The following example uses <tt>define-structure</tt> to create a module that
+implements simple cells as pairs, instantiates this module, and binds the
+resulting structure to <tt>cells</tt>.
+The syntax <tt>(export <i>name <tt>...</tt></i>)</tt> creates an interface
+containing <i>name <tt>...</tt></i>.
+The <tt>open</tt> clause lists structures whose bindings are visible
+within the module.
+The <tt>begin</tt> clause contains source code.
+</p>
+<pre class=verbatim>(define-structure cells (export make-cell
+                                cell-ref
+                                cell-set!)
+  (open scheme)
+  (begin (define (make-cell x)
+           (cons 'cell x))
+         (define cell-ref cdr)
+         (define cell-set! set-cdr!)))
+</pre><p></p>
+<p>
+Cells could also have been implemented using the
+record facility described in section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.9">5.9</a>
+and available in structure <tt>define-record-type</tt>.
+</p>
+<pre class=verbatim>(define-structure cells (export make-cell
+                                cell-ref
+                                cell-set!)
+  (open scheme define-record-types)
+  (begin (define-record-type cell :cell
+           (make-cell value)
+           cell?
+           (value cell-ref cell-set!))))
+</pre><p></p>
+<p>
+With either definition the resulting structure can be used in other
+modules by including <tt>cells</tt> in an <tt>open</tt> clause.</p>
+<p>
+The command interpreter is always operating within a particular package.
+Initially this is a package in which only the standard Scheme bindings
+are visible.
+The bindings of other structures can be made visible by using the 
+<tt>,open</tt> command described in section&nbsp;<a href="manual-Z-H-4.html#node_sec_3.4">3.4</a> below.</p>
+<p>
+Note that this initial package does not include the configuration language.
+Module code needs to be evaluated in the configuration package, which can
+be done by using the <tt>,</tt>config command:
+</p>
+<pre class=verbatim>&gt; ,config (define-structure cells <tt>...</tt>)
+&gt; ,open cells
+&gt; (make-cell 4)
+'(cell . 4)
+&gt; (define c (make-cell 4))
+&gt; (cell-ref c)
+4
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_2.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_2.7">2.7&nbsp;&nbsp;Library</a></h2>
+<p>A number of useful utilities are either built in to Scheme&nbsp;48 or can
+be loaded from an external library.  These utilities are not visible
+in the user environment by default, but can be made available with the
+<tt>open</tt> command.  For example, to use the <tt>tables</tt> structure, do
+</p>
+<pre class=verbatim>&gt; ,open tables
+&gt; 
+</pre><p></p>
+<p>
+If the utility is not already loaded, then the <tt>,open</tt> command will
+load it.
+Or, you can load something explicitly (without opening it) using the
+<tt>load-package</tt> command:
+</p>
+<pre class=verbatim>&gt; ,load-package queues
+&gt; ,open queues
+</pre><p></p>
+<p>
+When loading a utility, the message &quot;Note: optional optimizer not
+invoked&quot; is innocuous.  Feel free to ignore it.</p>
+<p>
+See also the package system documentation, in
+chapter&nbsp;<a href="manual-Z-H-5.html#node_chap_4">4</a>.</p>
+<p>
+Not all of the the libraries available in Scheme&nbsp;48 are described in this
+manual.
+All are listed in files <tt>rts-packages.scm</tt>,
+<tt>comp-packages.scm</tt>, <tt>env-packages.scm</tt>, and
+<tt>more-packages.scm</tt> in the <tt>scheme</tt> directory of the distribution,
+and the bindings they
+export are listed in <tt>interfaces.scm</tt> and
+<tt>more-interfaces.scm</tt> in the same directory.</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-2.html">previous</a></span><span>, <a href="manual-Z-H-4.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,925 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-4.html">previous</a></span><span>, <a href="manual-Z-H-6.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_4"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_4">Chapter 4</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_4">Module system</a></h1>
+<p></p>
+<p>
+This chapter describes Scheme&nbsp;48&rsquo;s module system.
+The module system is unique in the extent to which it
+supports both static linking and rapid turnaround during program
+development.  The design was influenced by Standard ML
+modules[<a href="manual-Z-H-11.html#node_bib_7">7</a>] and by the module system for Scheme
+Xerox[<a href="manual-Z-H-11.html#node_bib_4">4</a>].  It has also been shaped by the
+needs of Scheme&nbsp;48, which is designed to run both on workstations and
+on relatively small (less than 1 Mbyte) embedded controllers.</p>
+<p>
+Except where noted, everything described here is implemented in
+Scheme&nbsp;48, and exercised by the Scheme&nbsp;48 implementation and some
+application programs.</p>
+<p>
+Unlike the Common Lisp package system, the module system described
+here controls the mapping of names to denotations, not the
+mapping of strings to symbols.</p>
+<p>
+</p>
+<a name="node_sec_4.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.1">4.1&nbsp;&nbsp;Introduction</a></h2>
+<p>The module system supports the structured division of a corpus of
+Scheme software into a set of modules.  Each module has its own
+isolated namespace, with visibility of bindings controlled by module
+descriptions written in a special <em>configuration language.</em></p>
+<p>
+A module may be instantiated multiple times, producing several <em>packages</em>, just as a lambda-expression can be instantiated multiple
+times to produce several different procedures.  Since single
+instantiation is the normal case, we will defer discussion of multiple
+instantiation until a later section.  For now you can think of a
+package as simply a module&rsquo;s internal environment mapping names to
+denotations.</p>
+<p>
+A module exports bindings by providing views onto the underlying
+package.  Such a view is called a <em>structure</em> (terminology from
+Standard ML).  One module may provide several different views.  A
+structure is just a subset of the package&rsquo;s bindings.  The particular
+set of names whose bindings are exported is the structure&rsquo;s <em>interface</em>.</p>
+<p>
+A module imports bindings from other modules by either <em>opening</em>
+or <em>accessing</em> some structures that are built on other packages.
+When a structure is opened, all of its exported bindings are visible
+in the client package.
+</p>
+<p>
+For example:
+</p>
+<pre class=verbatim>(define-structure foo (export a c cons)
+  (open scheme)
+  (begin (define a 1)
+         (define (b x) (+ a x))
+         (define (c y) (* (b a) y))))
+
+(define-structure bar (export d)
+  (open scheme foo)
+  (begin (define (d w) (+ a (c w)))))
+</pre><p>
+This configuration defines two structures, <tt>foo</tt> and <tt>bar</tt>.
+<tt>foo</tt> is a view on a package in which the <tt>scheme</tt> structure&rsquo;s
+bindings (including <tt>define</tt> and <tt>+</tt>) are visible, together
+with bindings for <tt>a</tt>, <tt>b</tt>,
+and <tt>c</tt>.  <tt>foo</tt>&rsquo;s interface is <tt>(export a c cons)</tt>, so of
+the bindings in its underlying package, <tt>foo</tt> only exports those
+three.  Similarly, structure <tt>bar</tt> consists of the binding of <tt>d</tt> from a package in which both <tt>scheme</tt>&rsquo;s and <tt>foo</tt>&rsquo;s
+bindings are visible.  <tt>foo</tt>&rsquo;s binding of <tt>cons</tt> is imported
+from the Scheme structure and then re-exported.</p>
+<p>
+A module&rsquo;s body, the part following <tt>begin</tt> in the above example,
+is evaluated in an isolated lexical scope completely specified by the
+package definition&rsquo;s <tt>open</tt> and <tt>access</tt> clauses.  In
+particular, the binding of the syntactic operator <tt>define-structure</tt>
+is not visible unless it comes from some opened structure.  Similarly,
+bindings from the <tt>scheme</tt> structure aren&rsquo;t visible unless they
+become so by <tt>scheme</tt> (or an equivalent structure) being opened.</p>
+<p>
+</p>
+<a name="node_sec_4.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.2">4.2&nbsp;&nbsp;The configuration language</a></h2>
+<p></p>
+<p>
+The configuration language consists of top-level defining forms for
+modules and interfaces.
+Its syntax is given in figure&nbsp;<a href="#node_fig_Temp_4">1</a>.</p>
+<p>
+</p>
+<p>
+</p>
+<p></p>
+<hr>
+<p></p>
+<a name="node_fig_Temp_4"></a>
+<div class=:figure align=center><table width=100%><tr><td align=center><p>
+</p>
+<table border=0><tr><td valign=top >
+<p class=noindent>&lang;configuration&rang; <tt>--&gt;</tt>&nbsp;</p>
+
+<p class=noindent>&lang;definition&rang;<sup>*</sup> </td></tr>
+<tr><td valign=top ></p>
+<p>
+</p>
+<table border=0><tr><td valign=top >
+<p class=noindent>&lang;definition&rang; <tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(define-structure 
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;interface&rang;
+</p>
+
+<p class=noindent>&lang;clause&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(define-structures ((
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;interface&rang;)<sup>*</sup>)
+</p>
+
+<p class=noindent>&lang;clause&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(define-interface 
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;interface&rang;) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(define-syntax 
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;transformer-spec&rang;)
+</p>
+</tt></td></tr></table>
+</td></tr>
+<tr><td valign=top ><table border=0><tr><td valign=top >
+<p class=noindent>&lang;clause&rang; <tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(open 
+<p class=noindent>&lang;structure&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(access 
+<p class=noindent>&lang;name&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(begin 
+<p class=noindent>&lang;program&rang;) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(files 
+<p class=noindent>&lang;filespec&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(optimize 
+<p class=noindent>&lang;optimize-spec&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(for-syntax 
+<p class=noindent>&lang;clause&rang;<sup>*</sup>)
+</p>
+</tt></td></tr></table>
+</td></tr>
+<tr><td valign=top ><table border=0><tr><td valign=top >
+<p class=noindent>&lang;interface&rang; <tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(export 
+<p class=noindent>&lang;item&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top >
+<p class=noindent>&lang;name&rang; </td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(compound-interface 
+<p class=noindent>&lang;interface&rang;<sup>*</sup>)
+</p>
+</tt></td></tr></table>
+</td></tr>
+<tr><td valign=top ><table border=0><tr><td valign=top >
+<p class=noindent>&lang;item&rang; <tt>--&gt;</tt>&nbsp; </p>
+
+<p class=noindent>&lang;name&rang; </td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;type&rang;) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>((
+<p class=noindent>&lang;name&rang;<sup>*</sup>) </p>
+
+<p class=noindent>&lang;type&rang;)
+</p>
+</tt></td></tr></table>
+</td></tr>
+<tr><td valign=top ><table border=0><tr><td valign=top >
+<p class=noindent>&lang;structure&rang; <tt>--&gt;</tt> </p>
+</td><td valign=top >
+<p class=noindent>&lang;name&rang; </td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(modify 
+<p class=noindent>&lang;structure&rang; </p>
+
+<p class=noindent>&lang;modifier&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(subset 
+<p class=noindent>&lang;structure&rang; (</p>
+
+<p class=noindent>&lang;name&rang;<sup>*</sup>)) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(with-prefix 
+<p class=noindent>&lang;structure&rang; </p>
+
+<p class=noindent>&lang;name&rang;)
+</p>
+</tt></td></tr></table>
+</td></tr>
+<tr><td valign=top ><table border=0><tr><td valign=top >
+<p class=noindent>&lang;modifier&rang; <tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(expose 
+<p class=noindent>&lang;name&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(hide 
+<p class=noindent>&lang;name&rang;<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(rename (
+<p class=noindent>&lang;name&rang;<sub>0</sub> </p>
+
+<p class=noindent>&lang;name&rang;<sub>1</sub>)<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(alias (
+<p class=noindent>&lang;name&rang;<sub>0</sub> </p>
+
+<p class=noindent>&lang;name&rang;<sub>1</sub>)<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(prefix 
+<p class=noindent>&lang;name&rang;)
+</p>
+</tt></td></tr></table>
+</td></tr></table>
+</td></tr>
+<tr><td align=center><b>Figure 1:</b>&nbsp;&nbsp;The configuration language.</td></tr>
+<tr><td>
+
+</td></tr></table></div><p></p>
+<hr>
+<p></p>
+<p></p>
+<p>
+A <a name="node_idx_2"></a><tt>define-structure</tt> form introduces a binding of a name to a
+structure.  A structure is a view on an underlying package which is
+created according to the clauses of the <tt>define-structure</tt> form.
+Each structure has an interface that specifies which bindings in the
+structure&rsquo;s underlying package can be seen via that structure in other
+packages.</p>
+<p>
+An <tt>open</tt> clause specifies which structures will be opened up for
+use inside the new package.
+At least one structure must be specified or else it will be impossible to
+write any useful programs inside the package, since <tt>define</tt>,
+<tt>lambda</tt>, <tt>cons</tt>, etc. will be unavailable.
+Packages typically include <tt>scheme</tt>, which exports all bindings
+appropriate to Revised<sup>5</sup> Scheme, in an <tt>open</tt> clause.
+For building structures that export structures, there is a <tt>defpackage</tt>
+package that exports the operators of the configuration language.
+Many other structures, such as record and hash table facilities, are also
+available in the Scheme&nbsp;48 implementation.</p>
+<p>
+The <a name="node_idx_4"></a><tt>modify</tt>, <a name="node_idx_6"></a><tt>subset</tt>, and
+<a name="node_idx_8"></a><tt>prefix</tt> forms produce new
+views on existing structures by renaming or hiding exported names.
+<tt>Subset</tt> returns a new structure that exports only the listed names
+from its </p>
+
+<p class=noindent>&lang;structure&rang; argument.
+<tt>With-prefix</tt> returns a new structure that adds </p>
+
+<p class=noindent>&lang;prefix&rang;
+to each of the names exported by the </p>
+
+<p class=noindent>&lang;structure&rang; argument.
+For example, if structure <tt>s</tt> exports <tt>a</tt> and <tt>b</tt>,
+then
+</p>
+<pre class=verbatim>(subset s (a))
+</pre><p>
+exports only <tt>a</tt> and
+</p>
+<pre class=verbatim>(with-prefix s p/)
+</pre><p>
+exports <tt>a</tt> as <tt>p/a</tt> and <tt>b</tt> as <tt>p/b</tt>.</p>
+<p>
+Both <tt>subset</tt> and <tt>with-prefix</tt> are simple macros that
+expand into uses of <tt>modify</tt>, a more general renaming form.
+In a <tt>modify</tt> structure specification the </p>
+
+<p class=noindent>&lang;command&rang;s are applied to
+the names exported
+by </p>
+
+<p class=noindent>&lang;structure&rang; to produce a new set of names for the </p>
+
+<p class=noindent>&lang;structure&rang;&rsquo;s
+bindings.
+<tt>Expose</tt> makes only the listed names visible.
+<tt>Hide</tt> makes all but the listed names visible.
+<tt>Rename</tt> makes each </p>
+
+<p class=noindent>&lang;name&rang;<sub>0</sub> visible as </p>
+
+<p class=noindent>&lang;name&rang;<sub>1</sub> 
+name and not visible as </p>
+
+<p class=noindent>&lang;name&rang;<sub>0</sub> , while
+<tt>alias</tt> makes each </p>
+
+<p class=noindent>&lang;name&rang;<sub>0</sub> visible as both </p>
+
+<p class=noindent>&lang;name&rang;<sub>0</sub> 
+and </p>
+
+<p class=noindent>&lang;name&rang;<sub>1</sub>.
+<tt>Prefix</tt> adds </p>
+
+<p class=noindent>&lang;name&rang; to the beginning of each exported name.
+The modifiers are applied from right to left.  Thus
+</p>
+<pre class=verbatim>(modify scheme (prefix foo/) (rename (car bus))))
+</pre><p>
+makes <tt>car</tt> available as <tt>foo/bus</tt>.</p>
+<p>
+</p>
+<p>
+The package&rsquo;s body is specified by <tt>begin</tt> and/or <tt>files</tt>
+clauses.  <tt>begin</tt> and <tt>files</tt> have the same semantics, except
+that for <tt>begin</tt> the text is given directly in the package
+definition, while for <tt>files</tt> the text is stored somewhere in the
+file system.  The body consists of a Scheme program, that is, a
+sequence of definitions and expressions to be evaluated in order.  In
+practice, we always use <tt>files</tt> in preference to <tt>begin</tt>; <tt>begin</tt> exists mainly for expository purposes.</p>
+<p>
+A name&rsquo;s imported binding may be lexically overridden or <em>shadowed</em>
+by defining the name using a defining form such as <tt>define</tt>
+or <tt>define-syntax</tt>.  This will create a new binding without having
+any effect on the binding in the opened package.  For example, one can
+do <tt>(define car &rsquo;chevy)</tt> without affecting the binding of the name
+<tt>car</tt> in the <tt>scheme</tt> package.</p>
+<p>
+Assignments (using <tt>set!</tt>) to imported and undefined variables
+are not allowed.  In order to <tt>set!</tt> a top-level variable, the
+package body must contain a <tt>define</tt> form defining that variable.
+Applied to bindings from the <tt>scheme</tt> structure, this restriction
+is compatible with the requirements of the Revised<sup>5</sup> Scheme report.</p>
+<p>
+It is an error for two of a package&rsquo;s opened structures to export two
+different bindings for the same name.  However, the current
+implementation does not check for this situation; a name&rsquo;s binding is
+always taken from the structure that is listed first within the <tt>open</tt> clause.  This may be fixed in the future.</p>
+<p>
+File names in a <tt>files</tt> clause can be symbols, strings, or lists
+(Maclisp-style &lsquo;&lsquo;namelists&rsquo;&rsquo;).  A &lsquo;&lsquo;<tt>.scm</tt>&rsquo;&rsquo; file type suffix is
+assumed.  Symbols are converted to file names by converting to upper
+or lower case as appropriate for the host operating system.  A
+namelist is an operating-system-independent way to specify a file
+obtained from a subdirectory.  For example, the namelist <tt>(rts
+record)</tt> specifies the file <tt>record.scm</tt> in the <tt>rts</tt>
+subdirectory.</p>
+<p>
+If the <tt>define-structure</tt> form was itself obtained from a file,
+then file names in <tt>files</tt> clauses are interpreted relative to the
+directory in which the file containing the <tt>define-structure</tt> form
+was found.  You can&rsquo;t at present put an absolute path name in the <tt>files</tt> list.</p>
+<p>
+</p>
+<a name="node_sec_4.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.3">4.3&nbsp;&nbsp;Interfaces</a></h2>
+<p><a name="node_idx_10"></a><tt>define-interface</tt></p>
+<p>
+An interface can be thought of as the type of a structure.  In its
+basic form it is just a list of variable names, written <tt>(export
+<i>name</i> <tt>...</tt>)</tt>.  However, in place of
+a name one may write <tt>(<i>name</i> <i>type</i>)</tt>, indicating the type
+of <i>name</i>&rsquo;s binding.
+The type field is optional, except
+that exported macros must be indicated with type <tt>:syntax</tt>.</p>
+<p>
+Interfaces may be either anonymous, as in the example in the
+introduction, or they may be given names by a <tt>define-interface</tt>
+form, for example
+</p>
+<pre class=verbatim>(define-interface foo-interface (export a c cons))
+(define-structure foo foo-interface <tt>...</tt>)
+</pre><p>
+In principle, interfaces needn&rsquo;t ever be named.  If an interface
+had to be given at the point of a structure&rsquo;s use as well as at the
+point of its definition, it would be important to name interfaces in
+order to avoid having to write them out twice, with risk of mismatch
+should the interface ever change.  But they don&rsquo;t.</p>
+<p>
+Still, there are several reasons to use <tt>define-interface</tt>:
+</p>
+<ol>
+<li><p>It is important to separate the interface definition from the
+package definitions when there are multiple distinct structures that
+have the same interface --- that is, multiple implementations of the
+same abstraction.</p>
+<p>
+</p>
+<li><p>It is conceptually cleaner, and often useful for documentation
+purposes, to separate a module&rsquo;s specification (interface) from its
+implementation (package).</p>
+<p>
+</p>
+<li><p>Our experience is that configurations that are separated into
+interface definitions and package definitions are easier to read; the
+long lists of exported bindings just get in the way most of the time.
+</p>
+</ol><p></p>
+<p>
+The <a name="node_idx_12"></a><tt>compound-interface</tt> operator forms an interface that is the
+union of two or more component interfaces.  For example,
+</p>
+<pre class=verbatim>(define-interface bar-interface
+  (compound-interface foo-interface (export mumble)))
+</pre><p>
+defines <tt>bar-interface</tt> to be <tt>foo-interface</tt> with the name
+<tt>mumble</tt> added.</p>
+<p>
+</p>
+<a name="node_sec_4.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.4">4.4&nbsp;&nbsp;Macros</a></h2>
+<p>Hygienic macros, as described in
+[<a href="manual-Z-H-11.html#node_bib_2">2</a>,&nbsp;<a href="manual-Z-H-11.html#node_bib_3">3</a>], are implemented.
+Structures may export macros; auxiliary names introduced into the
+expansion are resolved in the environment of the macro&rsquo;s definition.</p>
+<p>
+For example, the <tt>scheme</tt> structure&rsquo;s <tt>delay</tt> macro 
+is defined by the rewrite rule
+</p>
+<pre class=verbatim>(delay <i>exp</i>)  %
+%
+<tt>---&gt;</tt>%
+(make-promise (lambda () <i>exp</i>)).
+</pre><p>
+The variable <tt>make-promise</tt> is defined in the <tt>scheme</tt>
+structure&rsquo;s underlying package, but is not exported.  A use of the
+<tt>delay</tt> macro, however, always accesses the correct definition
+of <tt>make-promise</tt>.  Similarly, the <tt>case</tt> macro expands into
+uses of <tt>cond</tt>, <tt>eqv?</tt>, and so on.  These names are exported
+by <tt>scheme</tt>, but their correct bindings will be found even if they
+are shadowed by definitions in the client package.</p>
+<p>
+</p>
+<a name="node_sec_4.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.5">4.5&nbsp;&nbsp;Higher-order modules</a></h2>
+<p>There are <tt>define-module</tt> and <tt>define</tt> forms for
+defining modules that are intended to be instantiated multiple times.
+But these are pretty kludgey --- for example, compiled code isn&rsquo;t
+shared between the instantiations --- so we won&rsquo;t describe them yet.
+If you must know, figure it out from the following grammar.
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><span style="margin-left: 2em">&zwnj;</span>
+<p class=noindent>&lang;definition&rang; <tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(define-module (
+<p class=noindent>&lang;name&rang; (</p>
+
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;interface&rang;)<sup>*</sup>) </tt></td></tr>
+<tr><td valign=top ></p>
+</td><td valign=top ><span style="margin-left: 2em">&zwnj;</span>
+<p class=noindent>&lang;definition&rang;<sup>*</sup> </td></tr>
+<tr><td valign=top ></p>
+</td><td valign=top ><span style="margin-left: 2em">&zwnj;</span>
+<p class=noindent>&lang;name&rang;<tt>) </tt></td></tr>
+<tr><td valign=top ><tt>--&gt;</tt> </p>
+</td><td valign=top ><tt>(define 
+<p class=noindent>&lang;name&rang; (</p>
+
+<p class=noindent>&lang;name&rang; </p>
+
+<p class=noindent>&lang;name&rang;<sup>*</sup>))
+</p>
+</tt></td></tr></table>
+</td></tr></table></div>
+
+<p>
+</p>
+<a name="node_sec_4.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.6">4.6&nbsp;&nbsp;Compiling and linking</a></h2>
+<p>Scheme&nbsp;48 has a static linker that produces stand-alone heap images
+from module descriptions.  The programmer specifies a particular procedure in a
+particular structure to be the image&rsquo;s startup procedure (entry
+point), and the linker traces dependency links as given by <tt>open</tt>
+and <tt>access</tt> clauses to determine the composition of the heap
+image.</p>
+<p>
+There is not currently any provision for separate compilation; the
+only input to the static linker is source code.  However, it will not
+be difficult to implement separate compilation.  The unit of
+compilation is one module (not one file).  Any opened or accessed
+structures from which macros are obtained must be processed to the
+extent of extracting its macro definitions.  The compiler knows from
+the interface of an opened or accessed structure which of its exports
+are macros.  Except for macros, a module may be compiled without any
+knowledge of the implementation of its opened and accessed structures.
+However, inter-module optimization may be available as an option.</p>
+<p>
+The main difficulty with separate compilation is resolution of
+auxiliary bindings introduced into macro expansions.  The module
+compiler must transmit to the loader or linker the search path by
+which such bindings are to be resolved.  In the case of the <tt>delay</tt>
+macro&rsquo;s auxiliary <tt>make-promise</tt> (see example above), the loader
+or linker needs to know that the desired binding of <tt>make-promise</tt>
+is the one apparent in <tt>delay</tt>&rsquo;s defining package, not in the
+package being loaded or linked.</p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_4.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.7">4.7&nbsp;&nbsp;Semantics of configuration mutation</a></h2>
+<p>During program development it is often desirable to make changes to
+packages and interfaces.  In static languages it may be necessary to
+recompile and re-link a program in order for such changes to be
+reflected in a running system.  Even in interactive Common Lisp
+implementations, a change to a package&rsquo;s exports often requires
+reloading clients that have already mentioned names whose bindings
+change.  Once <tt>read</tt> resolves a use of a name to a symbol, that
+resolution is fixed, so a change in the way that a name resolves to a
+symbol can only be reflected by re-<tt>read</tt>ing all such references.</p>
+<p>
+The Scheme&nbsp;48 development environment supports rapid turnaround in
+modular program development by allowing mutations to a program&rsquo;s
+configuration, and giving a clear semantics to such mutations.  The
+rule is that variable bindings in a running program are always
+resolved according to current structure and interface bindings, even
+when these bindings change as a result of edits to the configuration.
+For example, consider the following:
+</p>
+<pre class=verbatim>(define-interface foo-interface (export a c))
+(define-structure foo foo-interface
+  (open scheme)
+  (begin (define a 1)
+         (define (b x) (+ a x))
+         (define (c y) (* (b a) y))))
+(define-structure bar (export d)
+  (open scheme foo)
+  (begin (define (d w) (+ (b w) a))))
+</pre><p>
+This program has a bug.  The variable <tt>b</tt>, which is free in the
+definition of <tt>d</tt>, has no binding in <tt>bar</tt>&rsquo;s package.  Suppose
+that <tt>b</tt> was supposed to be exported by <tt>foo</tt>, but was omitted
+from <tt>foo-interface</tt> by mistake.  It is not necessary to
+re-process <tt>bar</tt> or any of <tt>foo</tt>&rsquo;s other clients at this point.
+One need only change <tt>foo-interface</tt> and inform the development
+system of that change (using, say, an appropriate Emacs command),
+and <tt>foo</tt>&rsquo;s binding of <tt>b</tt> will be found when procedure <tt>d</tt> is called.</p>
+<p>
+Similarly, it is also possible to replace a structure; clients of the
+old structure will be modified so that they see bindings from the new
+one.  Shadowing is also supported in the same way.  Suppose that a
+client package <em>C</em> opens a structure <tt>foo</tt> that exports a name
+<tt>x</tt>, and <tt>foo</tt>&rsquo;s implementation obtains the binding of <tt>x</tt>
+as an import from some other structure <tt>bar</tt>.  Then <em>C</em> will see
+the binding from <tt>bar</tt>.  If one then alters <tt>foo</tt> so that it
+shadows <tt>bar</tt>&rsquo;s binding of <tt>x</tt> with a definition of its own,
+then procedures in <em>C</em> that reference <tt>x</tt> will automatically see
+<tt>foo</tt>&rsquo;s definition instead of the one from <tt>bar</tt> that they saw
+earlier.</p>
+<p>
+This semantics might appear to require a large amount of computation
+on every variable reference: The specified behavior requires scanning
+the package&rsquo;s list of opened structures, examining their interfaces,
+on every variable reference, not just at compile time.  However, the
+development environment uses caching with cache invalidation to make
+variable references fast.</p>
+<p>
+</p>
+<a name="node_sec_4.8"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.8">4.8&nbsp;&nbsp;Command processor support</a></h2>
+<p></p>
+<p>
+While it is possible to use the Scheme&nbsp;48 static linker for program
+development, it is far more convenient to use the development
+environment, which supports rapid turnaround for program changes.  The
+programmer interacts with the development environment through a <em>command processor</em>.  The command processor is like the usual Lisp
+read-eval-print loop in that it accepts Scheme forms to evaluate.
+However, all meta-level operations, such as exiting the Scheme system
+or requests for trace output, are handled by <em>commands,</em> which are
+lexically distinguished from Scheme forms.  This arrangement is
+borrowed from the Symbolics Lisp Machine system, and is reminiscent of
+non-Lisp debuggers.  Commands are a little easier to type than Scheme
+forms (no parentheses, so you don&rsquo;t have to shift), but more
+importantly, making them distinct from Scheme forms ensures that
+programs&rsquo; namespaces aren&rsquo;t cluttered with inappropriate bindings.
+Equivalently, the command set is available for use regardless of what
+bindings happen to be visible in the current program.  This is
+especially important in conjunction with the module system, which puts
+strict controls on visibility of bindings.</p>
+<p>
+The Scheme&nbsp;48 command processor supports the module system with a
+variety of special commands.  For commands that require structure
+names, these names are resolved in a designated configuration package
+that is distinct from the current package for evaluating Scheme forms
+given to the command processor.  The command processor interprets
+Scheme forms in a particular current package, and there are commands
+that move the command processor between different packages.</p>
+<p>
+Commands are introduced by a comma (<tt>,</tt>) and end at the end of
+line.  The command processor&rsquo;s prompt consists of the name of the
+current package followed by a greater-than (<tt>&gt;</tt>).</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt></dt><dd><tt>,open <i>structure</i><sup>*</sup></tt> <br>
+The <tt>,open</tt> command opens new structures in the current
+package, as if the package&rsquo;s definition&rsquo;s <tt>open</tt> clause
+had listed <i>structure</i>.
+As with <tt>open</tt> clauses the visible names can be modified,
+as in
+<pre class=verbatim>,open (subset foo (bar baz))
+</pre><p>
+which only makes the <tt>bar</tt> and <tt>baz</tt> bindings from
+structure <tt>foo</tt> visible.</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,config</tt> <br>
+The <tt>,config</tt> command sets the command processor&rsquo;s current
+package to be the current configuration package.  Forms entered at
+this point are interpreted as being configuration language forms,
+not Scheme forms.<p>
+</p>
+</dd><dt></dt><dd><tt>,config <i>command</i></tt> <br>
+This form of the <tt>,config</tt> command executes another command in
+the current configuration package.  For example,
+<pre class=verbatim>,config ,load foo.scm
+</pre><p>
+interprets configuration language forms from the file <tt>foo.scm</tt> in the current configuration package.</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,config-package-is <i>struct-name</i></tt> <br>
+The <tt>,config-package-is</tt> command designates a new configuration
+package for use by the <tt>,config</tt> command and resolution of
+<i>struct-name</i>s for other commands such as <tt>,in</tt> and
+<tt>,open</tt>.  See
+section&nbsp;<a href="#node_sec_4.9">4.9</a>
+for information on making new configuration packages.<p>
+</p>
+</dd><dt></dt><dd><tt>,in <i>struct-name</i></tt> <br>
+The <tt>,in</tt> command moves the command processor to a specified
+structure&rsquo;s underlying package.  For example:
+<pre class=verbatim>user&gt; ,config
+config&gt; (define-structure foo (export a)
+          (open scheme))
+config&gt; ,in foo
+foo&gt; (define a 13)
+foo&gt; a
+13
+</pre><p>
+In this example the command processor starts in a package called
+<tt>user</tt>, but the <tt>,config</tt> command moves it into the
+configuration package, which has the name <tt>config</tt>.  The <tt>define-structure</tt> form binds, in <tt>config</tt>, the name <tt>foo</tt> to
+a structure that exports <tt>a</tt>.  Finally, the command <tt>,in
+foo</tt> moves the command processor into structure <tt>foo</tt>&rsquo;s
+underlying package.</p>
+<p>
+A package&rsquo;s body isn&rsquo;t executed (evaluated) until the package is
+<em>loaded</em>, which is accomplished by the <tt>,load-package</tt>
+command.</p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,in <i>struct-name</i> <i>command</i></tt> <br>
+This form of the <tt>,in</tt> command executes a single command in the
+specified package without moving the command processor into that
+package.  Example:
+<pre class=verbatim>,in mumble (cons 1 2)
+,in mumble ,trace foo
+</pre><p></p>
+<p>
+</p>
+</dd><dt></dt><dd><tt>,user [<i>command</i>]</tt> <br>
+This is similar to the <tt>,config</tt> and <tt>,in</tt> commands.  It
+moves to or executes a command in the user package (which is the
+default package when the Scheme&nbsp;48 command processor starts).<p>
+</p>
+</dd><dt></dt><dd><tt>,user-package-is <i>name</i></tt> <br>
+The <tt>,user-package-is</tt> command designates a new user
+package for use by the <tt>,user</tt> command.<p>
+</p>
+</dd><dt></dt><dd><tt>,load-package <i>struct-name</i></tt> <br>
+The <tt>,load-package</tt> command ensures that the specified structure&rsquo;s
+underlying package&rsquo;s program has been loaded.  This 
+consists of (1) recursively ensuring that the packages of any
+opened or accessed structures are loaded, followed by (2)
+executing the package&rsquo;s body as specified by its definition&rsquo;s <tt>begin</tt> and <tt>files</tt> forms.
+<p>
+</p>
+</dd><dt></dt><dd><tt>,reload-package <i>struct-name</i></tt> <br>
+This command re-executes the structure&rsquo;s package&rsquo;s program.  It
+is most useful if the program comes from a file or files, when
+it will update the package&rsquo;s bindings after mutations to its
+source file.<p>
+</p>
+</dd><dt></dt><dd><tt>,load <i>filespec</i> <tt>...</tt></tt> <br>
+The <tt>,load</tt> command executes forms from the specified file or
+files in the current package.  <tt>,load <i>filespec</i></tt> is similar
+to <tt>(load &quot;<i>filespec</i>&quot;)</tt>
+except that the name <tt>load</tt> needn&rsquo;t be bound in the current
+package to Scheme&rsquo;s <tt>load</tt> procedure.<p>
+</p>
+</dd><dt></dt><dd><tt>,for-syntax [<i>command</i>]</tt> <br>
+This is similar to the <tt>,config</tt> and <tt>,in</tt> commands.  It
+moves to or executes a command in the current package&rsquo;s &lsquo;&lsquo;package
+for syntax,&rsquo;&rsquo; which is the package in which the forms <em>f</em> in
+<tt>(define-syntax <i>name</i> <i>f</i>)</tt> are evaluated.<p>
+</p>
+</dd><dt></dt><dd><tt>,new-package [<i>struct-name</i> <tt>...</tt>]</tt> <br>
+The <tt>,new-package</tt> command creates a new package and moves the
+command processor to it.  With no arguments, only the standard
+Scheme bindings are visible in the new package.  Otherwise, the
+structures specified as command arguments (and not the
+<tt>scheme</tt> structure) are opened in the new package.<p>
+</p>
+</dd><dt></dt><dd><tt>,structure <i>name</i> <i>interface</i></tt> <br>
+The <tt>,structure</tt> command defines <i>name</i> in the
+configuration package to be a structure with interface
+<i>interface</i> based on the current package.<p>
+</p>
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_4.9"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.9">4.9&nbsp;&nbsp;Configuration packages</a></h2>
+<p></p>
+<p>
+It is possible to set up multiple configuration packages.  The default
+configuration package opens the following structures:
+</p>
+<ul>
+<li><p><tt>module-system</tt>, which exports <tt>define-structure</tt> and the
+other configuration language keywords, as well as standard types
+and type constructors (<tt>:syntax</tt>, <tt>:value</tt>, <tt>proc</tt>, etc.).
+</p>
+<li><p><tt>built-in-structures</tt>, which exports structures that are
+built into the initial Scheme&nbsp;48 image; these include
+<tt>scheme</tt>, <tt>threads</tt>, <tt>tables</tt>, and <tt>records</tt>.
+</p>
+<li><p><tt>more-structures</tt>, which exports additional structures that
+are available in the development environment. 
+A complete listing
+can be found in the definition of <tt>more-structures-interface</tt>
+at the end of the file <tt>scheme/packages.scm</tt>.
+</p>
+</ul><p>
+Note that it does not open <tt>scheme</tt>.</p>
+<p>
+You can define additional configuration packages by making a package
+that opens <tt>module-system</tt> and, optionally,
+<tt>built-in-structures</tt>,
+<tt>more-structures</tt>, or other structures that
+export structures and interfaces.</p>
+<p>
+For example:
+</p>
+<pre class=verbatim>&gt; ,config (define-structure foo (export)
+            (open module-system
+                  built-in-structures
+                  more-structures))
+&gt; ,in foo
+foo&gt; (define-structure x (export a b)
+       (open scheme)
+       (files x))
+foo&gt; 
+</pre><p></p>
+<p>
+Unfortunately, the above example does not work.
+The problem is that every environment in which
+<tt>define-structure</tt> is used must also have a way to
+create &lsquo;&lsquo;syntactic towers&rsquo;&rsquo;.
+A new syntactic tower is required whenever a new environment is created for
+compiling the source code in the package associated with a new structure.
+The environment&rsquo;s tower is used at compile time for
+evaluating the <i>macro-source</i> in
+</p>
+<pre class=verbatim>(define-syntax <i>name</i> <i>macro-source</i>)
+(let-syntax ((<i>name</i> <i>macro-source</i>) <tt>...</tt>) <i>body</i>)
+</pre><p>
+and so forth.
+It is a &lsquo;&lsquo;tower&rsquo;&rsquo; because that environment, in turn, has to say what environment
+to use if <tt>macro-source</tt> itself contains a use of <tt>let-syntax</tt>.</p>
+<p>
+The simplest way to provide a tower maker is to pass on the one used by
+an existing configuration package.
+The special form <tt>export-syntactic-tower-maker</tt> creates an interface
+that exports a configuration package&rsquo;s tower.
+The following example uses <tt>export-syntactic-tower-maker</tt> and
+the <tt>,structure</tt> command to obtain a tower maker and create a new
+configuration environment.</p>
+<p>
+</p>
+<pre class=verbatim>&gt; ,config ,structure t (export-syntactic-tower-maker)
+&gt; ,config (define-structure foo (export)
+            (open module-system
+                  t
+                  built-in-structures
+                  more-structures))
+</pre><p></p>
+<p>
+Before Scheme&nbsp;48&nbsp;1.9, <tt>export-syntactic-tower-maker</tt> was named
+<tt>export-reflective-tower-maker</tt>; this name is still supported for
+backwards compatibility.</p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_4.10"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_4.10">4.10&nbsp;&nbsp;Discussion</a></h2>
+<p>This module system was not designed as the be-all and end-all of
+Scheme module systems; it was only intended to help us
+organize the Scheme&nbsp;48 system.  Not only does the module system
+help avoid name clashes by keeping different subsystems in different
+namespaces, it has also helped us to tighten up and generalize
+Scheme&nbsp;48&rsquo;s internal interfaces.  Scheme&nbsp;48 is unusual among Lisp
+implementations in admitting many different possible modes of
+operation.  Examples of such multiple modes include the following:
+</p>
+<ul>
+<li><p>Linking can be either static or dynamic.</p>
+<p>
+</p>
+<li><p>The development environment (compiler, debugger, and command
+processor) can run either in the same address space as the program
+being developed or in a different address space.  The environment and
+user program may even run on different processors under different
+operating systems[<a href="manual-Z-H-11.html#node_bib_8">8</a>].</p>
+<p>
+</p>
+<li><p>The virtual machine can be supported by either
+of two implementations of its implementation language, Prescheme.
+</p>
+</ul><p>
+The module system has been helpful in organizing these multiple modes.
+By forcing us to write down interfaces and module dependencies, the
+module system helps us to keep the system clean, or at least to keep
+us honest about how clean or not it is.</p>
+<p>
+The need to make structures and interfaces second-class instead of
+first-class results from the requirements of static program analysis:
+it must be possible for the compiler and linker to expand macros and
+resolve variable bindings before the program is executed.  Structures
+could be made first-class (as in FX[<a href="manual-Z-H-11.html#node_bib_10">10</a>]) if a
+type system were added to Scheme and the definitions of exported
+macros were defined in interfaces instead of in module bodies, but
+even in that case types and interfaces would remain second-class.</p>
+<p>
+The prohibition on assignment to imported bindings makes substitution
+a valid optimization when a module is compiled as a block.  The block
+compiler first scans the entire module body, noting which variables
+are assigned.  Those that aren&rsquo;t assigned (only <tt>define</tt>d) may be
+assumed never assigned, even if they are exported.  The optimizer can
+then perform a very simple-minded analysis to determine automatically
+that some procedures can and should have their calls compiled in line.</p>
+<p>
+The programming style encouraged by the module system is consistent
+with the unextended Scheme language.  Because module system features
+do not generally show up within module bodies, an individual module
+may be understood by someone who is not familiar with the module
+system.  This is a great aid to code presentation and portability.  If
+a few simple conditions are met (no name conflicts between packages,
+and use of <tt>files</tt> in preference to
+<tt>begin</tt>), then a multi-module program can be loaded into a Scheme
+implementation that does not support the module system.  The Scheme&nbsp;48
+static linker satisfies these conditions, and can therefore run in
+other Scheme implementations.  Scheme&nbsp;48&rsquo;s bootstrap process, which is
+based on the static linker, is therefore nonincestuous.  This
+contrasts with most other integrated programming environments, such as
+Smalltalk-80, where the system can only be built using an existing
+version of the system itself.</p>
+<p>
+Like ML modules, but unlike Scheme Xerox modules, this module system
+is compositional.  That is, structures are constructed by single
+syntactic units that compose existing structures with a body of code.
+In Scheme Xerox, the set of modules that can contribute to an
+interface is open-ended --- any module can contribute bindings to any
+interface whose name is in scope.  The module system implementation is
+a cross-bar that channels definitions from modules to interfaces.  The
+module system described here has simpler semantics and makes
+dependencies easier to trace.  It also allows for higher-order
+modules, which Scheme Xerox considers unimportant.</p>
+<p>
+</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-4.html">previous</a></span><span>, <a href="manual-Z-H-6.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

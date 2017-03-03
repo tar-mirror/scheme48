@@ -1,0 +1,557 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-6.html">previous</a></span><span>, <a href="manual-Z-H-8.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_6"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_6">Chapter 6</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_6">Unicode</a></h1>
+<p>Scheme&nbsp;48 fully supports ISO 10646 (Unicode): Scheme characters
+represent Unicode scalar values, and Scheme strings are arrays of
+scalar values.  More information on Unicode can be found at
+<a href="http://www.unicode.org/">the Unicode web
+site</a>.</p>
+<p>
+</p>
+<a name="node_sec_6.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.1">6.1&nbsp;&nbsp;Characters and their codes</a></h2>
+<p>Scheme&nbsp;48 internally represents characters as Unicode scalar values.
+The <tt>unicode</tt> structure contains procedures for converting
+between characters and scalar values:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(char-&gt;scalar-value<i> char</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_500"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(scalar-value-&gt;char<i> integer</i>)&nbsp;--&gt;&nbsp;<i>char</i></tt><a name="node_idx_502"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(scalar-value?<i> integer</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_504"></a></p>
+</ul><p>
+<tt>Char-&gt;scalar-value</tt> returns the scalar value of a character, and
+<tt>scalar-value-&gt;char</tt> converts in the other direction.
+<tt>Scalar-value-&gt;char</tt> signals an error if passed an integer that is
+not a scalar value.</p>
+<p>
+Note that the Unicode scalar value range is
+</p>
+<div align=center><img src="unicode-Z-G-1.gif" border="0" alt="[unicode-Z-G-1.gif]"></div><p>
+In particular, this excludes the surrogates, which UTF-16 uses to
+encode scalar values with two 16-bit words.  Note that this
+representation differs from that of Java, which uses UTF-16 code units
+as the character representation---Scheme&nbsp;48 effectively uses UTF-32,
+and is thus in line with other Scheme implementations and the current
+Unicode proposal for R<sup>6</sup>RS, as set forth in SRFI&nbsp;75.</p>
+<p>
+The R<sup>5</sup>RS procedures <tt>char-&gt;integer</tt> and <tt>integer-&gt;char</tt>
+are synonyms for <tt>char-&gt;scalar-value</tt> and
+<tt>scalar-value-&gt;char</tt>, respectively.</p>
+<p>
+</p>
+<a name="node_sec_6.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.2">6.2&nbsp;&nbsp;Character and string literals</a></h2>
+<p>The syntax specified here is in line with the current Unicode proposal
+for R<sup>6</sup>RS, as set forth in SRFI&nbsp;75, except for case-sensitivity.
+(Scheme&nbsp;48 is case-insensitive.)</p>
+<p>
+</p>
+<a name="node_sec_6.2.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.2.1">6.2.1&nbsp;&nbsp;Character literals</a></h3>
+<p>The following character names are available in addition to what
+R<sup>5</sup>RS provides:
+</p>
+<ul>
+<li><p><code class=verbatim>#\nul</code> (ASCII 0) 
+</p>
+<li><p><code class=verbatim>#\alarm</code> (ASCII 7) 
+</p>
+<li><p><code class=verbatim>#\backspace</code> (ASCII 8) 
+</p>
+<li><p><code class=verbatim>#\tab</code> (ASCII 9) 
+</p>
+<li><p><code class=verbatim>#\vtab</code> (ASCII 11) 
+</p>
+<li><p><code class=verbatim>#\page</code> (ASCII 12) 
+</p>
+<li><p><code class=verbatim>#\return</code> (ASCII 13) 
+</p>
+<li><p><code class=verbatim>#\esc</code> (ASCII 27) 
+</p>
+<li><p><code class=verbatim>#\rubout</code> (ASCII 127) 
+</p>
+<li><p><code class=verbatim>#\x</code>&lt;x&gt;&lt;x&gt;<tt>...</tt> hex, explicitly or implicitly
+delimited, where &lt;x&gt;&lt;x&gt;<tt>...</tt> denotes the scalar value
+of the character
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_6.2.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.2.2">6.2.2&nbsp;&nbsp;String literals</a></h3>
+<p>The following escape characters in string literals are available in addition to what
+R<sup>5</sup>RS provides:</p>
+<p>
+</p>
+<ul>
+<li><p><code class=verbatim>\a</code>: alarm (ASCII 7) 
+</p>
+<li><p><code class=verbatim>\b</code>: backspace (ASCII 8) 
+</p>
+<li><p><code class=verbatim>\t</code>: tab (ASCII 9) 
+</p>
+<li><p><code class=verbatim>\n</code>: linefeed (ASCII 10) 
+</p>
+<li><p><code class=verbatim>\v</code>: vertical tab (ASCII 11) 
+</p>
+<li><p><code class=verbatim>\f</code>: formfeed (ASCII 12) 
+</p>
+<li><p><code class=verbatim>\r</code>: return (ASCII 13) 
+</p>
+<li><p><code class=verbatim>\e</code>: escape (ASCII 27) 
+</p>
+<li><p><code class=verbatim>\'</code>: quote (ASCII 39, same as unquoted) 
+</p>
+<li><p><code class=verbatim>\</code>&lt;newline&gt;&lt;intraline whitespace&gt;: elided (allows a single-line string to
+span source lines)
+</p>
+<li><p><code class=verbatim>\x</code>&lt;x&gt;&lt;x&gt;<tt>...</tt><code class=verbatim>;</code> hex, where &lt;x&gt;&lt;x&gt;<tt>...</tt>
+denotes the scalar value of the character
+</p>
+</ul><p></p>
+<p>
+</p>
+<a name="node_sec_6.2.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.2.3">6.2.3&nbsp;&nbsp;Identifiers and symbol literals</a></h3>
+<p>Where R<sup>5</sup>RS allows a &lt;letter&gt;, Scheme&nbsp;48 allows in addition any
+character whose scalar value is greater than 127 and whose Unicode
+general category is Lu, Ll, Lt, Lm, Lo, Mn, Mc, Me, Nd, Nl, No, Pd, Pc,
+Po, Sc, Sm, Sk, So, or Co.</p>
+<p>
+Moreover, when a backslash appears in a symbol, it must start a
+<code class=verbatim>\x</code>&lt;x&gt;&lt;x&gt;<tt>...</tt><code class=verbatim>;</code> escape, which identifies an
+arbitrary character to include in the symbol. Note that a backslash
+itself can be specified as <code class=verbatim>\x5C;</code>.</p>
+<p>
+</p>
+<a name="node_sec_6.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.3">6.3&nbsp;&nbsp;Character classification and case mappings</a></h2>
+<p>The R<sup>5</sup>RS character predicates---<tt>char-whitespace?</tt>,
+<tt>char-lower-case?</tt>, <tt>char-upper-case?</tt>,
+<tt>char-numeric?</tt>, and <tt>char-alphabetic?</tt>---all treat the full
+Unicode range.</p>
+<p>
+<tt>Char-upcase</tt> and <tt>char-downcase</tt> as well as
+<tt>char-ci=?</tt>, <tt>char-ci&lt;?</tt>, <tt>char-ci&lt;=?</tt>,
+<tt>char-ci&gt;?</tt>, <tt>char-ci&gt;=?</tt>, <tt>string-ci=?</tt>,
+<tt>string-ci&lt;?</tt>, <tt>string-ci&gt;?</tt>, <tt>string-ci&lt;=?</tt>,
+<tt>string-ci&gt;=?</tt> all use the standard simple locale-insensitive
+Unicode case folding.</p>
+<p>
+In addition, Scheme&nbsp;48 provides the <tt>unicode-char-maps</tt> structure
+for more complete access to the Unicode character classification with
+the following procedures and macros:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(general-category <i>general-category-name</i>)&nbsp;--&gt;&nbsp;<i>general-category</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(general-category?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_506"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(general-category-id<i> general-category</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_508"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(char-general-category<i> char</i>)&nbsp;--&gt;&nbsp;<i>general-category</i></tt><a name="node_idx_510"></a></p>
+</ul><p>
+The syntax <tt>general-category</tt> returns a Unicode general category
+object associated with <i>general-category-name</i>.  (See
+Figure&nbsp;<a href="#node_fig_Temp_23">2</a> below.)  <tt>General-category?</tt>
+is the predicate for general-category objects.
+<tt>General-category-id</tt> returns the Unicode category id as a string
+(also listed in Figure&nbsp;<a href="#node_fig_Temp_23">2</a>).
+<tt>Char-general-category</tt> returns the general category of a character.</p>
+<p>
+</p>
+<p></p>
+<hr>
+<p></p>
+<a name="node_fig_Temp_23"></a>
+<div class=:figure align=center><table width=100%><tr><td align=center>
+<table border=1><tr><td valign=top ><i>general-category-name</i> </td><td valign=top ><i>primary-category-name</i> </td><td valign=top >Unicode category id
+</td></tr>
+<tr><td valign=top ><tt>uppercase-letter</tt> </td><td valign=top ><tt>letter</tt> </td><td valign=top ><code class=verbatim>&quot;Lu&quot;</code> </td></tr>
+<tr><td valign=top ><tt>lowercase-letter</tt> </td><td valign=top ><tt>letter</tt> </td><td valign=top ><code class=verbatim>&quot;Ll&quot;</code> </td></tr>
+<tr><td valign=top ><tt>titlecase-letter</tt> </td><td valign=top ><tt>letter</tt> </td><td valign=top ><code class=verbatim>&quot;Lt&quot;</code> </td></tr>
+<tr><td valign=top ><tt>modified-letter</tt> </td><td valign=top ><tt>letter</tt> </td><td valign=top ><code class=verbatim>&quot;Lm&quot;</code> </td></tr>
+<tr><td valign=top ><tt>other-letter</tt> </td><td valign=top ><tt>letter</tt> </td><td valign=top ><code class=verbatim>&quot;Lo&quot;</code> </td></tr>
+<tr><td valign=top ><p>
+<tt>non-spacing-mark</tt> </p>
+</td><td valign=top ><tt>mark</tt> </td><td valign=top ><code class=verbatim>&quot;Mn&quot;</code> </td></tr>
+<tr><td valign=top ><tt>combining-spacing-mark</tt> </td><td valign=top ><tt>mark</tt> </td><td valign=top ><code class=verbatim>&quot;Mc&quot;</code> </td></tr>
+<tr><td valign=top ><tt>enclosing-mark</tt> </td><td valign=top ><tt>mark</tt> </td><td valign=top ><code class=verbatim>&quot;Me&quot;</code> </td></tr>
+<tr><td valign=top ><p>
+<tt>decimal-digit-number</tt> </p>
+</td><td valign=top ><tt>number</tt> </td><td valign=top ><code class=verbatim>&quot;Nd&quot;</code> </td></tr>
+<tr><td valign=top ><tt>letter-number</tt> </td><td valign=top ><tt>number</tt> </td><td valign=top ><code class=verbatim>&quot;Nl&quot;</code> </td></tr>
+<tr><td valign=top ><tt>other-number</tt> </td><td valign=top ><tt>number</tt> </td><td valign=top ><code class=verbatim>&quot;No&quot;</code> </td></tr>
+<tr><td valign=top ><p>
+<tt>opening-punctuation</tt> </p>
+</td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Ps&quot;</code> </td></tr>
+<tr><td valign=top ><tt>closing-punctuation</tt> </td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Pe&quot;</code> </td></tr>
+<tr><td valign=top ><tt>initial-quote-punctuation</tt> </td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Pi&quot;</code> </td></tr>
+<tr><td valign=top ><tt>final-quote-punctuation</tt> </td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Pf&quot;</code> </td></tr>
+<tr><td valign=top ><tt>dash-punctuation</tt> </td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Pd&quot;</code> </td></tr>
+<tr><td valign=top ><tt>connector-punctuation</tt> </td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Pc&quot;</code> </td></tr>
+<tr><td valign=top ><tt>other-punctuation</tt> </td><td valign=top ><tt>punctuation</tt> </td><td valign=top ><code class=verbatim>&quot;Po&quot;</code> </td></tr>
+<tr><td valign=top ><p>
+<tt>currency-symbol</tt> </p>
+</td><td valign=top ><tt>symbol</tt> </td><td valign=top ><code class=verbatim>&quot;Sc&quot;</code> </td></tr>
+<tr><td valign=top ><tt>mathematical-symbol</tt> </td><td valign=top ><tt>symbol</tt> </td><td valign=top ><code class=verbatim>&quot;Sm&quot;</code> </td></tr>
+<tr><td valign=top ><tt>modifier-symbol</tt> </td><td valign=top ><tt>symbol</tt> </td><td valign=top ><code class=verbatim>&quot;Sk&quot;</code> </td></tr>
+<tr><td valign=top ><tt>other-symbol</tt> </td><td valign=top ><tt>symbol</tt> </td><td valign=top ><code class=verbatim>&quot;So&quot;</code> </td></tr>
+<tr><td valign=top ><p>
+<tt>space-separator</tt> </p>
+</td><td valign=top ><tt>separator</tt> </td><td valign=top ><code class=verbatim>&quot;Zs&quot;</code> </td></tr>
+<tr><td valign=top ><tt>paragraph-separator</tt> </td><td valign=top ><tt>separator</tt> </td><td valign=top ><code class=verbatim>&quot;Zp&quot;</code> </td></tr>
+<tr><td valign=top ><tt>line-separator</tt> </td><td valign=top ><tt>separator</tt> </td><td valign=top ><code class=verbatim>&quot;Zl&quot;</code> </td></tr>
+<tr><td valign=top ><p>
+<tt>control-character</tt> </p>
+</td><td valign=top ><tt>miscellaneous</tt> </td><td valign=top ><code class=verbatim>&quot;Cc&quot;</code> </td></tr>
+<tr><td valign=top ><tt>formatting-character</tt> </td><td valign=top ><tt>miscellaneous</tt> </td><td valign=top ><code class=verbatim>&quot;Cf&quot;</code> </td></tr>
+<tr><td valign=top ><tt>surrogate</tt> </td><td valign=top ><tt>miscellaneous</tt> </td><td valign=top ><code class=verbatim>&quot;Cs&quot;</code> </td></tr>
+<tr><td valign=top ><tt>private-use-character</tt> </td><td valign=top ><tt>miscellaneous</tt> </td><td valign=top ><code class=verbatim>&quot;Co&quot;</code> </td></tr>
+<tr><td valign=top ><tt>unassigned</tt> </td><td valign=top ><tt>miscellaneous</tt> </td><td valign=top ><code class=verbatim>&quot;Cn&quot;</code>
+</td></tr></table><p>
+</p>
+</td></tr>
+<tr><td align=center><b>Figure 2:</b>&nbsp;&nbsp;Unicode general categories and primary categories</td></tr>
+<tr><td>
+
+</td></tr></table></div><p></p>
+<hr>
+<p></p>
+<p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(general-category-primary-category<i> general-category</i>)&nbsp;--&gt;&nbsp;<i>primary-category</i></tt><a name="node_idx_512"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(primary-category <i>primary-category-name</i>)&nbsp;--&gt;&nbsp;<i>primary-category</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(primary-category?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_514"></a></p>
+</ul><p>
+<tt>General-category-primary-category</tt> maps the general category to
+its associated primary category---also listed in
+Figure&nbsp;<a href="#node_fig_Temp_23">2</a>.  The <tt>primary-category</tt>
+syntax returns the primary-category object associated with
+<i>primary-category-name</i>.  <tt>Primary-category?</tt> is the
+predicate for primary-category objects.</p>
+<p>
+The <tt>unicode-char-maps</tt> procedure also provides the following
+additional case-mapping procedures for characters:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(char-titlecase?<i> char</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_516"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(char-titlecase<i> char</i>)&nbsp;--&gt;&nbsp;<i>char</i></tt><a name="node_idx_518"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(char-foldcase<i> char</i>)&nbsp;--&gt;&nbsp;<i>char</i></tt><a name="node_idx_520"></a></p>
+</ul><p>
+<tt>Char-titlecase?</tt> tests if a character is in titlecase.
+<tt>Char-titlecase</tt> returns the titlecase counterpart of a
+character.  <tt>Char-foldcase</tt> folds the case of a character, i.e.
+maps it to uppercase first, then to lowercase.
+The following case-mapping procedures on strings are available:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(string-upcase<i> string</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_522"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-downcase<i> string</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_524"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-titlecase<i> string</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_526"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(string-foldcase<i> string</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_528"></a></p>
+</ul><p>
+These implement the simple case mappings defined by the Unicode
+standard---note that the length of the output string may be different
+from that of the input string.</p>
+<p>
+</p>
+<a name="node_sec_6.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.4">6.4&nbsp;&nbsp;SRFI 14</a></h2>
+<p>The SRFI&nbsp;14 (&lsquo;&lsquo;Character Sets&rsquo;&rsquo;) implementation in the <tt>srfi-14</tt>
+structure is fully Unicode-compliant.</p>
+<p>
+</p>
+<a name="node_sec_6.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.5">6.5&nbsp;&nbsp;R6RS</a></h2>
+<p>The <tt>r6rs-unicode</tt> structure exports the procedures from the
+<tt>(r6rs unicode)</tt> library of 5.91 draft of R<sup>6</sup>RS that are not
+already in the <tt>scheme</tt> structure:</p>
+<p>
+</p>
+<div align=left><table><tr><td>
+
+<tt>string-normalize-nfd</tt><br>
+<tt>string-normalize-nfkd</tt><br>
+<tt>string-normalize-nfc</tt><br>
+<tt>string-normalize-nfkc</tt><br>
+<tt>char-titlecase</tt><br>
+<tt>char-title-case?</tt><br>
+<tt>char-foldcase</tt><br>
+<tt>string-upcase</tt><br>
+<tt>string-downcase</tt><br>
+<tt>string-foldcase</tt><br>
+<tt>string-titlecase</tt>
+</td></tr></table></div>
+
+The <tt>r6rs-unicode</tt> structure also exports a
+<tt>char-general-category</tt> procedure compatible with the
+<tt>(r6rs unicode)</tt> library.  Note that, as Scheme&nbsp;48 treats
+source code case-insensitively, the symbols it returns are
+all-lowercase.<p>
+</p>
+<a name="node_sec_6.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.6">6.6&nbsp;&nbsp;I/O</a></h2>
+<p>Ports must encode any text a program writes to an output port to a
+byte sequence, and conversely decode byte sequences when a program
+reads text from an input port.  Therefore, each port has an associated
+<i>text codec</i><a name="node_idx_530"></a>that describes how encode and decode text.</p>
+<p>
+Note that the interface to the text codec functionality is
+experimental and very likely to change in the future.</p>
+<p>
+</p>
+<a name="node_sec_6.6.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.6.1">6.6.1&nbsp;&nbsp;Text codecs</a></h3>
+<p></p>
+<p>
+The <tt>i/o</tt> structure defines the following procedures:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(port-text-codec<i> port</i>)&nbsp;--&gt;&nbsp;<i>text-codec</i></tt><a name="node_idx_532"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-port-text-codec!<i> port text-codec</i>)</tt><a name="node_idx_534"></a></p>
+</ul><p>
+These two procedures retrieve and set the text codec associated with a
+port, respectively.  A program can set text codec of a port at any
+time, even if it has already performed I/O on the port.</p>
+<p>
+The <tt>text-codecs</tt> structure defines the following procedures and macros:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(text-codec?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_536"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>null-text-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_538"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>us-ascii-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_540"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>latin-1-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_542"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>utf-8-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_544"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>utf-16le-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_546"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>utf-16be-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_548"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>utf-32le-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_550"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>utf-32be-codec</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( text-codec)<a name="node_idx_552"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(find-text-codec<i> string</i>)&nbsp;--&gt;&nbsp;<i>text-codec or <tt>#f</tt></i></tt><a name="node_idx_554"></a></p>
+</ul><p>
+<tt>Text-codec?</tt> is the predicate for text codecs.
+<tt>Null-text-codec</tt> is primarily meant for null ports that never
+yield input and swallow all output.  The following text codecs
+implement the US-ASCII, Latin-1, Unicode UTF-8, Unicode UTF-16
+(little-endian), Unicode UTF-16 (big-endian), Unicode UTF-32
+(little-endian), Unicode UTF-32 (big-endian) encodings, respectively.</p>
+<p>
+<tt>Find-text-codec</tt> finds the codec associated with an encoding
+name.  The names of the above encodings are <code class=verbatim>&quot;null&quot;</code>,
+<code class=verbatim>&quot;US&#x2011;ASCII&quot;</code>, <code class=verbatim>&quot;ISO8859&#x2011;1&quot;</code>, <code class=verbatim>&quot;UTF&#x2011;8&quot;</code>,
+<code class=verbatim>&quot;UTF&#x2011;16LE&quot;</code>, <code class=verbatim>&quot;UTF&#x2011;16BE&quot;</code>, <code class=verbatim>&quot;UTF&#x2011;32LE&quot;</code>, and
+<code class=verbatim>&quot;UTF&#x2011;32BE&quot;</code>, respectively.</p>
+<p>
+</p>
+<a name="node_sec_6.6.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.6.2">6.6.2&nbsp;&nbsp;Text-codec utilities</a></h3>
+<p>The <tt>text-codec-utils</tt> structure exports a few utilities for
+dealing with text codecs:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(guess-port-text-codec-according-to-bom<i> port</i>)&nbsp;--&gt;&nbsp;<i>text-codec or <tt>#f</tt></i></tt><a name="node_idx_556"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-port-text-codec-according-to-bom!<i> port</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_558"></a></p>
+</ul><p>
+These procedures look at the byte-order-mark (also called the
+&lsquo;&lsquo;BOM&rsquo;&rsquo;, <tt>U+FEFF</tt>) at the
+beginning of a port and guess the appropriate text codec.  This works
+only for UTF-16 (little-endian and big-endian) and UTF-8.
+<tt>Guess-port-text-codec-according-to-bom</tt> returns the text codec,
+or <tt>#f</tt> if it found no UTF-16 or UTF-8 BOM.  Note that this
+actually reads from the port.  If the guess does not succeed, it is
+probably a good idea to re-open the port.
+<tt>Set-port-text-codec-according-to-bom!</tt> calls
+<tt>guess-port-text-codec-according-to-bom</tt>, sets the port text
+codec to the result if successful and returns <tt>#t</tt>.  If it is
+not successful, it returns <tt>#f</tt>.  As with
+<tt>guess-port-text-codec-according-to-bom</tt>, this reads from the
+port, whether successful or not.</p>
+<p>
+</p>
+<a name="node_sec_6.6.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.6.3">6.6.3&nbsp;&nbsp;Creating text codecs</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-text-codec<i> strings encode-proc decode-proc</i>)&nbsp;--&gt;&nbsp;<i>text-codec</i></tt><a name="node_idx_560"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(text-codec-names<i> text-codec</i>)&nbsp;--&gt;&nbsp;<i>list of strings</i></tt><a name="node_idx_562"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(text-codec-encode-char-proc<i> text-codec</i>)&nbsp;--&gt;&nbsp;<i> encode-proc</i></tt><a name="node_idx_564"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(text-codec-decode-char-proc<i> text-codec</i>)&nbsp;--&gt;&nbsp;<i> decode-proc</i></tt><a name="node_idx_566"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(define-text-codec <i>id</i> <i>name</i> <i>encode-proc</i> <i>decode-proc</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)<a name="node_idx_568"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(define-text-codec <i>id</i> (<i>name</i> <tt>...</tt>) <i>encode-proc</i> <i>decode-proc</i>)</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)<a name="node_idx_570"></a></p>
+</ul><p>
+<tt>Make-text-codec</tt> constructs a text codec from a list of names,
+and an encode and a decode procedure.  (See below on how to construct
+encode and decode procedures.)  <tt>Text-codec-names</tt>,
+<tt>text-codec-encode-char-proc</tt>, and
+<tt>text-codec-decode-char-proc</tt> are the accessors for text codec.
+The <tt>define-text-codec</tt> is a shorthand for binding a global
+identifier to a text codec.  Its first form is for codecs with only
+one name, the second for codecs with several names.</p>
+<p>
+Encoding and decoding procedures work as follows:
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(<i>encode-proc</i><i> char buffer start count</i>)&nbsp;--&gt;&nbsp;<i>boolean maybe-count</i></tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(<i>decode-proc</i><i> buffer start count</i>)&nbsp;--&gt;&nbsp;<i>maybe-char count</i></tt>
+</p>
+</ul><p>
+An <i>encode-proc</i> consumes a character <i>char</i> to encode, a
+byte vector <i>buffer</i> to receive the encoding, an index <i>start</i>
+into the buffer, and a block size <i>count</i>.  It is supposed to
+encode the bytes into the block at [<i>start</i>, <i>start +
+count</i>).  If the encoding is successful, the procedure must
+return <tt>#t</tt> and the number of bytes needed by the encoding.
+If the character cannot be encoded at all, the procedure must return
+<tt>#f</tt> and <tt>#f</tt>.  If the encoding is possible but the
+space is not sufficient, the procedure must return <tt>#f</tt> and a
+total number of bytes needed for the encoding.</p>
+<p>
+A <i>decode-proc</i> consumes a byte vector <i>buffer</i>, an index
+<i>start</i> into the buffer, and a block size <i>count</i>.  It is
+supposed to decode the bytes at indices [<i>start</i>, <i>start
++ count</i>).  If the decoding is successful, it must return
+the decoded character at the beginning of the block, and the number of
+bytes consumed.  If the block cannot begin with or be a prefix of a
+valid encoding, the procedure must return <tt>#f</tt> and
+<tt>#f</tt>.  If the block contains a true prefix of a valid
+encoding, the procedure must return <tt>#f</tt> and a total count of
+bytes (including the buffer) needed to complete the encoding.  Note
+that this byte count is only a guess: the system will provide that
+many bytes, but the decoding procedures might still signal an
+incomplete encoding, causing the system to try to obtain more. </p>
+<p>
+</p>
+<a name="node_sec_6.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_6.7">6.7&nbsp;&nbsp;Default encodings</a></h2>
+<p>The default encoding for new ports is UTF-8.  For the default
+<tt>current-input-port</tt>, <tt>current-output-port</tt>, and
+<tt>current-error-port</tt>, Scheme&nbsp;48 consults the OS for encoding
+information.</p>
+<p>
+For Unix, it consults <tt>nl_langinfo(3)</tt>, which in turn consults
+the <tt>LC_</tt> environment variables.  If the encoding is not defined
+that way, Scheme&nbsp;48 reverts to US-ASCII.</p>
+<p>
+Under Windows, Scheme&nbsp;48 uses Unicode I/O (using UTF-16) for the
+default ports connected to the console, and Latin-1 for default ports
+that are not.</p>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-6.html">previous</a></span><span>, <a href="manual-Z-H-8.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>

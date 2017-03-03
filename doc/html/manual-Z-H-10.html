@@ -1,0 +1,2233 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!--
+
+Generated from manual.tex by tex2page, v 20130325
+(running on Racket 6.0, :unix), 
+(c) Dorai Sitaram, 
+http://www.ccs.neu.edu/~dorai/tex2page/index.html
+
+-->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+The Incomplete Scheme 48 Reference Manual for release 1.9.2
+</title>
+<link rel="stylesheet" type="text/css" href="manual-Z-S.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<div id=slidecontent>
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-9.html">previous</a></span><span>, <a href="manual-Z-H-11.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+<p></p>
+<a name="node_chap_9"></a>
+<h1 class=chapter>
+<div class=chapterheading><a href="manual-Z-H-1.html#node_toc_node_chap_9">Chapter 9</a></div><br>
+<a href="manual-Z-H-1.html#node_toc_node_chap_9">Access to POSIX</a></h1>
+<p>This chapter describes Scheme&nbsp;48&rsquo;s interface to the POSIX C calls
+[<a href="manual-Z-H-11.html#node_bib_1">1</a>].
+Scheme versions of most of the functions in POSIX are provided.
+Both the interface and implementation are new and are likely to
+change in future releases.
+Section&nbsp;<a href="#node_sec_9.12">9.12</a> lists which Scheme functions
+call which C functions.</p>
+<p>
+Scheme&nbsp;48&rsquo;s POSIX interface will likely change significantly in the
+future.
+The implementation is new and may have significant bugs.</p>
+<p>
+The POSIX bindings are available in several structures:</p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><tt>posix-processes</tt> </td><td valign=top >fork, exec, and friends </td></tr>
+<tr><td valign=top ><tt>posix-process-data</tt> </td><td valign=top >information about processes </td></tr>
+<tr><td valign=top ><tt>posix-files</tt> </td><td valign=top >files and directories </td></tr>
+<tr><td valign=top ><tt>posix-i/o</tt> </td><td valign=top >operations on ports </td></tr>
+<tr><td valign=top ><tt>posix-time</tt> </td><td valign=top >time functions </td></tr>
+<tr><td valign=top ><tt>posix-users</tt> </td><td valign=top >users and groups </td></tr>
+<tr><td valign=top ><tt>posix-regexps</tt> </td><td valign=top >regular expression matching </td></tr>
+<tr><td valign=top ><tt>posix-syslog</tt> </td><td valign=top >POSIX logging facility </td></tr>
+<tr><td valign=top ><tt>posix-errnos</tt> </td><td valign=top >POSIX error codes</td></tr>
+<tr><td valign=top ><tt>posix</tt> </td><td valign=top >all of the above
+</td></tr></table>
+</td></tr></table></div>
+<p>
+Scheme&nbsp;48&rsquo;s POSIX interface differs from
+Scsh&rsquo;s [<a href="manual-Z-H-11.html#node_bib_11">11</a>,&nbsp;<a href="manual-Z-H-11.html#node_bib_12">12</a>] in several ways.
+The interface here lacks Scsh&rsquo;s high-level constructs and utilities,
+such as the process notation, <tt>awk</tt> procedure, and parsing
+utilities.
+Scheme&nbsp;48 uses distinct types for some values that Scsh leaves
+as symbols or unboxed integers; these include file types, file modes,
+and user and group ids.
+Many of the names and other interface details are different, as well.</p>
+<p>
+</p>
+<a name="node_sec_9.1"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.1">9.1&nbsp;&nbsp;Process primitives</a></h2>
+<p>The procedures described in this section control the creation of processes
+and the execution of programs.
+They are in the structures <tt>posix-process</tt> and <tt>posix</tt>.</p>
+<p>
+</p>
+<a name="node_sec_9.1.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.1.1">9.1.1&nbsp;&nbsp;Process creation and termination</a></h3>
+<p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(fork<i></i>)&nbsp;--&gt;&nbsp;<i>process-id or <tt>#f</tt></i></tt><a name="node_idx_798"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(fork-and-forget<i> thunk</i>)</tt><a name="node_idx_800"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Fork</tt> creates a new child process and returns the child&rsquo;s process-id in
+the parent and <tt>#f</tt> in the child.
+<tt>Fork-and-forget</tt> calls <i>thunk</i> in a new process; no process-id
+is returned.
+<tt>Fork-and-forget</tt> uses an intermediate process to avoid creating
+a zombie process.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(process-id?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_802"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(process-id=?<i> process-id0 process-id1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_804"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(process-id-&gt;integer<i> process-id</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_806"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(integer-&gt;process-id<i> integer</i>)&nbsp;--&gt;&nbsp;<i>process-id</i></tt><a name="node_idx_808"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Process-id?</tt> is a predicate for process-ids,
+<tt>process-id=?</tt> compares two to see if they are the same,
+and <tt>process-id-uid</tt> returns the actual Unix id.
+<tt>Process-id-&gt;integer</tt> and <tt>integer-&gt;process-id</tt>
+convert process ids to and from integers.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(process-id-exit-status<i> process-id</i>)&nbsp;--&gt;&nbsp;<i>integer or <tt>#f</tt></i></tt><a name="node_idx_810"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(process-id-terminating-signal<i> process-id</i>)&nbsp;--&gt;&nbsp;<i>signal or <tt>#f</tt></i></tt><a name="node_idx_812"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(wait-for-child-process<i> process-id</i>)</tt><a name="node_idx_814"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>If a process terminates normally
+<tt>process-id-exit-status</tt> will return its exit status.
+If the process is still running or was terminated by a signal then
+<tt>process-id-exit-status</tt> will return <tt>#f</tt>.
+Similarly, if a child process was terminated by a signal
+<tt>process-id-terminating-signal</tt> will return that signal and
+will return <tt>#f</tt> if the process is still running or terminated
+normally.
+<tt>Wait-for-child-process</tt> blocks until the child process terminates.
+Scheme&nbsp;48 may reap child processes before the user requests their
+exit status, but it does not always do so.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(exit<i> status</i>)</tt><a name="node_idx_816"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Terminates the current process with the integer <i>status</i>
+as its exit status.</p>
+<p>
+</p>
+<a name="node_sec_9.1.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.1.2">9.1.2&nbsp;&nbsp;<tt>Exec</tt></a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(exec<i> program-name arg0 <tt>...</tt></i>)</tt><a name="node_idx_818"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(exec-with-environment<i> program-name env arg0 <tt>...</tt></i>)</tt><a name="node_idx_820"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(exec-file<i> filename arg0 <tt>...</tt></i>)</tt><a name="node_idx_822"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(exec-file-with-environment<i> filename env arg0 <tt>...</tt></i>)</tt><a name="node_idx_824"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(exec-with-alias<i> name lookup? maybe-env arguments</i>)</tt><a name="node_idx_826"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>All of these replace the current program with a new one.
+They differ in how the new program is found, what its environment is,
+and what arguments it is passed.
+<tt>Exec</tt> and <tt>exec-with-environment</tt>
+look up the new program in the search path,
+while <tt>exec-file</tt> and <tt>exec-file-with-environment</tt>
+execute a particular file.
+The environment is either inherited from the current process
+(<tt>exec</tt> and <tt>exec-file</tt>) or given as an argument
+(<tt><tt>...</tt>-with-environment</tt>).
+<i>Program-name</i> and <i>filename</i> and any <i>arg<sub><em>i</em></sub></i> should
+be <i>os-string-thing</i> arguments (see section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.15">5.15</a>.
+<i>Env</i> should be a list of <i>os-string-thing</i> arguments of the form
+<tt>&quot;<i>name</i>=<i>value</i>&quot;</tt>.
+The first four procedures add their first argument, <i>program-name</i> or
+<i>filename</i>, before the <i>arg0 <tt>...</tt></i> arguments.</p>
+<p>
+<tt>Exec-with-alias</tt> is an omnibus procedure that subsumes the other
+four.
+<i>Name</i> is looked up in the search path if <i>lookup?</i> is true
+and is used as a filename otherwise.
+<i>Maybe-env</i> is either a list of <i>os-string-thing</i>s for the environment of the
+new program or <tt>#f</tt> in which case the new program inherits its
+environment from the current one.
+<i>Arguments</i> should be a list of <i>os-string-thing</i>s; unlike with the other four
+procedures, <i>name</i> is not added to this list (hence <tt>-with-alias</tt>).</p>
+<p>
+</p>
+<a name="node_sec_9.2"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.2">9.2&nbsp;&nbsp;Signals</a></h2>
+<p>There are two varieties of signals available, <em>named</em> and <em>anonymous</em>.
+A named signal is one for which we have a symbolic name, such as <tt>kill</tt>
+or <tt>pipe</tt>.
+Anonymous signals, for which we only have the current operating system&rsquo;s
+signal number, have no meaning in other operating systems.
+Named signals preserve their meaning in image files.
+Not all named signals are available from all OS&rsquo;s and
+there may be multiple names for a single OS signal number.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(signal <i>signal-name</i>)&nbsp;--&gt;&nbsp;<i>signal</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(name-&gt;signal<i> symbol</i>)&nbsp;--&gt;&nbsp;<i>signal or <tt>#f</tt></i></tt><a name="node_idx_828"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(integer-&gt;signal<i> integer</i>)&nbsp;--&gt;&nbsp;<i>signal</i></tt><a name="node_idx_830"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(signal?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_832"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(signal-name<i> signal</i>)&nbsp;--&gt;&nbsp;<i>symbol or <tt>#f</tt></i></tt><a name="node_idx_834"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(signal-os-number<i> signal</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_836"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(signal=?<i> signal0 signal1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_838"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The syntax <tt>signal</tt> returns a (named) signal associated with
+<i>signal-name</i>.
+<tt>Name-&gt;signal</tt> returns a (named) signal or <tt>#f</tt> if the
+the signal <i>name</i> is not supported by the operating system.
+The signal returned by <tt>integer-&gt;signal</tt> is a named signal if
+<i>integer</i> corresponds to a named signal in the current operating
+system; otherwise it returns an anonymous signal.
+<tt>Signal-name</tt> returns a symbol if <i>signal</i> is named and
+<tt>#f</tt> if it is anonymous.
+<tt>Signal=?</tt> returns <tt>#t</tt> if <i>signal0</i> and <i>signal1</i>
+have the same operating system number and <tt>#f</tt> if they do not.</p>
+<p>
+</p>
+<a name="node_sec_9.2.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.2.1">9.2.1&nbsp;&nbsp;POSIX signals</a></h3>
+<p>The following lists the names of the POSIX signals.
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><tt>abrt</tt> </td><td valign=top >abort - abnormal termination (as by abort()) </td></tr>
+<tr><td valign=top ><tt>alrm</tt> </td><td valign=top >alarm - timeout signal (as by alarm()) </td></tr>
+<tr><td valign=top ><tt>fpe </tt> </td><td valign=top >floating point exception </td></tr>
+<tr><td valign=top ><tt>hup </tt> </td><td valign=top >hangup - hangup on controlling terminal or death of
+controlling process </td></tr>
+<tr><td valign=top ><tt>ill </tt> </td><td valign=top >illegal instruction </td></tr>
+<tr><td valign=top ><tt>int </tt> </td><td valign=top >interrupt - interaction attention </td></tr>
+<tr><td valign=top ><tt>kill</tt> </td><td valign=top >kill - termination signal, cannot be caught or ignored </td></tr>
+<tr><td valign=top ><tt>pipe</tt> </td><td valign=top >pipe - write on a pipe with no readers </td></tr>
+<tr><td valign=top ><tt>quit</tt> </td><td valign=top >quit - interaction termination </td></tr>
+<tr><td valign=top ><tt>segv</tt> </td><td valign=top >segmentation violation - invalid memory reference </td></tr>
+<tr><td valign=top ><tt>term</tt> </td><td valign=top >termination - termination signal </td></tr>
+<tr><td valign=top ><tt>usr1</tt> </td><td valign=top >user1 - for use by applications </td></tr>
+<tr><td valign=top ><tt>usr2</tt> </td><td valign=top >user2 - for use by applications </td></tr>
+<tr><td valign=top ><tt>chld</tt> </td><td valign=top >child - child process stopped or terminated </td></tr>
+<tr><td valign=top ><tt>cont</tt> </td><td valign=top >continue - continue if stopped </td></tr>
+<tr><td valign=top ><tt>stop</tt> </td><td valign=top >stop - cannot be caught or ignored </td></tr>
+<tr><td valign=top ><tt>tstp</tt> </td><td valign=top >interactive stop </td></tr>
+<tr><td valign=top ><tt>ttin</tt> </td><td valign=top >read from control terminal attempted by background process </td></tr>
+<tr><td valign=top ><tt>ttou</tt> </td><td valign=top >write to control terminal attempted by background process </td></tr>
+<tr><td valign=top ><tt>bus </tt> </td><td valign=top >bus error - access to undefined portion of memory </td></tr>
+<tr><td valign=top ></td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+<a name="node_sec_9.2.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.2.2">9.2.2&nbsp;&nbsp;Other signals</a></h3>
+<p>The following lists the names of the non-POSIX signals that the system is
+currently aware of.
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><tt>trap  </tt> </td><td valign=top >trace or breakpoint trap </td></tr>
+<tr><td valign=top ><tt>iot   </tt> </td><td valign=top >IOT trap - a synonym for ABRT </td></tr>
+<tr><td valign=top ><tt>emt   </tt> </td><td valign=top ></td></tr>
+<tr><td valign=top ><tt>sys   </tt> </td><td valign=top >bad argument to routine (SVID) </td></tr>
+<tr><td valign=top ><tt>stkflt</tt> </td><td valign=top >stack fault on coprocessor </td></tr>
+<tr><td valign=top ><tt>urg   </tt> </td><td valign=top >urgent condition on socket      (4.2 BSD) </td></tr>
+<tr><td valign=top ><tt>io    </tt> </td><td valign=top >I/O now possible                (4.2 BSD) </td></tr>
+<tr><td valign=top ><tt>poll  </tt> </td><td valign=top >A synonym for SIGIO             (System V) </td></tr>
+<tr><td valign=top ><tt>cld   </tt> </td><td valign=top >A synonym for SIGCHLD </td></tr>
+<tr><td valign=top ><tt>xcpu  </tt> </td><td valign=top >CPU time limit exceeded (4.2 BSD) </td></tr>
+<tr><td valign=top ><tt>xfsz  </tt> </td><td valign=top >File size limit exceeded        (4.2 BSD) </td></tr>
+<tr><td valign=top ><tt>vtalrm</tt> </td><td valign=top >Virtual alarm clock             (4.2 BSD) </td></tr>
+<tr><td valign=top ><tt>prof  </tt> </td><td valign=top >Profile alarm clock </td></tr>
+<tr><td valign=top ><tt>pwr   </tt> </td><td valign=top >Power failure                   (System V) </td></tr>
+<tr><td valign=top ><tt>info  </tt> </td><td valign=top >A synonym for SIGPWR </td></tr>
+<tr><td valign=top ><tt>lost  </tt> </td><td valign=top >File lock lost </td></tr>
+<tr><td valign=top ><tt>winch </tt> </td><td valign=top >Window resize signal            (4.3 BSD, Sun) </td></tr>
+<tr><td valign=top ><tt>unused</tt> </td><td valign=top >Unused signal </td></tr>
+<tr><td valign=top ></td></tr></table></td></tr></table></div>
+<p>
+</p>
+<a name="node_sec_9.2.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.2.3">9.2.3&nbsp;&nbsp;Sending signals</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(signal-process<i> process-id signal</i>)</tt><a name="node_idx_840"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Send <i>signal</i> to the process corresponding to <i>process-id</i>.</p>
+<p>
+</p>
+<a name="node_sec_9.2.4"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.2.4">9.2.4&nbsp;&nbsp;Receiving signals</a></h3>
+<p>Signals received by the Scheme process can be obtained via one or more
+signal-queues.
+Each signal queue has a list of monitored signals and a queue of
+received signals that have yet to be read from the signal-queue.
+When the Scheme process receives a signal that signal is added to the
+received-signal queues of all signal-queues which are currently monitoring
+that particular signal.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-signal-queue<i> signals</i>)&nbsp;--&gt;&nbsp;<i>signal-queue</i></tt><a name="node_idx_842"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(signal-queue?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_844"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(signal-queue-monitored-signals<i> signal-queue</i>)&nbsp;--&gt;&nbsp;<i>list of signals</i></tt><a name="node_idx_846"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(dequeue-signal!<i> signal-queue</i>)&nbsp;--&gt;&nbsp;<i>signal</i></tt><a name="node_idx_848"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(maybe-dequeue-signal!<i> signal-queue</i>)&nbsp;--&gt;&nbsp;<i>signal or <tt>#f</tt></i></tt><a name="node_idx_850"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-signal-queue</tt> returns a new signal-queue that will monitor
+the signals in the list <i>signals</i>.
+<tt>Signal-queue?</tt> is a predicate for signal queues.
+<tt>Signal-queue-monitored-signals</tt> returns a list of the signals
+currently monitored by <i>signal-queue</i>.
+<tt>Dequeue-signal!</tt> and <tt>maybe-dequeue-signal</tt> both return
+the next received-but-unread signal from <i>signal-queue</i>.
+If <i>signal-queue</i>&rsquo;s queue of signals is empty <tt>dequeue-signal!</tt>
+blocks until an appropriate signal is received.
+<tt>Maybe-dequeue-signal!</tt> does not block; it returns <tt>#f</tt> instead.</p>
+<p>
+There is a bug in the current system that causes an erroneous deadlock
+error if threads are blocked waiting for signals and no other threads
+are available to run.
+A work around is to create a thread that sleeps for a long time, which
+prevents any deadlock errors (including real ones):
+</p>
+<pre class=verbatim>&gt; ,open threads
+&gt; (spawn (lambda ()
+           ; Sleep for a year
+           (sleep (* 1000 60 60 24 365))))
+</pre><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(add-signal-queue-signal!<i> signal-queue signal</i>)</tt><a name="node_idx_852"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(remove-signal-queue-signal!<i> signal-queue signal</i>)</tt><a name="node_idx_854"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These two procedures can be used to add or remove signals from a
+signal-queue&rsquo;s list of monitored signals.
+When a signal is removed from a signal-queue&rsquo;s list of monitored signals
+any occurances of the signal are removed from that signal-queue&rsquo;s pending
+signals.
+In other words, <tt>dequeue-signal!</tt> and <tt>maybe-dequeue-signal!</tt>
+will only return signals that are currently on the signal-queue&rsquo;s list
+of signals.</p>
+<p>
+</p>
+<a name="node_sec_9.3"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.3">9.3&nbsp;&nbsp;Process environment</a></h2>
+<p>These are in structures <tt>posix-process-data</tt> and <tt>posix</tt>.</p>
+<p>
+</p>
+<a name="node_sec_9.3.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.3.1">9.3.1&nbsp;&nbsp;Process identification</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(get-process-id<i></i>)&nbsp;--&gt;&nbsp;<i> process-id</i></tt><a name="node_idx_856"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-parent-process-id<i></i>)&nbsp;--&gt;&nbsp;<i> process-id</i></tt><a name="node_idx_858"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return the process ids of the current process and its parent.
+See section&nbsp;<a href="#node_sec_9.1.1">9.1.1</a> for operations on process ids.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(get-user-id<i></i>)&nbsp;--&gt;&nbsp;<i> user-id</i></tt><a name="node_idx_860"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-effective-user-id<i></i>)&nbsp;--&gt;&nbsp;<i> user-id</i></tt><a name="node_idx_862"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-user-id!<i> user-id</i>)</tt><a name="node_idx_864"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-effective-user-id!<i> user-id</i>)</tt><a name="node_idx_866"></a></p>
+</ul><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(get-group-id<i></i>)&nbsp;--&gt;&nbsp;<i> group-id</i></tt><a name="node_idx_868"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-effective-group-id<i></i>)&nbsp;--&gt;&nbsp;<i> group-id</i></tt><a name="node_idx_870"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-group-id!<i> group-id</i>)</tt><a name="node_idx_872"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-effective-group-id!<i> group-id</i>)</tt><a name="node_idx_874"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Every process has both the original and effective user id and group id.
+The effective values may be set, but the original ones can only be set
+if the process has appropriate privelages.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(get-groups<i></i>)&nbsp;--&gt;&nbsp;<i> group-ids</i></tt><a name="node_idx_876"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-login-name<i></i>)&nbsp;--&gt;&nbsp;<i> os-string</i></tt><a name="node_idx_878"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Get-groups</tt> returns a list of the supplementary groups of the
+current process.
+<tt>Get-login-name</tt> returns a user name for the current process.</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_9.3.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.3.2">9.3.2&nbsp;&nbsp;Environment variables</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(lookup-environment-variable<i> os-string-thing</i>)&nbsp;--&gt;&nbsp;<i>os-string or <tt>#f</tt></i></tt><a name="node_idx_880"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-environment-variable!<i> name value</i>)</tt>
+<a name="node_idx_882"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(environment-alist<i></i>)&nbsp;--&gt;&nbsp;<i>alist</i></tt><a name="node_idx_884"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Lookup-environment-variable</tt> looks up its argument in the
+environment list and returns the corresponding value or <tt>#f</tt>
+if there is none.
+<tt>Set-environment-variable!</tt> sets the value of <tt>name</tt> in the
+environment list to <tt>value</tt>. If <tt>name</tt> is not already an environment
+variable, it&rsquo;s created. If it already exists, its value is overwritten with
+<tt>value</tt>. Both arguments must be os-string-things.
+<tt>Environment-alist</tt> returns the entire environment as a list of
+<tt>(<i>name-os-string</i> . <i>value-os-string</i>)</tt> pairs.</p>
+<p>
+</p>
+<a name="node_sec_9.4"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.4">9.4&nbsp;&nbsp;Users and groups</a></h2>
+<p><i>User-id</i>s and <i>group-id</i>s are boxed integers representing
+Unix users and groups.
+The procedures in this section are in structures <tt>posix-users</tt> and
+<tt>posix</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(user-id?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_886"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-id=?<i> user-id0 user-id1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_888"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-id-&gt;integer<i> user-id</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_890"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(integer-&gt;user-id<i> integer</i>)&nbsp;--&gt;&nbsp;<i>user-id</i></tt><a name="node_idx_892"></a></p>
+</ul><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(group-id?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_894"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(group-id=?<i> group-id0 group-id1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_896"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(group-id-&gt;integer<i> group-id</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_898"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(integer-&gt;group-id<i> integer</i>)&nbsp;--&gt;&nbsp;<i>group-id</i></tt><a name="node_idx_900"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>User-ids and group-ids have their own
+own predicates and comparison, boxing, and unboxing functions.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(user-id-&gt;user-info<i> user-id</i>)&nbsp;--&gt;&nbsp;<i>user-info</i></tt><a name="node_idx_902"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(name-&gt;user-info<i> os-string</i>)&nbsp;--&gt;&nbsp;<i>user-info</i></tt><a name="node_idx_904"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return the user info for a user identified by user-id or name.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(user-info?<i> x</i>)&nbsp;--&gt;&nbsp;<i> boolean</i></tt><a name="node_idx_906"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-info-name<i> user-info</i>)&nbsp;--&gt;&nbsp;<i> os-string</i></tt><a name="node_idx_908"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-info-id<i> user-info</i>)&nbsp;--&gt;&nbsp;<i> user-id</i></tt><a name="node_idx_910"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-info-group<i> user-info</i>)&nbsp;--&gt;&nbsp;<i> group-id</i></tt><a name="node_idx_912"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-info-home-directory<i> user-info</i>)&nbsp;--&gt;&nbsp;<i> os-string</i></tt><a name="node_idx_914"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(user-info-shell<i> user-info</i>)&nbsp;--&gt;&nbsp;<i> os-string</i></tt><a name="node_idx_916"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>A <tt>user-info</tt> contains information about a user.
+Available are the user&rsquo;s name, id, group, home directory, and shell.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(group-id-&gt;group-info<i> group-id</i>)&nbsp;--&gt;&nbsp;<i>group-info</i></tt><a name="node_idx_918"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(name-&gt;group-info<i> os-string</i>)&nbsp;--&gt;&nbsp;<i>group-info</i></tt><a name="node_idx_920"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return the group info for a group identified by group-id or name.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(group-info?<i> x</i>)&nbsp;--&gt;&nbsp;<i> boolean</i></tt><a name="node_idx_922"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(group-info-name<i> group-info</i>)&nbsp;--&gt;&nbsp;<i> os-string</i></tt><a name="node_idx_924"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(group-info-id<i> group-info</i>)&nbsp;--&gt;&nbsp;<i> group-id</i></tt><a name="node_idx_926"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(group-info-members<i> group-info</i>)&nbsp;--&gt;&nbsp;<i> user-ids</i></tt><a name="node_idx_928"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>A <tt>group-info</tt> contains information about a group.
+Available are the group&rsquo;s name, id, and a list of members.</p>
+<p>
+</p>
+<a name="node_sec_9.5"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.5">9.5&nbsp;&nbsp;OS and machine identification</a></h2>
+<p>These procedures return strings that are supposed to identify the current
+OS and machine.
+The POSIX standard does not indicate the format of the strings.
+The procedures are in structures <tt>posix-platform-names</tt> and <tt>posix</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(os-name<i></i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_930"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(os-node-name<i></i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_932"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(os-release-name<i></i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_934"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(os-version-name<i></i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_936"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(machine-name<i></i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_938"></a></p>
+</ul><p></p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_9.6"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6">9.6&nbsp;&nbsp;Files and directories</a></h2>
+<p>These procedures are in structures <tt>posix-files</tt> and <tt>posix</tt>.</p>
+<p>
+</p>
+<a name="node_sec_9.6.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6.1">9.6.1&nbsp;&nbsp;Directory streams</a></h3>
+<p>Directory streams are like input ports, with each read operation
+returning the next name in the directory.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(open-directory-stream<i> name</i>)&nbsp;--&gt;&nbsp;<i>directory</i></tt><a name="node_idx_940"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(directory-stream?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_942"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(read-directory-stream<i> directory</i>)&nbsp;--&gt;&nbsp;<i>name or <tt>#f</tt></i></tt><a name="node_idx_944"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(close-directory-stream<i> directory</i>)</tt><a name="node_idx_946"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Open-directory-stream</tt> opens a new directory stream.
+<tt>Directory-stream?</tt> is a predicate that recognizes directory streams.
+<tt>Read-directory-stream</tt> returns the next name in the directory or
+<tt>#f</tt> if all names have been read.
+<tt>Close-directory-stream</tt> closes a directory stream.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(list-directory<i> name</i>)&nbsp;--&gt;&nbsp;<i>list of os-strings</i></tt><a name="node_idx_948"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>This is the obvious utility; it returns a list of the names in directory
+<i>name</i>.</p>
+<p>
+</p>
+<a name="node_sec_9.6.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6.2">9.6.2&nbsp;&nbsp;Working directory</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(working-directory<i></i>)&nbsp;--&gt;&nbsp;<i>os-string</i></tt><a name="node_idx_950"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-working-directory!<i> os-string-thing</i>)</tt><a name="node_idx_952"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return and set the working directory.</p>
+<p>
+</p>
+<a name="node_sec_9.6.3"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6.3">9.6.3&nbsp;&nbsp;File creation and removal</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(open-file<i> path file-options</i>)&nbsp;--&gt;&nbsp;<i>port</i></tt><a name="node_idx_954"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(open-file<i> path file-options file-mode</i>)&nbsp;--&gt;&nbsp;<i>port</i></tt><a name="node_idx_956"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Open-file</tt> opens a port to the file named by <i>path</i>, which
+must be a <i>os-string-thing</i> argument.
+The <i>file-options</i> argument determines various aspects of the
+returned port.
+The optional <i>file-mode</i> argument is used only if the file to be opened
+does not already exist.
+The returned port is an input port if <i>file-options</i> includes
+<tt>read-only</tt>; otherwise it returns an output port.
+<tt>Dup-switching-mode</tt> can be used to open an input port for
+output ports opened with the <tt>read/write</tt> option.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-options <i>file-option-name</i> <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>file-options</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(file-options-on?<i> file-options file-options</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_958"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-options-union<i> file-options file-options</i>)&nbsp;--&gt;&nbsp;<i>file-options</i></tt><a name="node_idx_960"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The syntax <tt>file-options</tt> returns a file-option with the
+indicated options set.
+<tt>File-options-on?</tt> returns true if its first argument includes all of
+the options listed in the second argument.  <tt>File-options-union</tt>
+returns a file-options argument containing exactly all of the options
+listed in either argument.
+The following file options may be used with <tt>open-file</tt>.</p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ></td><td valign=top ><tt>create</tt> </td><td valign=top >create file if it does not already exist; a file-mode argument
+is required with this option </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>exclusive</tt> </td><td valign=top >an error will be raised if this option and <tt>create</tt>
+are both set and the file already exists </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>no-controlling-tty</tt> </td><td valign=top >if <i>path</i> is a terminal device this option
+causes the terminal to not become the controlling terminal of the process</td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>truncate</tt> </td><td valign=top >file is truncated </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>append</tt> </td><td valign=top >writes are appended to existing contents </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>nonblocking</tt> </td><td valign=top >read and write operations do not block </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>read-only</tt> </td><td valign=top >port may not be written </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>read-write</tt> </td><td valign=top >file descriptor may be read or written </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>write-only</tt> </td><td valign=top >port may not be read
+</td></tr></table>
+</td></tr></table></div>
+
+
+<p class=noindent>Only one of the last three options may be used.  If
+<tt>read-write</tt> is specified, an output port is returned.</p>
+<p>
+For example
+</p>
+<pre class=verbatim>(open-file &quot;some-file.txt&quot;
+           (file-options create write-only)
+           (file-mode read owner-write))
+</pre><p>
+returns an output port that writes to a newly-created file that can be
+read by anyone and written only by the owner.
+Once the file exists,
+</p>
+<pre class=verbatim>(open-file &quot;some-file.txt&quot;
+           (file-options append write-only))
+</pre><p>
+will open an output port that appends to the file.</p>
+<p>
+The <tt>append</tt> and <tt>nonblocking</tt> options and the read/write nature of
+the port can be read using <tt>i/o-flags</tt>.
+The <tt>append</tt> and <tt>nonblocking</tt> options can be set
+using <tt>set-i/o-flags!</tt>.</p>
+<p>
+To keep port operations from blocking the Scheme&nbsp;48 process, output
+ports are set to be nonblocking at the time of creation (input ports
+are managed using <tt>select()</tt>).
+You can use <tt>set-i/o-flags!</tt> to make an output port blocking, for
+example just before a fork, but care should be exercised.
+The Scheme&nbsp;48 runtime code may get confused if an I/O operation blocks.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(set-file-creation-mask!<i> file-mode</i>)</tt><a name="node_idx_962"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Sets the file creation mask to be <i>file-mode</i>.
+Bits set in <i>file-mode</i> are cleared in the modes of any files or
+directories created by the current process.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(link<i> existing new</i>)</tt><a name="node_idx_964"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>Both <i>existing</i> and <i>new</i> must be <i>os-string-thing</i> arguments.
+<tt>Link</tt> makes path <i>new</i> be a new link to the file
+pointed to by path <i>existing</i>.
+The two paths must be in the same file system.</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-directory<i> path file-mode</i>)</tt><a name="node_idx_966"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-fifo<i> path file-mode</i>)</tt><a name="node_idx_968"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These two procedures make new directories and fifo files.  In both
+cases, <i>path</i> must be a <i>os-string-thing</i> argument.</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(unlink<i> path</i>)</tt><a name="node_idx_970"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(remove-directory<i> path</i>)</tt><a name="node_idx_972"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(rename<i> old-path new-path</i>)</tt><a name="node_idx_974"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><i>Path</i>, <i>old-path</i> and <i>new-path</i> must all be
+<i>os-string-thing</i> arguments.
+<tt>Unlink</tt> removes the link indicated by <i>path</i>.
+<tt>Remove-directory</tt> removes the indicated (empty) directory.
+<tt>Rename</tt> moves the file pointed to by <i>old-path</i> to the
+location pointed to by <i>new-path</i> (the two paths must be in
+the same file system).
+Any other links to the file remain unchanged.</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(accessible?<i> path access-mode . more-modes</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_976"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(access-mode <i>mode-name</i>)&nbsp;--&gt;&nbsp;<i>access-mode</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Accessible?</tt> returns true if <i>path</i> (which must be a
+<i>os-string-thing</i> argument) is a file that
+can be accessed in the listed mode.
+If more than one mode is specified <tt>accessible?</tt> returns true
+if all of the specified modes are permitted.
+The <i>mode-name</i>s are: <tt>read</tt>, <tt>write</tt>, <tt>execute</tt>,
+<tt>exists</tt>.</p>
+<p>
+</p>
+<a name="node_sec_9.6.4"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6.4">9.6.4&nbsp;&nbsp;File information</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(get-file-info<i> path</i>)&nbsp;--&gt;&nbsp;<i>file-info</i></tt><a name="node_idx_978"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-file/link-info<i> name</i>)&nbsp;--&gt;&nbsp;<i>file-info</i></tt><a name="node_idx_980"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(get-port-info<i> fd-port</i>)&nbsp;--&gt;&nbsp;<i>file-info</i></tt><a name="node_idx_982"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Get-file-info</tt> and <tt>get-file/link-info</tt> both return
+a file info record for the file named by <i>path</i>, which must be a
+<i>os-string-thing</i> argument.
+<tt>Get-file-info</tt> follows symbolic links while <tt>get-file/link-info</tt>
+does not.
+<tt>Get-port-info</tt> returns a file info record for the file
+which <i>port</i> reads from or writes to.
+An error is raised if <i>fd-port</i> does not read from or write to a
+file descriptor.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-info?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_984"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-name<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>os-string</i></tt><a name="node_idx_986"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>File-info?</tt> is a predicate for file-info records.
+<tt>File-info-name</tt> is the name which was used to get <tt>file-info</tt>,
+either as passed to <tt>get-file-info</tt> or <tt>get-file/link-info</tt>,
+or used to open the port passed to <tt>get-port-info</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-type<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>file-type</i></tt><a name="node_idx_988"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-type?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_990"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-type-name<i> file-type</i>)&nbsp;--&gt;&nbsp;<i>symbol</i></tt><a name="node_idx_992"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-type <i>type</i>)&nbsp;--&gt;&nbsp;<i>file-type</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>File-info-type</tt> returns the type of the file, as a file-type object
+File types may be compared using <tt>eq?</tt>.
+The valid file types are:</p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><tt>regular</tt> </td></tr>
+<tr><td valign=top ><tt>directory</tt> </td></tr>
+<tr><td valign=top ><tt>character-device</tt> </td></tr>
+<tr><td valign=top ><tt>block-device</tt> </td></tr>
+<tr><td valign=top ><tt>fifo</tt> </td></tr>
+<tr><td valign=top ><tt>symbolic-link</tt> </td></tr>
+<tr><td valign=top ><tt>socket</tt> </td></tr>
+<tr><td valign=top ><tt>other</tt>
+</td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+
+<p class=noindent><tt>Symbolic-link</tt> and <tt>socket</tt> are not required by POSIX.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-device<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_994"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-inode<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_996"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The device and inode numbers uniquely determine a file.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-link-count<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_998"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-size<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_1000"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return the number of links to a file and the file size in bytes.
+The size is only meaningful for regular files.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-owner<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>user-id</i></tt><a name="node_idx_1002"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-group<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>group-id</i></tt><a name="node_idx_1004"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-mode<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>file-mode</i></tt><a name="node_idx_1006"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return the owner, group, and access mode of a file.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-last-access<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>time</i></tt><a name="node_idx_1008"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-last-modification<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>time</i></tt><a name="node_idx_1010"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-info-last-status-change<i> file-info</i>)&nbsp;--&gt;&nbsp;<i>time</i></tt><a name="node_idx_1012"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These return the time the file was last read, modified, or had its
+status modified.</p>
+<p>
+</p>
+<a name="node_sec_9.6.5"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6.5">9.6.5&nbsp;&nbsp;File modes</a></h3>
+<p>A file mode is a boxed integer representing a file protection mask.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode permission-name <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>file-mode</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1014"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode+<i> file-mode <tt>...</tt></i>)&nbsp;--&gt;&nbsp;<i>file-mode</i></tt><a name="node_idx_1016"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode-<i> file-mode0 file-mode1</i>)&nbsp;--&gt;&nbsp;<i>file-mode</i></tt><a name="node_idx_1018"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>File-mode</tt> is syntax for creating file modes.
+The mode-names are listed below.
+<tt>File-mode?</tt> is a predicate for file modes.
+<tt>File-mode+</tt> returns a mode that contains all of permissions of
+its arguments.
+<tt>File-mode-</tt> returns a mode that has all of the permissions of
+<i>file-mode0</i> that are not in <i>file-mode1</i>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode=?<i> file-mode0 file-mode1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1020"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode&lt;=?<i> file-mode0 file-mode1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1022"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode&gt;=?<i> file-mode0 file-mode1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1024"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>File-mode=?</tt> returns true if the two modes are exactly the same.
+<tt>File-mode&lt;=?</tt> returns true if <i>file-mode0</i> has a subset
+of the permissions of <i>file-mode1</i>.
+<tt>File-mode&gt;=?</tt> is <tt>file-mode&lt;=?</tt> with the arguments reversed.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(file-mode-&gt;integer<i> file-mode</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_1026"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(integer-&gt;file-mode<i> integer</i>)&nbsp;--&gt;&nbsp;<i>file-mode</i></tt><a name="node_idx_1028"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Integer-&gt;file-mode</tt> and <tt>file-mode-&gt;integer</tt> translate file modes
+to and from the classic Unix file mode masks.
+These may not be the masks used by the underlying OS.</p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top >Permission name </td><td valign=top >Bit mask </td></tr>
+<tr><td valign=top ><tt>set-uid</tt> </td><td valign=top ><tt>#o4000</tt> </td><td valign=top >set user id when executing </td></tr>
+<tr><td valign=top ><tt>set-gid</tt> </td><td valign=top ><tt>#o2000</tt> </td><td valign=top >set group id when executing </td></tr>
+<tr><td valign=top ><tt>owner-read</tt> </td><td valign=top ><tt>#o0400</tt> </td><td valign=top >read by owner </td></tr>
+<tr><td valign=top ><tt>owner-write</tt> </td><td valign=top ><tt>#o0200</tt> </td><td valign=top >write by owner </td></tr>
+<tr><td valign=top ><tt>owner-exec</tt> </td><td valign=top ><tt>#o0100</tt> </td><td valign=top >execute (or search) by owner </td></tr>
+<tr><td valign=top ><tt>group-read</tt> </td><td valign=top ><tt>#o0040</tt> </td><td valign=top >read by group </td></tr>
+<tr><td valign=top ><tt>group-write</tt> </td><td valign=top ><tt>#o0020</tt> </td><td valign=top >write by group </td></tr>
+<tr><td valign=top ><tt>group-exec</tt> </td><td valign=top ><tt>#o0010</tt> </td><td valign=top >execute (or search) by group </td></tr>
+<tr><td valign=top ><tt>other-read</tt> </td><td valign=top ><tt>#o0004</tt> </td><td valign=top >read by others </td></tr>
+<tr><td valign=top ><tt>other-write</tt> </td><td valign=top ><tt>#o0002</tt> </td><td valign=top >write by others </td></tr>
+<tr><td valign=top ><tt>other-exec</tt> </td><td valign=top ><tt>#o0001</tt> </td><td valign=top >execute (or search) by others </td></tr>
+<tr><td valign=top ></td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top  colspan=3>Names for sets of permissions </td></tr>
+<tr><td valign=top ><tt>owner</tt> </td><td valign=top ><tt>#o0700</tt> </td><td valign=top >read, write, and execute by owner </td></tr>
+<tr><td valign=top ><tt>group</tt> </td><td valign=top ><tt>#o0070</tt> </td><td valign=top >read, write, and execute by group </td></tr>
+<tr><td valign=top ><tt>other</tt> </td><td valign=top ><tt>#o0007</tt> </td><td valign=top >read, write, and execute by others </td></tr>
+<tr><td valign=top ><tt>read</tt> </td><td valign=top ><tt>#o0444</tt> </td><td valign=top >read by anyone </td></tr>
+<tr><td valign=top ><tt>write</tt> </td><td valign=top ><tt>#o0222</tt> </td><td valign=top >write by anyone </td></tr>
+<tr><td valign=top ><tt>exec</tt> </td><td valign=top ><tt>#o0111</tt> </td><td valign=top >execute by anyone </td></tr>
+<tr><td valign=top ><tt>all</tt> </td><td valign=top ><tt>#o0777</tt> </td><td valign=top >anything by anyone
+</td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+<a name="node_sec_9.6.6"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.6.6">9.6.6&nbsp;&nbsp;Symbolic links</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(create-symbolic-link<i> path1 path2</i>)</tt><a name="node_idx_1030"></a></p>
+</ul><p>
+This creates a symbolic link at <i>path2</i> that contains <i>path1</i>.
+<i>Path1</i> and <i>path2</i> must be <i>os-string-thing</i> arguments.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(read-symbolic-link<i> path</i>)&nbsp;--&gt;&nbsp;<i> os-string</i></tt><a name="node_idx_1032"></a></p>
+</ul><p>
+This returns contents of the symbolic link at <i>path</i>.
+<i>Path</i> must be an <i>os-string-thing</i> argument.</p>
+<p>
+</p>
+<a name="node_sec_9.7"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.7">9.7&nbsp;&nbsp;Time and Date</a></h2>
+<p>These procedures are in structures <tt>posix-time</tt> and <tt>posix</tt>.</p>
+<p>
+</p>
+<a name="node_sec_9.7.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.7.1">9.7.1&nbsp;&nbsp;Time</a></h3>
+<p></p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-time<i> integer</i>)&nbsp;--&gt;&nbsp;<i>time</i></tt><a name="node_idx_1034"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(current-time<i></i>)&nbsp;--&gt;&nbsp;<i>time</i></tt><a name="node_idx_1036"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1038"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time-seconds<i> time</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_1040"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>A <tt>time</tt> record contains an integer that represents time as
+the number of second since the Unix epoch (00:00:00 GMT, January 1, 1970).
+<tt>Make-time</tt> and <tt>current-time</tt> return <tt>time</tt>s, with
+<tt>make-time</tt>&rsquo;s using its argument while <tt>current-time</tt>&rsquo;s has
+the current time.
+<tt>Time?</tt> is a predicate that recognizes <tt>time</tt>s and
+<tt>time-seconds</tt> returns the number of seconds <i>time</i> represents.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(time=?<i> time time</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1042"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time&lt;?<i> time time</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1044"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time&lt;=?<i> time time</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1046"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time&gt;?<i> time time</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1048"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time&gt;=?<i> time time</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1050"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These perform various comparison operations on the <tt>time</tt>s.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(time-&gt;string<i> time</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_1052"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Time-&gt;string</tt> returns a string representation of <i>time</i> in the
+locale&rsquo;s version of the following form.
+</p>
+<pre class=verbatim>&quot;Wed Jun 30 21:49:08 1993
+&quot;
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_9.7.2"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.7.2">9.7.2&nbsp;&nbsp;Date</a></h3>
+<p>A date is a time specification relative to a specific but implicit
+time zone, broken out into the familar
+year-month-day-hour-minute-second format.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-date<i> second minute hour month-day month year week-day year-day dst</i>)&nbsp;--&gt;&nbsp;<i>date</i></tt><a name="node_idx_1054"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1056"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-second<i> date</i>)&nbsp;--&gt;&nbsp;<i>second</i></tt><a name="node_idx_1058"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-minute<i> date</i>)&nbsp;--&gt;&nbsp;<i>minute</i></tt><a name="node_idx_1060"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-hour<i> date</i>)&nbsp;--&gt;&nbsp;<i>hour</i></tt><a name="node_idx_1062"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-month-day<i> date</i>)&nbsp;--&gt;&nbsp;<i>month-day</i></tt><a name="node_idx_1064"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-month<i> date</i>)&nbsp;--&gt;&nbsp;<i>month</i></tt><a name="node_idx_1066"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-year<i> date</i>)&nbsp;--&gt;&nbsp;<i>year</i></tt><a name="node_idx_1068"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-week-day<i> date</i>)&nbsp;--&gt;&nbsp;<i>week-day</i></tt><a name="node_idx_1070"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-year-day<i> date</i>)&nbsp;--&gt;&nbsp;<i>year-day</i></tt><a name="node_idx_1072"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(date-date-dst<i> date</i>)&nbsp;--&gt;&nbsp;<i>dst</i></tt><a name="node_idx_1074"></a></p>
+</ul><p>
+These are the constructor, predicate and corresponding accessors for
+date objects.  The meaning of the various field types are as follows:</p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><i>seconds</i> </td><td valign=top >seconds </td><td valign=top >(0--60) </td></tr>
+<tr><td valign=top ><i>minutes</i> </td><td valign=top >minutes </td><td valign=top >(0--59) </td></tr>
+<tr><td valign=top ><i>hour</i> </td><td valign=top >hours </td><td valign=top >(0--23) </td></tr>
+<tr><td valign=top ><i>month-day</i> </td><td valign=top >day of month </td><td valign=top >(1--31) </td></tr>
+<tr><td valign=top ><i>mon</i>     </td><td valign=top >month of year </td><td valign=top >(0--11) </td></tr>
+<tr><td valign=top ><i>year</i>    </td><td valign=top >year </td><td valign=top >since 1900</td></tr>
+<tr><td valign=top ><i>week-day</i>    </td><td valign=top >day of week </td><td valign=top >(Sunday = 0) </td></tr>
+<tr><td valign=top ><i>year-day</i>    </td><td valign=top >day of year </td><td valign=top >(0--365) </td></tr>
+<tr><td valign=top ><i>dst</i>   </td><td valign=top >is summer time in effect? </td><td valign=top ><tt>#t</tt>, <tt>#f</tt> or unspecific
+</td></tr></table>
+</td></tr></table></div>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(date-&gt;string<i> date</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_1076"></a></p>
+</ul><p>
+returns a string representation of <i>date</i> in the
+locale&rsquo;s version of the following form:
+</p>
+<pre class=verbatim>&quot;Wed Jun 30 21:49:08 1993
+&quot;
+</pre><p></p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(time-&gt;utc-date<i> time</i>)&nbsp;--&gt;&nbsp;<i>date</i></tt><a name="node_idx_1078"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(time-&gt;local-date<i> time</i>)&nbsp;--&gt;&nbsp;<i>date</i></tt><a name="node_idx_1080"></a></p>
+</ul><p>
+These convert a time object into a date object; the first does this
+relative to the UTC time zone, the second relative to the current
+timezone setting.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(date-&gt;time<i> date</i>)&nbsp;--&gt;&nbsp;<i>time</i></tt><a name="node_idx_1082"></a></p>
+</ul><p>
+This converts a date object into a time object relative to the current
+timezone setting.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(format-date<i> string date</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_1084"></a></p>
+</ul><p>
+This formats a date into a string, according to the format
+specification in the first argument.  The format specification is
+according to the specification of the C <tt>strftime</tt> function:</p>
+<p>
+</p>
+
+<p class=noindent></p>
+lp0.9
+<tt>%a</tt> &amp; is replaced by the locale&rsquo;s abbreviated weekday name.<br>
+<tt>%A</tt> &amp; is replaced by the locale&rsquo;s full weekday name.<br>
+<tt>%b</tt> &amp; is replaced by the locale&rsquo;s abbreviated month name.<br>
+<tt>%B</tt> &amp; is replaced by the locale&rsquo;s full month name.<br>
+<tt>%c</tt> &amp; is replaced by the locale&rsquo;s appropriate date and time representation.<br>
+<tt>%C</tt> &amp; is replaced by the year divided by 100 and truncated to an integer, as a decimal
+number (00--99).<br>
+<tt>%d</tt> &amp; is replaced by the day of the month as a decimal number (01--31).<br>
+<tt>%D</tt> &amp; is equivalent to &lsquo;&lsquo;<code class=verbatim>%m/%d/%y</code>&rsquo;&rsquo;.<br>
+<tt>%e</tt> &amp; is replaced by the day of the month as a decimal number (1--31); a single digit
+is preceded by a space.<br>
+<tt>%F</tt> &amp; is equivalent to &lsquo;&lsquo;<code class=verbatim>%Y&#x2011;%m&#x2011;%d</code>&rsquo;&rsquo; (the ISO 8601 date format).<br>
+<tt>%g</tt> &amp; is replaced by the last 2 digits of the week-based year (see below) as a decimal
+number (00--99).<br>
+<tt>%G</tt> &amp; is replaced by the week-based year (see below) as a decimal number (e.g.,
+1997).<br>
+<tt>%h</tt> &amp; is equivalent to &lsquo;&lsquo;<code class=verbatim>%b</code>&rsquo;&rsquo;.<br>
+<tt>%H</tt> &amp; is replaced by the hour (24-hour clock) as a decimal number (00--23).<br>
+<tt>%I</tt> &amp; is replaced by the hour (12-hour clock) as a decimal number (01--12).<br>
+<tt>%j</tt> &amp; is replaced by the day of the year as a decimal number (001--366).<br>
+<tt>%m</tt> &amp; is replaced by the month as a decimal number (01--12).<br>
+<tt>%M</tt> &amp; is replaced by the minute as a decimal number (00--59).<br>
+<tt>%n</tt> &amp; is replaced by a new-line character.<br>
+<tt>%p</tt> &amp; is replaced by the locale&rsquo;s equivalent of the AM/PM designations associated
+with a 12-hour clock.<br>
+<tt>%r</tt> &amp; is replaced by the locale&rsquo;s 12-hour clock time.<br>
+<tt>%R</tt> &amp; is equivalent to &lsquo;&lsquo;<code class=verbatim>%H:%M</code>&rsquo;&rsquo;.<br>
+<tt>%S</tt> &amp; is replaced by the second as a decimal number (00--60).<br>
+<tt>%t</tt> &amp; is replaced by a horizontal-tab character.<br>
+<tt>%T</tt> &amp; is equivalent to &lsquo;&lsquo;<code class=verbatim>%H:%M:%S</code>&rsquo;&rsquo; (the ISO 8601 time format).<br>
+<tt>%u</tt> &amp; is replaced by the ISO 8601 weekday as a decimal number (1--7), where
+Monday is 1.<br>
+<tt>%U</tt> &amp; is replaced by the week number of the year (the first Sunday as the first day of
+week 1) as a decimal number (00--53).<br>
+<tt>%V</tt> &amp; is replaced by the ISO 8601 week number (see below) as a decimal number
+(01--53).<br>
+<tt>%w</tt> &amp; is replaced by the weekday as a decimal number (0--6), where Sunday is 0.<br>
+<tt>%W</tt> &amp; is replaced by the week number of the year (the first Monday as the first day of
+week 1) as a decimal number (00--53).<br>
+<tt>%x</tt> &amp; is replaced by the locale&rsquo;s appropriate date representation.<br>
+<tt>%X</tt> &amp; is replaced by the locale&rsquo;s appropriate time representation.<br>
+<tt>%y</tt> &amp; is replaced by the last 2 digits of the year as a decimal number (00--99).<br>
+<tt>%Y</tt> &amp; is replaced by the year as a decimal number (e.g., 1997).<br>
+<tt>%z</tt> &amp; is replaced by the offset from UTC in the ISO 8601 format &lsquo;&lsquo;<code class=verbatim>&#x2011;0430</code>&rsquo;&rsquo; (meaning
+4 hours 30 minutes behind UTC, west of Greenwich), or by no characters if no
+time zone is determinable.<br>
+<tt>%Z</tt> &amp; is replaced by the locale&rsquo;s time zone name or abbreviation, or by no characters if
+no time zone is determinable.<br>
+<tt>%%</tt> &amp; is replaced by <code class=verbatim>%</code>.
+<p>
+</p>
+<a name="node_sec_9.8"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.8">9.8&nbsp;&nbsp;I/O</a></h2>
+<p>These procedures are in structures <tt>posix-i/o</tt> and <tt>posix</tt>.</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(open-pipe<i></i>)&nbsp;--&gt;&nbsp;<i>input-port + output-port</i></tt><a name="node_idx_1086"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Open-pipe</tt> creates a new pipe and returns the two ends as an
+input port and an output port.</p>
+<p>
+</p>
+<p>
+A <em>file descriptor</em> port (or <i>fd-port</i>)
+is a port that reads to or writes from an OS file descriptor.
+Fd-ports are returned by <tt>open-input-file</tt>, <tt>open-output-file</tt>,
+<tt>open-file</tt>, <tt>open-pipe</tt>, and other procedures.
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(fd-port?<i> port</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1088"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(port-&gt;fd<i> port</i>)&nbsp;--&gt;&nbsp;<i>integer or <tt>#f</tt></i></tt><a name="node_idx_1090"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Fd-port?</tt> returns true if its argument is an fd-port.
+<tt>Port-&gt;fd</tt> returns the file descriptor associated with
+or <tt>#f</tt> if <i>port</i> is not an fd-port.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(remap-file-descriptors<i> fd-spec <tt>...</tt></i>)</tt><a name="node_idx_1092"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Remap-file-descriptors</tt> reassigns file descriptors to ports.
+The <i>fd-specs</i> indicate which port is to be mapped to each
+file descriptor: the first gets file descriptor <tt>0</tt>, the second gets
+<tt>1</tt>, and so forth.
+A <i>fd-spec</i> is either a port that reads from or writes to
+a file descriptor,
+or <tt>#f</tt>, with <tt>#f</tt> indicating that the corresponding file
+descriptor is not used.
+Any open ports not listed are marked &lsquo;close-on-exec&rsquo;.
+The same port may be moved to multiple new file descriptors.</p>
+<p>
+For example,
+</p>
+<pre class=verbatim>(remap-file-descriptors (current-output-port)
+                        #f
+                        (current-input-port))
+</pre><p>
+moves the current output port to file descriptor <tt>0</tt> and the
+current input port to file descriptor <tt>2</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(dup<i> fd-port</i>)&nbsp;--&gt;&nbsp;<i>fd-port</i></tt><a name="node_idx_1094"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(dup-switching-mode<i> fd-port</i>)&nbsp;--&gt;&nbsp;<i>fd-port</i></tt><a name="node_idx_1096"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(dup2<i> fd-port file-descriptor</i>)&nbsp;--&gt;&nbsp;<i>fd-port</i></tt><a name="node_idx_1098"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These change <i>fd-port</i>&rsquo;s file descriptor and return a new port
+that uses <i>ports</i>&rsquo;s old file descriptor.
+<tt>Dup</tt> uses the lowest unused file descriptor and <tt>dup2</tt> uses the
+one provided.
+<tt>Dup-switching-mode</tt> is the same as <tt>dup</tt> except that the returned
+port is an input port if the argument was an output port and vice
+versa.
+If any existing port uses the file descriptor passed to <tt>dup2</tt>, that
+port is closed.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(close-all-but<i> port <tt>...</tt></i>)</tt><a name="node_idx_1100"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Close-all-but</tt> closes all file descriptors whose associated ports
+are not passed to it as arguments.</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(close-on-exec?<i> port</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1102"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-close-on-exec?!<i> port boolean</i>)</tt><a name="node_idx_1104"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Close-on-exec?</tt> returns true if <tt>port</tt> will be closed
+when a new program is exec&rsquo;ed.
+<tt>Set-close-on-exec?!</tt> sets <tt>port</tt>&rsquo;s close-on-exec flag.</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(i/o-flags<i> port</i>)&nbsp;--&gt;&nbsp;<i>file-options</i></tt><a name="node_idx_1106"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(set-i/o-flags!<i> port file-options</i>)</tt><a name="node_idx_1108"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>These two procedures read and write various options for <tt>port</tt>.
+The options that can be read are <tt>append</tt>, <tt>nonblocking</tt>,
+<tt>read-only</tt>, <tt>write-only</tt>, and <tt>read/write</tt>.
+Only the <tt>append</tt> and <tt>nonblocking</tt> can be written.</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(port-is-a-terminal?<i> port</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1110"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(port-terminal-name<i> port</i>)&nbsp;--&gt;&nbsp;<i>string</i></tt><a name="node_idx_1112"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Port-is-a-terminal?</tt> returns true if <i>port</i> has an underlying
+file descriptor that is associated with a terminal.
+For such ports <tt>port-terminal-name</tt> returns the name of the
+terminal, for all others it returns <tt>#f</tt>.</p>
+<p>
+</p>
+<p>
+</p>
+<a name="node_sec_9.9"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.9">9.9&nbsp;&nbsp;Regular expressions</a></h2>
+<p></p>
+<p>
+The procedures in this section provide access to POSIX regular expression
+matching.
+The regular expression syntax and semantics are far too complex to
+be described here.
+Due to limitations in the underlying facility, only Latin-1 strings
+are guaranteed to work here---on some platforms, only ASCII may
+function correctly.
+Moreover, because the C interface uses zero bytes for marking the ends of strings,
+patterns and strings that contain zero bytes will not work
+correctly.</p>
+<p>
+These procedures are in structures <tt>posix-regexps</tt> and <tt>posix</tt>.</p>
+<p>
+An abstract data type for creating POSIX regular expressions is
+described in section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.21">5.21</a>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-regexp<i> string . regexp-options</i>)&nbsp;--&gt;&nbsp;<i>regexp</i></tt><a name="node_idx_1114"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(regexp-option <i>option-name</i>)&nbsp;--&gt;&nbsp;<i>regexp-option</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-regexp</tt> makes a new regular expression, using <i>string</i>
+as the pattern.
+The possible option names are:</p>
+<p>
+</p>
+<div align=center><table><tr><td>
+
+<table border=0><tr><td valign=top ><tt>extended</tt> </td><td valign=top >use the extended patterns </td></tr>
+<tr><td valign=top ><tt>ignore-case</tt> </td><td valign=top >ignore case when matching </td></tr>
+<tr><td valign=top ><tt>submatches</tt> </td><td valign=top >report submatches </td></tr>
+<tr><td valign=top ><tt>newline</tt> </td><td valign=top >treat newlines specially
+</td></tr></table>
+</td></tr></table></div>
+<p>
+The regular expression is not compiled until it matched against a string,
+so any errors in the pattern string will not be reported until that
+point.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(regexp?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1116"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>This is a predicate for regular expressions.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(regexp-match<i> regexp string start submatches? starts-line? ends-line?</i>)</tt><a name="node_idx_1118"></a><br>
+</p>
+
+<p class=noindent><tt>    --&gt;&nbsp;<i>boolean or list of matches</i></tt>
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(match?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1120"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(match-start<i> match</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_1122"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(match-end<i> match</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_1124"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Regexp-match</tt> matches the regular expression against the characters
+in <i>string</i>, starting at position <i>start</i>.
+If the string does not match the regular expression, <tt>regexp-match</tt>
+returns <tt>#f</tt>.
+If the string does match, then a list of match records is returned
+if <i>submatches?</i> is true, or <tt>#t</tt> is returned if it is not.
+Each match record contains the index of the character at the beginning
+of the match and one more than the index of the character at the end.
+The first match record gives the location of the substring that matched
+<i>regexp</i>.
+If the pattern in <i>regexp</i> contained submatches, then the results
+of these are returned in order, with a match records reporting submatches
+that succeeded and <tt>#f</tt> in place of those that did not.</p>
+<p>
+<i>Starts-line?</i> should be true if <i>string</i> starts at the beginning
+of a line and <i>ends-line?</i> should be true if it ends one.</p>
+<p>
+</p>
+<a name="node_sec_9.10"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.10">9.10&nbsp;&nbsp;Syslog facility</a></h2>
+<p></p>
+<p>
+The procedures in this section provide access to the POSIX syslog
+facility.  The functionality is in a structure called
+<tt>posix-syslog</tt>.  The Scheme&nbsp;48 interface to the
+syslog facility differs significantly from that of the Unix library
+functionality in order to support multiple simultaneous connections to
+the syslog facility.</p>
+<p>
+Log messages carry a variety of parameters beside the text of the
+message itself, namely a set of options controlling the output format
+and destination, the facility identifying the class of programs the
+message is coming from, an identifier specifying the concrete program,
+and the level identifying the importance of the message.  Moreover, a
+log mask can prevent messages at certain levels to be actually sent to
+the syslog daemon.</p>
+<p>
+</p>
+<a name="node_sec_Temp_24"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_24">Log options</a></h3>
+<p>A log option specifies details of the I/O behavior of the syslog
+facility.  A syslog option is an element of a finite type (see
+Section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.10">5.10</a>) constructed by the
+<tt>syslog-option</tt> macro.  The syslog facility works with sets of
+options which are represented as enum sets (see
+Section&nbsp;<a href="manual-Z-H-6.html#node_sec_5.11">5.11</a>).</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-option <i>option-name</i>)&nbsp;--&gt;&nbsp;<i>option</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-option?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1126"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(make-syslog-options<i> list</i>)&nbsp;--&gt;&nbsp;<i>options</i></tt><a name="node_idx_1128"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-options <i>option-name</i> <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>options</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-options?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1130"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Syslog-option</tt> constructs a log option from the name of an
+option.  (The possible names are listed below.)  <tt>Syslog-option?</tt>
+is a predicate for log options.  Options are comparable using
+<tt>eq?</tt>.  <tt>Make-syslog-options</tt> constructs a set of options
+from a list of options.  <tt>Syslog-options</tt> is a macro which
+expands into an expression returning a set of options from names.
+<tt>Syslog-options?</tt> is a predicate for sets of options.</p>
+<p>
+Here is a list of possible names of syslog options:</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b><tt>console</tt></b></dt><dd>
+If syslog cannot pass the message to syslogd it will attempt to
+write the message to the console.<p>
+</p>
+</dd><dt><b><tt>delay</tt></b></dt><dd>
+Delay opening the connection to syslogd immediately until the first
+message is logged.<p>
+</p>
+</dd><dt><b><tt>no-delay</tt></b></dt><dd>
+Open the connection to syslogd immediately.  Normally
+the open is delayed until the first message is logged.
+Useful for programs that need to manage the order in which
+file descriptors are allocated.<p>
+</p>
+
+<p class=noindent><b>NOTA BENE:</b>
+The <tt>delay</tt> and <tt>no-delay</tt> options are included for
+completeness, but do not have the expected effect in the present
+Scheme interface: Because the Scheme interface has to multiplex
+multiple simultaneous connections to the syslog facility over a
+single one, open and close operations on that facility happen at
+unpredictable times.</p>
+<p>
+</p>
+</dd><dt><b><tt>log-pid</tt></b></dt><dd>
+Log the process id with each message: useful for identifying
+instantiations of daemons.<p>
+</p>
+</dd><dt><b><tt>no-wait</tt></b></dt><dd>
+Do not wait for child processes.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_25"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_25">Log facilities</a></h3>
+<p>A log facility identifies the originator of a log message from a
+finite set known to the system.  Each originator is identified by a
+name:</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-facility <i>facility-name</i>)&nbsp;--&gt;&nbsp;<i>facility</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-facility?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1132"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Syslog-facility</tt> is macro that expands into an expression
+returning a facility for a given name.  <tt>Syslog-facility?</tt> is a
+predicate for facilities.  Facilities are comparable via <tt>eq?</tt>.</p>
+<p>
+Here is a list of possible names of syslog facilities:</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b><tt>authorization</tt></b></dt><dd>
+The authorization system: login, su, getty, etc.<p>
+</p>
+</dd><dt><b><tt>cron</tt></b></dt><dd>
+The cron daemon.<p>
+</p>
+</dd><dt><b><tt>daemon</tt></b></dt><dd>
+System daemons, such as routed, that are not provided for explicitly
+by other facilities.<p>
+</p>
+</dd><dt><b><tt>kernel</tt></b></dt><dd>
+Messages generated by the kernel.<p>
+</p>
+</dd><dt><b><tt>lpr</tt></b></dt><dd>
+The line printer spooling system: lpr, lpc, lpd, etc.<p>
+</p>
+</dd><dt><b><tt>mail</tt></b></dt><dd>
+The mail system.<p>
+</p>
+</dd><dt><b><tt>news</tt></b></dt><dd>
+The network news system.<p>
+</p>
+</dd><dt><b><tt>user</tt></b></dt><dd>
+Messages generated by random user processes.<p>
+</p>
+</dd><dt><b><tt>uucp</tt></b></dt><dd>
+The uucp system.<p>
+</p>
+</dd><dt><b><tt>local0</tt> <tt>local1</tt> <tt>local2</tt> <tt>local3</tt> <tt>local4</tt> <tt>local5</tt> <tt>local6</tt> <tt>local7</tt></b></dt><dd>
+Reserved for local use.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_26"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_26">Log levels</a></h3>
+<p>A log level identifies the importance of a message from a fixed set
+of possible levels.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-level <i>level-name</i>)&nbsp;--&gt;&nbsp;<i>level</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-level?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1134"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Syslog-level</tt> is macro that expands into an expression returning
+a facility for a given name.  <tt>Syslog-level?</tt> is a predicate for
+facilities.  Levels are comparable via <tt>eq?</tt>.</p>
+<p>
+Here is a list of possible names of syslog levels:</p>
+<p>
+</p>
+<dl><dt></dt><dd>
+</dd><dt><b><tt>emergency</tt></b></dt><dd>
+A panic condition.  This is normally broadcast to all users.<p>
+</p>
+</dd><dt><b><tt>alert</tt></b></dt><dd>
+A condition that should be corrected immediately, such as a
+corrupted system database.<p>
+</p>
+</dd><dt><b><tt>critical</tt></b></dt><dd>
+Critical conditions, e.g., hard device errors.<p>
+</p>
+</dd><dt><b><tt>error</tt></b></dt><dd>
+Errors.<p>
+</p>
+</dd><dt><b><tt>warning</tt></b></dt><dd>
+Warning messages.<p>
+</p>
+</dd><dt><b><tt>notice</tt></b></dt><dd>
+Conditions that are not error conditions, but should possibly be
+handled specially.<p>
+</p>
+</dd><dt><b><tt>info</tt></b></dt><dd>
+Informational messages.<p>
+</p>
+</dd><dt><b><tt>debug</tt></b></dt><dd>
+Messages that contain information normally of use only when
+debugging a program.
+</dd></dl><p></p>
+<p>
+</p>
+<a name="node_sec_Temp_27"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_27">Log masks</a></h3>
+<p>A log masks can mask out log messages at a set of levels.  A log
+mask is an enum set of log levels.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(make-syslog-mask<i> list</i>)&nbsp;--&gt;&nbsp;<i>mask</i></tt><a name="node_idx_1136"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-mask <i>level-name</i> <tt>...</tt>)&nbsp;--&gt;&nbsp;<i>mask</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>syslog-mask-all</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( mask)<a name="node_idx_1138"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-mask-upto<i> level</i>)&nbsp;--&gt;&nbsp;<i>mask</i></tt><a name="node_idx_1140"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog-mask?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1142"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Make-syslog-mask</tt> constructs a mask from a list of levels.
+<tt>Syslog-mask</tt> is a macro which constructs a mask from names of
+levels.  <tt>Syslog-mask-all</tt> is a predefined log mask containing
+all levels.  <tt>Syslog-mask-upto</tt> returns a mask consisting of all
+levels up to and including a certain level, starting with
+<tt>emergency</tt>.</p>
+<p>
+</p>
+<a name="node_sec_Temp_28"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_28">Logging</a></h3>
+<p>Scheme&nbsp;48 dynamically maintains implicit connections to the syslog
+facility specifying a current identifier, current options, a current
+facility and a current log mask.  Every thread
+maintains it own implicit connection to syslog.  Note that the
+connection is not implicitly preserved across a <tt>spawn</tt>.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(with-syslog-destination<i> string options facility mask thunk</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_1144"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>With-syslog-destination</tt> dynamically binds parameters of the
+implicit connection to the syslog facility and runs <i>thunk</i>
+within those parameter bindings, returning what <i>thunk</i>
+returns.  Each of the parameters may be <tt>#f</tt> in which case the
+previous values will be used.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(syslog<i> level message</i>)</tt><a name="node_idx_1146"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog<i> level message string</i>)</tt><a name="node_idx_1148"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog<i> level message string options</i>)</tt><a name="node_idx_1150"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog<i> level message string options syslog-facility</i>)</tt><a name="node_idx_1152"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(syslog<i> level message channel</i>)</tt><a name="node_idx_1154"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Syslog</tt> actually logs a message.  Each of the parameters of the
+implicit connection (except for the log mask) can be explicitly
+specified as well for the current call to <tt>syslog</tt>, overriding
+the parameters of the channel.  The parameters revert to their
+original values after the call.</p>
+<p>
+The final form specifies the destination of the log message as a
+channel; see the next section.</p>
+<p>
+</p>
+<a name="node_sec_Temp_29"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_Temp_29">Syslog channels</a></h3>
+<p>These procedures allow direct manipulation of syslog channels, the
+objects that represent connections to the syslog facility.  Note that
+it is not necessary to explicitly open a syslog channel to do logging.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(open-syslog-channel<i>string options facility mask</i>)&nbsp;--&gt;&nbsp;<i>channel</i></tt><a name="node_idx_1156"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(close-syslog-channel<i>channel</i>)</tt><a name="node_idx_1158"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(with-syslog-destination<i> channel thunk</i>)&nbsp;--&gt;&nbsp;<i>value</i></tt><a name="node_idx_1160"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent><tt>Open-syslog-channel</tt> and <tt>close-syslog-channel</tt> create and
+destroy a connection to the syslog facility, respectively.  The
+specified form of calling <tt>syslog</tt> logs to the specified channel.</p>
+<p>
+<tt>With-syslog-channel</tt> dynamically binds parameters of the
+implicit connection to the syslog facility to those specified in
+<i>channel</i> and runs <i>thunk</i> within those parameter bindings,
+returning what <i>thunk</i> returns.</p>
+<p>
+</p>
+<a name="node_sec_9.11"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.11">9.11&nbsp;&nbsp;Error codes</a></h2>
+<p>POSIX functions report the nature of an error via <i>system error
+numbers</i>---OS-specific integers that encode a variety of different
+error situations.  At the Scheme level, error numbers are represented
+as <i>errnos</i>, objects that specify a name for the error
+sitation.  Errnos are definted in the structures <tt>posix-errnos</tt>
+and <tt>posix</tt>.</p>
+<p>
+Currently, the system reports such error situations by raising
+exceptions with condition type <tt>&amp;os-error</tt>.  The
+<tt>&amp;os-error</tt> condition type has a field <tt>code</tt> that contains
+the system error number.</p>
+<p>
+There are two varieties of errnos available, <em>named</em> and <em>anonymous</em>.
+A named errno is one for which we have a symbolic name, such as <tt>fault</tt>
+or <tt>intr</tt>.
+Anonymous errnos, for which we only have the current operating system&rsquo;s
+errno number, have no meaning in other operating systems.
+Named errnos preserve their meaning in image files.
+Not all named errnos are available from all OS&rsquo;s and
+there may be multiple names for a single OS errno number.</p>
+<p>
+</p>
+<ul>
+<li><p></p>
+
+<p class=noindent><tt>(errno <i>errno-name</i>)&nbsp;--&gt;&nbsp;<i>errno</i></tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(syntax)
+</p>
+<li><p></p>
+
+<p class=noindent><tt>(name-&gt;errno<i> symbol</i>)&nbsp;--&gt;&nbsp;<i>errno or <tt>#f</tt></i></tt><a name="node_idx_1162"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(integer-&gt;errno<i> integer</i>)&nbsp;--&gt;&nbsp;<i>errno</i></tt><a name="node_idx_1164"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(errno?<i> x</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1166"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(errno-name<i> errno</i>)&nbsp;--&gt;&nbsp;<i>symbol or <tt>#f</tt></i></tt><a name="node_idx_1168"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(errno-os-number<i> errno</i>)&nbsp;--&gt;&nbsp;<i>integer</i></tt><a name="node_idx_1170"></a></p>
+<li><p></p>
+
+<p class=noindent><tt>(errno=?<i> errno0 errno1</i>)&nbsp;--&gt;&nbsp;<i>boolean</i></tt><a name="node_idx_1172"></a></p>
+</ul><p>
+</p>
+
+<p class=noindent>The syntax <tt>errno</tt> returns a (named) errno associated with
+<i>errno-name</i>.
+<tt>Name-&gt;errno</tt> returns a (named) errno or <tt>#f</tt> if the
+the errno <i>name</i> is not supported by the operating system.
+The errno returned by <tt>integer-&gt;errno</tt> is a named errno if
+<i>integer</i> corresponds to a named errno in the current operating
+system; otherwise it returns an anonymous errno.
+<tt>Errno-name</tt> returns a symbol if <i>errno</i> is named and
+<tt>#f</tt> if it is anonymous.
+<tt>Errno=?</tt> returns <tt>#t</tt> if <i>errno0</i> and <i>errno1</i>
+have the same operating system number and <tt>#f</tt> if they do not.</p>
+<p>
+</p>
+<a name="node_sec_9.11.1"></a>
+<h3 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.11.1">9.11.1&nbsp;&nbsp;POSIX errnos</a></h3>
+<p>The following lists the names of the POSIX errnos.
+</p>
+<div align=center><table><tr><td>
+
+@<tt></tt>lp0.6
+toobig&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      Argument list too long.<br>
+acces&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Permission denied.<br>
+addrinuse&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Address in use.<br>
+addrnotavail&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Address not available.<br>
+afnosupport&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        Address family not supported.<br>
+again  Resource unavailable, try again.<br>
+already&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      Connection already in progress.<br>
+badf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bad file descriptor.<br>
+badmsg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bad message.<br>
+busy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Device or resource busy.<br>
+canceled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operation canceled.<br>
+child&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No child processes.<br>
+connaborted&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Connection aborted.<br>
+connrefused&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Connection refused.<br>
+connreset&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Connection reset.<br>
+deadlk&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       Resource deadlock would occur.<br>
+destaddrreq&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        Destination address required.<br>
+dom&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      Mathematics argument out of domain of function.<br>
+dquot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Reserved.<br>
+exist&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; File exists.<br>
+fault&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bad address.<br>
+fbig&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; File too large.<br>
+hostunreach&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Host is unreachable.<br>
+idrm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Identifier removed.<br>
+ilseq&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Illegal byte sequence.<br>
+inprogress&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operation in progress.<br>
+intr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Interrupted function.<br>
+inval&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Invalid argument.<br>
+io&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; I/O error.<br>
+isconn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Socket is connected.<br>
+isdir&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Is a directory.<br>
+loop&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   Too many levels of symbolic links.<br>
+mfile&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Too many open files.<br>
+mlink&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Too many links.<br>
+msgsize&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Message too large.<br>
+multihop&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Reserved.<br>
+nametoolong&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Filename too long.<br>
+netdown&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Network is down.<br>
+netreset&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       Connection aborted by network.<br>
+netunreach&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Network unreachable.<br>
+nfile&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       Too many files open in system.<br>
+nobufs&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No buffer space available.<br>
+nodata  No message is available on the STREAM head read queue. <br>
+nodev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No such device.<br>
+noent&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No such file or directory.<br>
+noexec&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        Executable file format error.<br>
+nolck&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No locks available.<br>
+nolink&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Reserved.<br>
+nomem&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Not enough space.<br>
+nomsg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      No message of the desired type.<br>
+noprotoopt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Protocol not available.<br>
+nospc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No space left on device.<br>
+nosr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No STREAM resources. <br>
+nostr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Not a STREAM. <br>
+nosys&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Function not supported.<br>
+notconn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The socket is not connected.<br>
+notdir&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Not a directory.<br>
+notempty&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Directory not empty.<br>
+notsock&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Not a socket.<br>
+notsup&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Not supported.<br>
+notty&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Inappropriate I/O control operation.<br>
+nxio&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No such device or address.<br>
+opnotsupp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   Operation not supported on socket.<br>
+overflow&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   Value too large to be stored in data type.<br>
+perm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operation not permitted.<br>
+pipe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Broken pipe.<br>
+proto&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Protocol error.<br>
+protonosupport&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Protocol not supported.<br>
+prototype&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      Protocol wrong type for socket.<br>
+range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Result too large.<br>
+rofs&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read-only file system.<br>
+spipe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Invalid seek.<br>
+srch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No such process.<br>
+stale&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Reserved.<br>
+time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      Stream ioctl() timeout. <br>
+timedout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Connection timed out.<br>
+txtbsy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Text file busy.<br>
+wouldblock&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operation would block.<br>
+xdev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cross-device link.<br>
+
+</td></tr></table></div>
+<p>
+</p>
+<a name="node_sec_9.12"></a>
+<h2 class=section><a href="manual-Z-H-1.html#node_toc_node_sec_9.12">9.12&nbsp;&nbsp;C to Scheme correspondence</a></h2>
+<p></p>
+<p>
+The following table lists the Scheme procedures that correspond to
+particular C procedures.
+Not all of the Scheme procedures listed are part of the POSIX interface.</p>
+<p>
+</p>
+<table border=0><tr><td valign=top >C procedure </td><td valign=top >Scheme procedure(s) </td></tr>
+<tr><td valign=top >C procedure </td><td valign=top >Scheme procedure(s) </td></tr>
+<tr><td valign=top ><tt>access</tt></td><td valign=top ><tt>accessible?</tt></td></tr>
+<tr><td valign=top ><tt>asctime</tt></td><td valign=top ><tt>date-&gt;string</tt></td></tr>
+<tr><td valign=top ><tt>chdir</tt></td><td valign=top ><tt>set-working-directory!</tt></td></tr>
+<tr><td valign=top ><tt>close</tt></td><td valign=top ><tt>close-input-port, close-output-port,</tt></td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  close-channel, close-socket</tt></td></tr>
+<tr><td valign=top ><tt>closedir</tt></td><td valign=top ><tt>close-directory-stream</tt></td></tr>
+<tr><td valign=top ><tt>creat</tt></td><td valign=top ><tt>open-file</tt></td></tr>
+<tr><td valign=top ><tt>ctime</tt></td><td valign=top ><tt>time-&gt;string</tt></td></tr>
+<tr><td valign=top ><tt>dup</tt></td><td valign=top ><tt>dup, dup-switching-mode</tt></td></tr>
+<tr><td valign=top ><tt>dup2</tt></td><td valign=top ><tt>dup2</tt></td></tr>
+<tr><td valign=top ><tt>exec[l|v][e|p|&epsilon;]</tt>
+</td><td valign=top ><tt>exec, exec-with-environment,</tt> </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  exec-file, exec-file-with-environment,</tt> </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  exec-with-alias</tt></td></tr>
+<tr><td valign=top ><tt>_exit</tt></td><td valign=top ><tt>exit</tt></td></tr>
+<tr><td valign=top ><tt>fcntl</tt></td><td valign=top ><tt>io-flags, set-io-flags!,</tt></td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  close-on-exec, set-close-on-exec!</tt></td></tr>
+<tr><td valign=top ><tt>fork</tt></td><td valign=top ><tt>fork, fork-and-forget</tt></td></tr>
+<tr><td valign=top ><tt>fstat</tt></td><td valign=top ><tt>get-port-info</tt></td></tr>
+<tr><td valign=top ><tt>getcwd</tt></td><td valign=top ><tt>working-directory</tt></td></tr>
+<tr><td valign=top ><tt>getegid</tt></td><td valign=top ><tt>get-effective-group-id</tt></td></tr>
+<tr><td valign=top ><tt>getenv</tt></td><td valign=top ><tt>lookup-environment-variable,</tt> </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  environment-alist</tt></td></tr>
+<tr><td valign=top ><tt>geteuid</tt></td><td valign=top ><tt>get-effective-user-id</tt></td></tr>
+<tr><td valign=top ><tt>getgid</tt></td><td valign=top ><tt>get-group-id</tt></td></tr>
+<tr><td valign=top ><tt>getgroups</tt></td><td valign=top ><tt>get-groups</tt></td></tr>
+<tr><td valign=top ><tt>getlogin</tt></td><td valign=top ><tt>get-login-name</tt></td></tr>
+<tr><td valign=top ><tt>getpid</tt></td><td valign=top ><tt>get-process-id</tt></td></tr>
+<tr><td valign=top ><tt>getppid</tt></td><td valign=top ><tt>get-parent-process-id</tt></td></tr>
+<tr><td valign=top ><tt>getuid</tt></td><td valign=top ><tt>get-user-id</tt></td></tr>
+<tr><td valign=top ><tt>gmtime</tt></td><td valign=top ><tt>time-&gt;local-date</tt></td></tr>
+<tr><td valign=top ><tt>isatty</tt></td><td valign=top ><tt>port-is-a-terminal?</tt></td></tr>
+<tr><td valign=top ><tt>link</tt></td><td valign=top ><tt>link</tt></td></tr>
+<tr><td valign=top ><tt>localtime</tt></td><td valign=top ><tt>time-&gt;utc-date</tt></td></tr>
+<tr><td valign=top ><tt>lstat</tt></td><td valign=top ><tt>get-file/link-info</tt></td></tr>
+<tr><td valign=top ><tt>mkdir</tt></td><td valign=top ><tt>make-directory</tt></td></tr>
+<tr><td valign=top ><tt>mkfifo</tt></td><td valign=top ><tt>make-fifo</tt></td></tr>
+<tr><td valign=top ><tt>mktime</tt></td><td valign=top ><tt>date-&gt;time</tt></td></tr>
+<tr><td valign=top ><tt>open</tt></td><td valign=top ><tt>open-file</tt></td></tr>
+<tr><td valign=top ><tt>opendir</tt></td><td valign=top ><tt>open-directory-stream</tt></td></tr>
+<tr><td valign=top ><tt>pipe</tt></td><td valign=top ><tt>open-pipe</tt></td></tr>
+<tr><td valign=top ><tt>read</tt></td><td valign=top ><tt>read-char, read-block</tt></td></tr>
+<tr><td valign=top ><tt>readdir</tt></td><td valign=top ><tt>read-directory-stream</tt></td></tr>
+<tr><td valign=top ><tt>readlink</tt></td><td valign=top ><tt>read-symbolic-link</tt></td></tr>
+<tr><td valign=top ><tt>rename</tt></td><td valign=top ><tt>rename</tt></td></tr>
+<tr><td valign=top ><tt>rmdir</tt></td><td valign=top ><tt>remove-directory</tt></td></tr>
+<tr><td valign=top ><tt>setgid</tt></td><td valign=top ><tt>set-group-id!</tt></td></tr>
+<tr><td valign=top ><tt>setegid</tt></td><td valign=top ><tt>set-effective-group-id!</tt></td></tr>
+<tr><td valign=top ><tt>setuid</tt></td><td valign=top ><tt>set-user-id!</tt></td></tr>
+<tr><td valign=top ><tt>seteuid</tt></td><td valign=top ><tt>set-effective-user-id!</tt></td></tr>
+<tr><td valign=top ><tt>stat</tt></td><td valign=top ><tt>get-file-info</tt></td></tr>
+<tr><td valign=top ><tt>strftime</tt></td><td valign=top ><tt>format-date</tt></td></tr>
+<tr><td valign=top ><tt>symlink</tt></td><td valign=top ><tt>create-symbolic-link</tt></td></tr>
+<tr><td valign=top ><tt>syslog</tt></td><td valign=top ><tt>syslog</tt></td></tr>
+<tr><td valign=top ><tt>time</tt></td><td valign=top ><tt>current-time</tt></td></tr>
+<tr><td valign=top ><tt>ttyname</tt></td><td valign=top ><tt>port-terminal-name</tt></td></tr>
+<tr><td valign=top ><tt>umask</tt></td><td valign=top ><tt>set-file-creation-mask!</tt></td></tr>
+<tr><td valign=top ><tt>uname</tt></td><td valign=top ><tt>os-name, os-node-name,</tt> </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  os-release-name, os-version-name,</tt> </td></tr>
+<tr><td valign=top ></td><td valign=top ><tt>  machine-name</tt></td></tr>
+<tr><td valign=top ><tt>unlink</tt></td><td valign=top ><tt>unlink</tt></td></tr>
+<tr><td valign=top ><tt>waitpid</tt></td><td valign=top ><tt>wait-for-child-process</tt></td></tr>
+<tr><td valign=top ><tt>write</tt></td><td valign=top ><tt>write-char, write-block</tt></td></tr>
+<tr><td valign=top ></td></tr></table><p>
+
+</p>
+<p>
+</p>
+<p>
+</p>
+<div class=smallskip></div>
+<p style="margin-top: 0pt; margin-bottom: 0pt">
+<div align=right class=navigation>[Go to <span><a href="manual.html">first</a>, <a href="manual-Z-H-9.html">previous</a></span><span>, <a href="manual-Z-H-11.html">next</a></span> page<span>; &nbsp;&nbsp;</span><span><a href="manual-Z-H-1.html#node_toc_start">contents</a></span><span><span>; &nbsp;&nbsp;</span><a href="manual-Z-H-11.html#node_index_start">index</a></span>]</div>
+</p>
+<p></p>
+</div>
+</body>
+</html>
